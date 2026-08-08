@@ -1,0 +1,99 @@
+import React from "react";
+import { Link } from "react-router";
+import {
+  FaFileInvoiceDollar,
+  FaMoneyCheckAlt,
+  FaUndoAlt,
+  FaHistory,
+} from "react-icons/fa";
+import { RiCoinsFill } from "react-icons/ri";
+
+const Billing_and_Payments = () => {
+  return (
+    <div className="p-6">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+          <RiCoinsFill className="text-2xl text-[#BF1E2E]" />
+        </div>
+
+        <h1 className="text-xl font-bold text-[#BF1E2E]">Billing & Payments</h1>
+      </div>
+
+      <p className="text-gray-500 mb-10">
+        Manage invoices, payments, refunds, and transaction history.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+        {/* Guest Invoices */}
+        <Link
+          to="/dashboard/billing/invoices"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
+        >
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaFileInvoiceDollar className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          </div>
+
+          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">
+            Guest Invoices
+          </h2>
+
+          <p className="text-gray-600 text-sm">
+            Create, view, and manage invoices for guest stays and services.
+          </p>
+        </Link>
+
+        {/* Payments */}
+        <Link
+          to="/dashboard/billing/payments"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
+        >
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaMoneyCheckAlt className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          </div>
+
+          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">Payments</h2>
+
+          <p className="text-gray-600 text-sm">
+            Record guest payments and monitor completed transactions.
+          </p>
+        </Link>
+
+        {/* Refunds */}
+        <Link
+          to="/dashboard/billing/refunds"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
+        >
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaUndoAlt className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          </div>
+
+          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">Refunds</h2>
+
+          <p className="text-gray-600 text-sm">
+            Process and track guest refunds for cancelled bookings.
+          </p>
+        </Link>
+
+        {/* Payment History */}
+        <Link
+          to="/dashboard/billing/history"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
+        >
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaHistory className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          </div>
+
+          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">
+            Payment History
+          </h2>
+
+          <p className="text-gray-600 text-sm">
+            View the complete history of invoices, payments, and refunds.
+          </p>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default Billing_and_Payments;
