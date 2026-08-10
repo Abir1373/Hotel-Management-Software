@@ -1,4 +1,3 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -40,42 +39,19 @@ const EditMaintenance = () => {
   });
 
   const onSubmit = async (data) => {
-    if (data.RoomStatus === "Available") {
-      const management_res = await axiosInstance.post("/maintenance-history", {
-        ...data,
-        roomID: { id },
+    const res = await axiosInstance.patch(
+      `/edit-maintenance-history/${id}`,
+      data,
+    );
+
+    if (res.data.room_res?.modifiedCount > 0) {
+      Swal.fire({
+        title: "Updated Successfully!",
+        icon: "success",
+        confirmButtonColor: "#BF1E2E",
       });
 
-      if (management_res.data.acknowledged) {
-        const room_res = await axiosInstance.patch(`/rooms/${id}`, {
-          RoomStatus: "Available",
-          WorkBegins: null,
-          WorkEnds: null,
-          AssignedPerson: null,
-          AssignedPersonNumber: null,
-          MaintenanceCost: null,
-        });
-
-        if (room_res.data.modifiedCount > 0) {
-          Swal.fire({
-            title: "Updated Successfully!",
-            icon: "success",
-            confirmButtonColor: "#BF1E2E",
-          });
-          navigate("/dashboard/rooms");
-        }
-      }
-    } else {
-      const res = await axiosInstance.patch(`/rooms/${id}`, data);
-
-      if (res.data.modifiedCount > 0) {
-        Swal.fire({
-          title: "Updated Successfully!",
-          icon: "success",
-          confirmButtonColor: "#BF1E2E",
-        });
-        navigate("/dashboard/rooms");
-      }
+      navigate("/dashboard/rooms");
     }
   };
 
@@ -108,7 +84,9 @@ const EditMaintenance = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-lg font-bold text-[#BF1E2E]">Room Maintenance</h1>
+          <h1 className="text-lg font-bold text-[#BF1E2E]">
+            Edit Room Maintenance
+          </h1>
           <p className="text-gray-500 mt-1">
             Room #{room.RoomNumber} — {room.RoomName}
           </p>

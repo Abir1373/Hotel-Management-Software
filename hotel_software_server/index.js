@@ -156,10 +156,55 @@ async function run() {
       .db("Hotel_Management_Software")
       .collection("Maintenance History");
 
-    app.post("/maintenance-history", async (req, res) => {
-      const data = req.body;
-      const result = await maintenanceHistoryCollection.insertOne(data);
-      res.send(result);
+    app.patch("/edit-maintenance-history/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const data = req.body;
+
+        // Never allow _id to be updated
+        const { _id, ...cleanData } = data;
+
+        let history_res = null;
+        let room_res;
+
+        if (cleanData.RoomStatus === "Available") {
+          // Close maintenance → save history + reset room
+          history_res = await maintenanceHistoryCollection.insertOne({
+            ...cleanData,
+            roomID: { id },
+            closedAt: new Date(),
+          });
+
+          room_res = await roomCollection.updateOne(
+            { _id: new ObjectId(id) },
+            {
+              $set: {
+                RoomStatus: "Available",
+                WorkBegins: null,
+                WorkEnds: null,
+                AssignedPerson: null,
+                AssignedPersonNumber: null,
+                MaintenanceCost: null,
+              },
+            },
+          );
+        } else {
+          // Normal update
+          room_res = await roomCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: cleanData },
+          );
+        }
+
+        // Always return the same shape
+        res.send({
+          history_res,
+          room_res,
+        });
+      } catch (error) {
+        console.error("edit-maintenance-history error:", error);
+        res.status(500).send({ message: error.message });
+      }
     });
 
     app.get("/maintenance-history", async (req, res) => {
