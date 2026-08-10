@@ -116,6 +116,63 @@ async function run() {
       res.status(201).send(result);
     });
 
+    app.get("/rooms", async (req, res) => {
+      const rooms = await roomCollection.find().toArray();
+      res.send(rooms);
+    });
+
+    app.patch("/rooms/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+      const result = await roomCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData },
+      );
+      res.send(result);
+    });
+
+    app.get("/rooms/maintenance", async (req, res) => {
+      const rooms = await roomCollection
+        .find({ RoomStatus: { $in: ["Maintenance", "In Progress"] } })
+        .toArray();
+
+      res.send(rooms);
+    });
+
+    app.get("/rooms/maintenance/:id", async (req, res) => {
+      const { id } = req.params;
+      const room = await roomCollection.findOne({
+        _id: new ObjectId(id),
+        RoomStatus: {
+          $in: ["Maintenance", "In Progress"],
+        },
+      });
+      res.send(room);
+    });
+
+    // Maintenance Collection
+
+    const maintenanceHistoryCollection = client
+      .db("Hotel_Management_Software")
+      .collection("Maintenance History");
+
+    app.post("/maintenance-history", async (req, res) => {
+      const data = req.body;
+      const result = await maintenanceHistoryCollection.insertOne(data);
+      res.send(result);
+    });
+    app.get("/maintenance-history", async (req, res) => {
+      const result = await maintenanceHistoryCollection.find().toArray();
+      res.send(result);
+    });
+    app.delete("/maintenance-history/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await maintenanceHistoryCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(

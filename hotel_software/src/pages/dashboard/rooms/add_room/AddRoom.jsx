@@ -47,7 +47,7 @@ const AddRoom = () => {
   return (
     <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-[#BF1E2E]">Add New Room</h1>
+        <h1 className="text-lg font-bold text-[#BF1E2E]">Add New Room</h1>
         <Link to="/dashboard/rooms">
           <button className="btn btn-outline btn-secondary">
             <RiHome3Line className="text-2xl" />
@@ -230,6 +230,69 @@ const AddRoom = () => {
               {...register("ReservedBy")}
               type="text"
               placeholder="Guest Name / Booking ID"
+              className="bg-white input input-bordered w-full"
+            />
+          </div>
+
+          {/* Work Begins */}
+          <div>
+            <label className="label">
+              <span className="label-text">Work Begins</span>
+            </label>
+            <input
+              {...register("WorkBegins")}
+              type="datetime-local"
+              className="bg-white input input-bordered w-full"
+            />
+          </div>
+
+          {/* Work Ends */}
+          <div>
+            <label className="label">
+              <span className="label-text">Work Ends</span>
+            </label>
+            <input
+              {...register("WorkEnds")}
+              type="datetime-local"
+              className="bg-white input input-bordered w-full"
+            />
+          </div>
+
+          {/* Assigned Person */}
+          <div>
+            <label className="label">
+              <span className="label-text">Assigned Person</span>
+            </label>
+            <input
+              {...register("AssignedPerson")}
+              type="text"
+              placeholder="Enter name"
+              className="bg-white input input-bordered w-full"
+            />
+          </div>
+
+          {/* Assigned Person Number */}
+          <div>
+            <label className="label">
+              <span className="label-text">Assigned Person Number</span>
+            </label>
+            <input
+              {...register("AssignedPersonNumber")}
+              type="tel"
+              placeholder="Enter phone number"
+              className="bg-white input input-bordered w-full"
+            />
+          </div>
+
+          {/* Maintenance Cost */}
+          <div>
+            <label className="label">
+              <span className="label-text">Maintenance Cost</span>
+            </label>
+            <input
+              {...register("MaintenanceCost")}
+              type="number"
+              placeholder="Enter cost"
               className="bg-white input input-bordered w-full"
             />
           </div>
