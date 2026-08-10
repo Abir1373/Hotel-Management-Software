@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../../hooks/useAxios";
 import { RiHome3Line } from "react-icons/ri";
@@ -9,7 +9,7 @@ import Swal from "sweetalert2";
 const EditMaintenance = () => {
   const { id } = useParams();
   const axiosInstance = useAxios();
-
+  const navigate = useNavigate();
   const {
     data: room,
     isLoading,
@@ -62,6 +62,7 @@ const EditMaintenance = () => {
             icon: "success",
             confirmButtonColor: "#BF1E2E",
           });
+          navigate("/dashboard/rooms");
         }
       }
     } else {
@@ -73,6 +74,7 @@ const EditMaintenance = () => {
           icon: "success",
           confirmButtonColor: "#BF1E2E",
         });
+        navigate("/dashboard/rooms");
       }
     }
   };
@@ -106,9 +108,7 @@ const EditMaintenance = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-lg font-bold text-[#BF1E2E]">
-            Edit Room Maintenance
-          </h1>
+          <h1 className="text-lg font-bold text-[#BF1E2E]">Room Maintenance</h1>
           <p className="text-gray-500 mt-1">
             Room #{room.RoomNumber} — {room.RoomName}
           </p>
@@ -264,7 +264,7 @@ const EditMaintenance = () => {
 
             {/* Save Button */}
             <div className="flex justify-end pt-4">
-              <button type="submit" className="btn btn-primary px-10">
+              <button type="submit" className="btn btn-secondary px-10">
                 Save
               </button>
             </div>

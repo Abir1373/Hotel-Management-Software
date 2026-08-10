@@ -3,8 +3,8 @@ import { useForm } from "react-hook-form";
 import { Link, useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../../hooks/useAxios";
-import { RiHome3Line } from "react-icons/ri";
 import Swal from "sweetalert2";
+import { FaBackward } from "react-icons/fa";
 
 const EditMaintenanceHistory = () => {
   const { id } = useParams();
@@ -70,14 +70,14 @@ const EditMaintenanceHistory = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-rose-800">
+          <h1 className="text-lg font-bold text-rose-800">
             Edit Maintenance History
           </h1>
           <p className="text-gray-500 mt-1">Update maintenance record</p>
         </div>
         <Link to="/dashboard/rooms/maintenance_history">
           <button className="btn btn-outline border-rose-800 text-rose-800 hover:bg-rose-800 hover:text-white">
-            <RiHome3Line className="text-2xl" />
+            <FaBackward className="text-sm" />
           </button>
         </Link>
       </div>

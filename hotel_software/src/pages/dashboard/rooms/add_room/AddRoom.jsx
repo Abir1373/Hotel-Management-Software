@@ -1,12 +1,12 @@
 import { useForm } from "react-hook-form";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { RiHome3Line } from "react-icons/ri";
 
 const AddRoom = () => {
   const axiosInstance = useAxios();
-
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -25,7 +25,7 @@ const AddRoom = () => {
           icon: "success",
           confirmButtonColor: "#BF1E2E",
         });
-        reset();
+        navigate("/dashboard/rooms");
       }
     } catch (error) {
       console.error(error);
