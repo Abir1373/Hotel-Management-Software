@@ -29,6 +29,7 @@ import Payroll from "../pages/dashboard/employees/payroll/Payroll";
 import Maintenance from "../pages/dashboard/rooms/maintenance/Maintenance";
 import EditMaintenance from "../pages/dashboard/rooms/maintenance/edit_maintenance/EditMaintenance";
 import MaintenanceHistory from "../pages/dashboard/rooms/maintenance/maintenance_history/MaintenanceHistory";
+import EditMaintenanceHistory from "../pages/dashboard/rooms/maintenance/edit_maintenance_history/EditMaintenanceHistory";
 
 const Router = createBrowserRouter([
   {
@@ -53,6 +54,10 @@ const Router = createBrowserRouter([
       { path: "rooms/maintenance", Component: Maintenance },
       { path: "rooms/edit_maintenance/:id", Component: EditMaintenance },
       { path: "rooms/maintenance_history", Component: MaintenanceHistory },
+      {
+        path: "rooms/edit_maintenance_history/:id",
+        Component: EditMaintenanceHistory,
+      },
       { path: "services", Component: Services },
       { path: "services/room_service", Component: RoomService },
       { path: "services/restaurant_orders", Component: RestaurantOrders },

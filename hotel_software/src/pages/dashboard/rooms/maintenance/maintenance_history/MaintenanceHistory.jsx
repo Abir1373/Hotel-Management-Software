@@ -125,7 +125,9 @@ const MaintenanceHistory = () => {
 
                 {/* Actions */}
                 <div className="card-actions justify-end mt-5 gap-2">
-                  <Link to={`/dashboard/rooms/edit_history/${item._id}`}>
+                  <Link
+                    to={`/dashboard/rooms/edit_maintenance_history/${item._id}`}
+                  >
                     <button className="btn btn-sm bg-rose-700 hover:bg-rose-900 text-white border-none transition-colors duration-200">
                       <AiFillEdit className="text-lg" />
                       Edit

@@ -161,10 +161,32 @@ async function run() {
       const result = await maintenanceHistoryCollection.insertOne(data);
       res.send(result);
     });
+
     app.get("/maintenance-history", async (req, res) => {
       const result = await maintenanceHistoryCollection.find().toArray();
       res.send(result);
     });
+
+    app.get("/maintenance-history/:id", async (req, res) => {
+      const { id } = req.params;
+      const result = await maintenanceHistoryCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
+
+    app.patch("/edit-maintenance-history/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+
+      const result = await maintenanceHistoryCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData },
+      );
+
+      res.send(result);
+    });
+
     app.delete("/maintenance-history/:id", async (req, res) => {
       const id = req.params.id;
       const result = await maintenanceHistoryCollection.deleteOne({

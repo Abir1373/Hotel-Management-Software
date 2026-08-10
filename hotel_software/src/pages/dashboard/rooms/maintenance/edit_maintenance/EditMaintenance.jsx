@@ -41,10 +41,10 @@ const EditMaintenance = () => {
 
   const onSubmit = async (data) => {
     if (data.RoomStatus === "Available") {
-      const management_res = await axiosInstance.post(
-        "/maintenance-history",
-        data,
-      );
+      const management_res = await axiosInstance.post("/maintenance-history", {
+        ...data,
+        roomID: { id },
+      });
 
       if (management_res.data.acknowledged) {
         const room_res = await axiosInstance.patch(`/rooms/${id}`, {
