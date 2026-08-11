@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
 import { Link } from "react-router";
-import { RiHome3Line, RiAddLine } from "react-icons/ri";
-import Swal from "sweetalert2";
+import { RiHome3Line } from "react-icons/ri";
 import { AiFillEdit } from "react-icons/ai";
 import { FaHistory } from "react-icons/fa";
 

@@ -9,7 +9,6 @@ const Rooms = () => {
         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
           <MdMeetingRoom className="text-2xl text-[#BF1E2E]" />
         </div>
-
         <h1 className="text-xl font-bold text-[#BF1E2E]">Room Management</h1>
       </div>
 
@@ -20,7 +19,7 @@ const Rooms = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
         {/* Room List */}
         <Link
-          to="/dashboard/rooms/list"
+          to="/dashboard/rooms/room_list"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
