@@ -4,6 +4,7 @@ import { AiFillEdit, AiFillDelete } from "react-icons/ai";
 import { FaLayerGroup, FaPlus } from "react-icons/fa";
 import { RiHome3Line } from "react-icons/ri";
 import useAxios from "../../../../hooks/useAxios";
+import Swal from "sweetalert2";
 
 const RoomOverview = () => {
   const axiosInstance = useAxios();
@@ -20,9 +21,30 @@ const RoomOverview = () => {
     },
   });
 
-  const handleDelete = async (id) => {
-    console.log(`hello ${id}`);
-    refetch();
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This will also delete all rooms under this variant!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#BF1E2E",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const res = await axiosInstance.delete(`/room-variants/${id}`);
+
+        if (res.data.deletedCount > 0) {
+          Swal.fire({
+            title: "Deleted!",
+            text: "Room variant and related rooms have been deleted.",
+            icon: "success",
+            confirmButtonColor: "#BF1E2E",
+          });
+          refetch(); // if you have react-query refetch
+        }
+      }
+    });
   };
 
   if (isLoading) {

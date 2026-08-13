@@ -419,6 +419,41 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/room-variants/:id", async (req, res) => {
+      const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({
+          message: "Invalid room variant ID",
+        });
+      }
+
+      // Get existing variant
+      const existingVariant = await roomVariantCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (!existingVariant) {
+        return res.status(404).send({
+          message: "Room variant not found",
+        });
+      }
+
+      const variantName = existingVariant.variantName;
+
+      // 1. Delete the variant itself
+      const result = await roomVariantCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+
+      // 2. Delete all rooms under this variant
+      await roomCollection.deleteMany({
+        variantName: variantName,
+      });
+
+      res.send(result);
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================
