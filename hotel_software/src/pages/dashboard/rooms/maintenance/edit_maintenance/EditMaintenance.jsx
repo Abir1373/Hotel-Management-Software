@@ -9,6 +9,7 @@ const EditMaintenance = () => {
   const { id } = useParams();
   const axiosInstance = useAxios();
   const navigate = useNavigate();
+
   const {
     data: room,
     isLoading,
@@ -29,12 +30,13 @@ const EditMaintenance = () => {
     formState: { errors },
   } = useForm({
     values: {
-      RoomStatus: room?.RoomStatus || "Maintenance",
-      WorkBegins: room?.WorkBegins || "",
-      WorkEnds: room?.WorkEnds || "",
-      AssignedPerson: room?.AssignedPerson || "",
-      AssignedPersonNumber: room?.AssignedPersonNumber || "",
-      MaintenanceCost: room?.MaintenanceCost || "",
+      roomStatus: room?.roomStatus || "Maintenance",
+      workBegins: room?.workBegins || "",
+      workEnds: room?.workEnds || "",
+      assignedPerson: room?.assignedPerson || "",
+      assignedPersonNumber: room?.assignedPersonNumber || "",
+      maintenanceCost: room?.maintenanceCost ?? "",
+      correctives: room?.correctives || "",
     },
   });
 
@@ -45,19 +47,26 @@ const EditMaintenance = () => {
     );
 
     if (res.data.room_res?.modifiedCount > 0) {
-      Swal.fire({
+      await Swal.fire({
         title: "Updated Successfully!",
         icon: "success",
         confirmButtonColor: "#BF1E2E",
       });
 
       navigate("/dashboard/rooms");
+    } else {
+      Swal.fire({
+        title: "No Changes Made",
+        text: "The room information was not changed.",
+        icon: "info",
+        confirmButtonColor: "#BF1E2E",
+      });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen flex justify-center items-center">
         <span className="loading loading-spinner loading-lg"></span>
       </div>
     );
@@ -87,12 +96,14 @@ const EditMaintenance = () => {
           <h1 className="text-lg font-bold text-[#BF1E2E]">
             Edit Room Maintenance
           </h1>
+
           <p className="text-gray-500 mt-1">
-            Room #{room.RoomNumber} — {room.RoomName}
+            Room #{room.roomNo} — {room.variantName}
           </p>
         </div>
+
         <Link to="/dashboard/rooms">
-          <button className="btn btn-outline btn-secondary">
+          <button type="button" className="btn btn-outline btn-secondary">
             <RiHome3Line className="text-2xl" />
           </button>
         </Link>
@@ -100,26 +111,27 @@ const EditMaintenance = () => {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Room Image */}
-        <div className="card shadow-xl mb-6">
+        <div className="card bg-white shadow-xl mb-6">
           <div className="card-body">
             <img
-              src={room.Image}
-              alt={room.RoomName}
+              src={room.image}
+              alt={room.variantName}
               className="w-full h-72 object-cover rounded-xl"
             />
           </div>
         </div>
 
         {/* Form Fields */}
-        <div className="card shadow-xl">
+        <div className="card bg-white shadow-xl">
           <div className="card-body space-y-5">
             {/* Room Status */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Room Status *</span>
               </label>
+
               <select
-                {...register("RoomStatus", {
+                {...register("roomStatus", {
                   required: "Room status is required",
                 })}
                 className="select select-bordered w-full bg-white"
@@ -128,9 +140,10 @@ const EditMaintenance = () => {
                 <option value="In Progress">In Progress</option>
                 <option value="Available">Available</option>
               </select>
-              {errors.RoomStatus && (
+
+              {errors.roomStatus && (
                 <p className="text-error text-sm mt-1">
-                  {errors.RoomStatus.message}
+                  {errors.roomStatus.message}
                 </p>
               )}
             </div>
@@ -140,16 +153,18 @@ const EditMaintenance = () => {
               <label className="label">
                 <span className="label-text font-semibold">Work Begins *</span>
               </label>
+
               <input
                 type="datetime-local"
-                {...register("WorkBegins", {
+                {...register("workBegins", {
                   required: "Work begins is required",
                 })}
                 className="input input-bordered w-full bg-white"
               />
-              {errors.WorkBegins && (
+
+              {errors.workBegins && (
                 <p className="text-error text-sm mt-1">
-                  {errors.WorkBegins.message}
+                  {errors.workBegins.message}
                 </p>
               )}
             </div>
@@ -159,16 +174,18 @@ const EditMaintenance = () => {
               <label className="label">
                 <span className="label-text font-semibold">Work Ends *</span>
               </label>
+
               <input
                 type="datetime-local"
-                {...register("WorkEnds", {
+                {...register("workEnds", {
                   required: "Work ends is required",
                 })}
                 className="input input-bordered w-full bg-white"
               />
-              {errors.WorkEnds && (
+
+              {errors.workEnds && (
                 <p className="text-error text-sm mt-1">
-                  {errors.WorkEnds.message}
+                  {errors.workEnds.message}
                 </p>
               )}
             </div>
@@ -180,17 +197,19 @@ const EditMaintenance = () => {
                   Assigned Person *
                 </span>
               </label>
+
               <input
                 type="text"
                 placeholder="Enter name"
-                {...register("AssignedPerson", {
+                {...register("assignedPerson", {
                   required: "Assigned person is required",
                 })}
                 className="input input-bordered w-full bg-white"
               />
-              {errors.AssignedPerson && (
+
+              {errors.assignedPerson && (
                 <p className="text-error text-sm mt-1">
-                  {errors.AssignedPerson.message}
+                  {errors.assignedPerson.message}
                 </p>
               )}
             </div>
@@ -202,17 +221,19 @@ const EditMaintenance = () => {
                   Assigned Person Number *
                 </span>
               </label>
+
               <input
                 type="tel"
                 placeholder="Enter phone number"
-                {...register("AssignedPersonNumber", {
+                {...register("assignedPersonNumber", {
                   required: "Phone number is required",
                 })}
                 className="input input-bordered w-full bg-white"
               />
-              {errors.AssignedPersonNumber && (
+
+              {errors.assignedPersonNumber && (
                 <p className="text-error text-sm mt-1">
-                  {errors.AssignedPersonNumber.message}
+                  {errors.assignedPersonNumber.message}
                 </p>
               )}
             </div>
@@ -224,20 +245,40 @@ const EditMaintenance = () => {
                   Maintenance Cost *
                 </span>
               </label>
+
               <input
                 type="number"
                 placeholder="Enter cost"
-                {...register("MaintenanceCost", {
+                {...register("maintenanceCost", {
                   required: "Maintenance cost is required",
-                  min: { value: 0, message: "Cost cannot be negative" },
+                  valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: "Cost cannot be negative",
+                  },
                 })}
                 className="input input-bordered w-full bg-white"
               />
-              {errors.MaintenanceCost && (
+
+              {errors.maintenanceCost && (
                 <p className="text-error text-sm mt-1">
-                  {errors.MaintenanceCost.message}
+                  {errors.maintenanceCost.message}
                 </p>
               )}
+            </div>
+
+            {/* Correctives */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold">Correctives</span>
+              </label>
+
+              <input
+                type="text"
+                placeholder="Enter corrective action"
+                {...register("correctives")}
+                className="input input-bordered w-full bg-white"
+              />
             </div>
 
             {/* Save Button */}

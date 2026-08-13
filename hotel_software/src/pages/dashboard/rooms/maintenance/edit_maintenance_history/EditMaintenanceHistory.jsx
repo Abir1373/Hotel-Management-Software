@@ -11,7 +11,12 @@ const EditMaintenanceHistory = () => {
   const navigate = useNavigate();
   const axiosInstance = useAxios();
 
-  const { data: history, isLoading } = useQuery({
+  const {
+    data: history,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["maintenance-history", id],
     queryFn: async () => {
       const res = await axiosInstance.get(`/maintenance-history/${id}`);
@@ -26,35 +31,52 @@ const EditMaintenanceHistory = () => {
     formState: { errors },
   } = useForm({
     values: {
-      RoomStatus: history?.RoomStatus || "Available",
-      WorkBegins: history?.WorkBegins || "",
-      WorkEnds: history?.WorkEnds || "",
-      AssignedPerson: history?.AssignedPerson || "",
-      AssignedPersonNumber: history?.AssignedPersonNumber || "",
-      MaintenanceCost: history?.MaintenanceCost || "",
+      roomStatus: history?.roomStatus || "Available",
+      workBegins: history?.workBegins || "",
+      workEnds: history?.workEnds || "",
+      assignedPerson: history?.assignedPerson || "",
+      assignedPersonNumber: history?.assignedPersonNumber || "",
+      maintenanceCost: history?.maintenanceCost ?? "",
+      correctives: history?.correctives || "",
     },
   });
 
   const onSubmit = async (data) => {
     const res = await axiosInstance.patch(
-      `/edit-maintenance-history/${id}`,
+      `/change-maintenance-history/${id}`,
       data,
     );
 
-    if (res.data.modifiedCount > 0) {
-      Swal.fire({
+    if (res.data.result?.modifiedCount > 0) {
+      await Swal.fire({
         title: "Updated Successfully!",
         icon: "success",
         confirmButtonColor: "#BF1E2E",
       });
+
       navigate("/dashboard/rooms/maintenance_history");
+    } else {
+      await Swal.fire({
+        title: "No Changes Made",
+        text: "The maintenance record was not changed.",
+        icon: "info",
+        confirmButtonColor: "#BF1E2E",
+      });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen flex justify-center items-center">
         <span className="loading loading-spinner loading-lg text-rose-800"></span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="alert alert-error max-w-2xl mx-auto mt-10">
+        <span>{error?.message || "Failed to load maintenance history."}</span>
       </div>
     );
   }
@@ -66,17 +88,22 @@ const EditMaintenanceHistory = () => {
   }
 
   return (
-    <div className="mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-lg font-bold text-rose-800">
             Edit Maintenance History
           </h1>
+
           <p className="text-gray-500 mt-1">Update maintenance record</p>
         </div>
+
         <Link to="/dashboard/rooms/maintenance_history">
-          <button className="btn btn-outline border-rose-800 text-rose-800 hover:bg-rose-800 hover:text-white">
+          <button
+            type="button"
+            className="btn btn-outline border-rose-800 text-rose-800 hover:bg-rose-800 hover:text-white"
+          >
             <FaBackward className="text-sm" />
           </button>
         </Link>
@@ -92,17 +119,21 @@ const EditMaintenanceHistory = () => {
             <label className="label">
               <span className="label-text font-semibold">Room Status *</span>
             </label>
+
             <select
-              {...register("RoomStatus", { required: "Status is required" })}
+              {...register("roomStatus", {
+                required: "Status is required",
+              })}
               className="select select-bordered w-full bg-white"
             >
               <option value="Available">Available</option>
               <option value="Maintenance">Maintenance</option>
               <option value="In Progress">In Progress</option>
             </select>
-            {errors.RoomStatus && (
+
+            {errors.roomStatus && (
               <p className="text-error text-sm mt-1">
-                {errors.RoomStatus.message}
+                {errors.roomStatus.message}
               </p>
             )}
           </div>
@@ -112,16 +143,18 @@ const EditMaintenanceHistory = () => {
             <label className="label">
               <span className="label-text font-semibold">Work Begins *</span>
             </label>
+
             <input
               type="datetime-local"
-              {...register("WorkBegins", {
+              {...register("workBegins", {
                 required: "Work begins is required",
               })}
               className="input input-bordered w-full bg-white"
             />
-            {errors.WorkBegins && (
+
+            {errors.workBegins && (
               <p className="text-error text-sm mt-1">
-                {errors.WorkBegins.message}
+                {errors.workBegins.message}
               </p>
             )}
           </div>
@@ -131,14 +164,18 @@ const EditMaintenanceHistory = () => {
             <label className="label">
               <span className="label-text font-semibold">Work Ends *</span>
             </label>
+
             <input
               type="datetime-local"
-              {...register("WorkEnds", { required: "Work ends is required" })}
+              {...register("workEnds", {
+                required: "Work ends is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
-            {errors.WorkEnds && (
+
+            {errors.workEnds && (
               <p className="text-error text-sm mt-1">
-                {errors.WorkEnds.message}
+                {errors.workEnds.message}
               </p>
             )}
           </div>
@@ -150,16 +187,19 @@ const EditMaintenanceHistory = () => {
                 Assigned Person *
               </span>
             </label>
+
             <input
               type="text"
-              {...register("AssignedPerson", {
+              placeholder="Enter assigned person's name"
+              {...register("assignedPerson", {
                 required: "Assigned person is required",
               })}
               className="input input-bordered w-full bg-white"
             />
-            {errors.AssignedPerson && (
+
+            {errors.assignedPerson && (
               <p className="text-error text-sm mt-1">
-                {errors.AssignedPerson.message}
+                {errors.assignedPerson.message}
               </p>
             )}
           </div>
@@ -169,16 +209,19 @@ const EditMaintenanceHistory = () => {
             <label className="label">
               <span className="label-text font-semibold">Person Number *</span>
             </label>
+
             <input
               type="tel"
-              {...register("AssignedPersonNumber", {
+              placeholder="Enter phone number"
+              {...register("assignedPersonNumber", {
                 required: "Phone number is required",
               })}
               className="input input-bordered w-full bg-white"
             />
-            {errors.AssignedPersonNumber && (
+
+            {errors.assignedPersonNumber && (
               <p className="text-error text-sm mt-1">
-                {errors.AssignedPersonNumber.message}
+                {errors.assignedPersonNumber.message}
               </p>
             )}
           </div>
@@ -190,17 +233,44 @@ const EditMaintenanceHistory = () => {
                 Maintenance Cost *
               </span>
             </label>
+
             <input
               type="number"
-              {...register("MaintenanceCost", {
+              placeholder="Enter cost"
+              {...register("maintenanceCost", {
                 required: "Cost is required",
-                min: { value: 0, message: "Cost cannot be negative" },
+                valueAsNumber: true,
+                min: {
+                  value: 0,
+                  message: "Cost cannot be negative",
+                },
               })}
               className="input input-bordered w-full bg-white"
             />
-            {errors.MaintenanceCost && (
+
+            {errors.maintenanceCost && (
               <p className="text-error text-sm mt-1">
-                {errors.MaintenanceCost.message}
+                {errors.maintenanceCost.message}
+              </p>
+            )}
+          </div>
+
+          {/* Correctives */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Correctives</span>
+            </label>
+
+            <input
+              type="text"
+              placeholder="Enter corrective action"
+              {...register("correctives")}
+              className="input input-bordered w-full bg-white"
+            />
+
+            {errors.correctives && (
+              <p className="text-error text-sm mt-1">
+                {errors.correctives.message}
               </p>
             )}
           </div>

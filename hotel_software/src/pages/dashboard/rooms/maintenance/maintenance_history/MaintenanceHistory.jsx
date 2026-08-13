@@ -34,19 +34,21 @@ const MaintenanceHistory = () => {
 
     if (result.isConfirmed) {
       await axiosInstance.delete(`/maintenance-history/${id}`);
-      Swal.fire({
+
+      await Swal.fire({
         title: "Deleted!",
         text: "History has been deleted.",
         icon: "success",
         confirmButtonColor: "#BF1E2E",
       });
+
       refetch();
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
+      <div className="min-h-screen flex justify-center items-center">
         <span className="loading loading-spinner loading-lg text-rose-800"></span>
       </div>
     );
@@ -54,12 +56,14 @@ const MaintenanceHistory = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-lg font-bold text-[#BF1E2E]">
           Maintenance History
         </h1>
+
         <Link to="/dashboard/rooms">
-          <button className="btn btn-outline btn-secondary">
+          <button type="button" className="btn btn-outline btn-secondary">
             <RiHome3Line className="text-2xl" />
           </button>
         </Link>
@@ -82,43 +86,63 @@ const MaintenanceHistory = () => {
                   <h2 className="card-title text-lg text-rose-800">
                     Maintenance Record
                   </h2>
+
                   <span className="badge bg-rose-800 text-white border-none">
-                    {item.RoomStatus}
+                    {item.roomStatus || "Maintenance"}
                   </span>
                 </div>
 
                 {/* Details */}
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  {/* Room Number */}
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-500">Room No:</span>
+                    <span className="font-medium">{item.roomNo || "-"}</span>
+                  </div>
+
+                  {/* Work Begins */}
+                  <div className="flex justify-between gap-4">
                     <span className="text-gray-500">Work Begins:</span>
                     <span className="font-medium">
-                      {item.WorkBegins || "-"}
+                      {item.workBegins || "-"}
                     </span>
                   </div>
 
-                  <div className="flex justify-between">
+                  {/* Work Ends */}
+                  <div className="flex justify-between gap-4">
                     <span className="text-gray-500">Work Ends:</span>
-                    <span className="font-medium">{item.WorkEnds || "-"}</span>
+                    <span className="font-medium">{item.workEnds || "-"}</span>
                   </div>
 
-                  <div className="flex justify-between">
+                  {/* Assigned Person */}
+                  <div className="flex justify-between gap-4">
                     <span className="text-gray-500">Assigned Person:</span>
                     <span className="font-medium">
-                      {item.AssignedPerson || "-"}
+                      {item.assignedPerson || "-"}
                     </span>
                   </div>
 
-                  <div className="flex justify-between">
+                  {/* Phone */}
+                  <div className="flex justify-between gap-4">
                     <span className="text-gray-500">Phone:</span>
                     <span className="font-medium">
-                      {item.AssignedPersonNumber || "-"}
+                      {item.assignedPersonNumber || "-"}
                     </span>
                   </div>
 
-                  <div className="flex justify-between">
+                  {/* Cost */}
+                  <div className="flex justify-between gap-4">
                     <span className="text-gray-500">Cost:</span>
                     <span className="font-bold text-rose-800">
-                      ${item.MaintenanceCost || "0"}
+                      ৳{item.maintenanceCost ?? "0"}
+                    </span>
+                  </div>
+
+                  {/* Correctives */}
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-500">Correctives:</span>
+                    <span className="font-medium text-right">
+                      {item.correctives || "-"}
                     </span>
                   </div>
                 </div>
@@ -128,13 +152,17 @@ const MaintenanceHistory = () => {
                   <Link
                     to={`/dashboard/rooms/edit_maintenance_history/${item._id}`}
                   >
-                    <button className="btn btn-sm bg-rose-700 hover:bg-rose-900 text-white border-none transition-colors duration-200">
+                    <button
+                      type="button"
+                      className="btn btn-sm bg-rose-700 hover:bg-rose-900 text-white border-none transition-colors duration-200"
+                    >
                       <AiFillEdit className="text-lg" />
                       Edit
                     </button>
                   </Link>
 
                   <button
+                    type="button"
                     onClick={() => handleDelete(item._id)}
                     className="btn btn-sm bg-rose-800 hover:bg-rose-950 text-white border-none transition-colors duration-200"
                   >

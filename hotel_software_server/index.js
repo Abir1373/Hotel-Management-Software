@@ -147,7 +147,7 @@ async function run() {
     app.get("/rooms/maintenance", async (req, res) => {
       const rooms = await roomCollection
         .find({
-          RoomStatus: {
+          roomStatus: {
             $in: ["Maintenance", "In Progress"],
           },
         })
@@ -167,7 +167,7 @@ async function run() {
 
       const room = await roomCollection.findOne({
         _id: new ObjectId(id),
-        RoomStatus: {
+        roomStatus: {
           $in: ["Maintenance", "In Progress"],
         },
       });
@@ -259,7 +259,7 @@ async function run() {
       res.send(result);
     });
 
-    // Edit current room maintenance
+    //edit maintenance history
     app.patch("/edit-maintenance-history/:id", async (req, res) => {
       const { id } = req.params;
 
@@ -271,52 +271,37 @@ async function run() {
 
       const { _id, ...cleanData } = req.body;
 
-      let history_res = null;
-      let room_res;
+      // Update room
+      const room_res = await roomCollection.updateOne(
+        {
+          _id: new ObjectId(id),
+        },
+        {
+          $set: cleanData,
+        },
+      );
 
-      if (cleanData.RoomStatus === "Available") {
+      let history_res = null;
+
+      // Save maintenance history only when maintenance is completed
+      if (cleanData.roomStatus === "Available") {
         history_res = await maintenanceHistoryCollection.insertOne({
           ...cleanData,
-          roomID: {
-            id,
-          },
+          roomID: new ObjectId(id),
           closedAt: new Date(),
         });
-
-        room_res = await roomCollection.updateOne(
-          {
-            _id: new ObjectId(id),
-          },
-          {
-            $set: {
-              RoomStatus: "Available",
-              WorkBegins: null,
-              WorkEnds: null,
-              AssignedPerson: null,
-              AssignedPersonNumber: null,
-              MaintenanceCost: null,
-            },
-          },
-        );
-      } else {
-        room_res = await roomCollection.updateOne(
-          {
-            _id: new ObjectId(id),
-          },
-          {
-            $set: cleanData,
-          },
-        );
       }
 
       res.send({
+        success: true,
+        message: "Room updated successfully",
         history_res,
         room_res,
       });
     });
 
-    // Edit an existing maintenance history record
-    app.patch("/maintenance-history/:id", async (req, res) => {
+    // Change an existing maintenance history record
+    app.patch("/change-maintenance-history/:id", async (req, res) => {
       const { id } = req.params;
 
       if (!ObjectId.isValid(id)) {
@@ -336,7 +321,11 @@ async function run() {
         },
       );
 
-      res.send(result);
+      res.send({
+        success: true,
+        message: "Maintenance history updated successfully",
+        result,
+      });
     });
 
     // Delete maintenance history
@@ -369,6 +358,14 @@ async function run() {
     // Get all room variants
     app.get("/room-variants", async (req, res) => {
       const result = await roomVariantCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/room-variants/:id", async (req, res) => {
+      const { id } = req.params;
+      const result = await roomVariantCollection.findOne({
+        _id: new ObjectId(id),
+      });
       res.send(result);
     });
 

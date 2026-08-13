@@ -169,11 +169,12 @@ const RoomOverview = () => {
                       </button>
                     </Link>
 
-                    <Link to="/dashboard/rooms">
-                      <button className="flex items-center gap-2 px-4 py-2 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
-                        <FaPlus />
-                        Add Rooms
-                      </button>
+                    <Link
+                      to={`/dashboard/rooms/add_room/${item._id}`}
+                      className="flex items-center gap-2 px-4 py-2 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+                    >
+                      <FaPlus />
+                      Add Room
                     </Link>
 
                     <button

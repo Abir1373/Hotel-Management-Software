@@ -31,6 +31,7 @@ import MaintenanceHistory from "../pages/dashboard/rooms/maintenance/maintenance
 import EditMaintenanceHistory from "../pages/dashboard/rooms/maintenance/edit_maintenance_history/EditMaintenanceHistory";
 import AddRoomVariant from "../pages/dashboard/rooms/add_room_variant/AddRoomVariant";
 import RoomOverview from "../pages/dashboard/rooms/room_overview/RoomOverview";
+import AddRoom from "../pages/dashboard/rooms/add_room/AddRoom";
 
 const Router = createBrowserRouter([
   {
@@ -63,6 +64,7 @@ const Router = createBrowserRouter([
       // { path: "rooms/room_overview", Component: RoomOverview },
       { path: "rooms/add_room_variant", Component: AddRoomVariant },
       { path: "rooms/room_overview", Component: RoomOverview },
+      { path: "rooms/add_room/:id", Component: AddRoom },
       { path: "rooms/maintenance", Component: Maintenance },
       { path: "rooms/edit_maintenance/:id", Component: EditMaintenance },
       {

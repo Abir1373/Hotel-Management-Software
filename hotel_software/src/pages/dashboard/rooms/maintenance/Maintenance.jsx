@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { RiHome3Line } from "react-icons/ri";
 import { AiFillEdit } from "react-icons/ai";
 import { FaHistory } from "react-icons/fa";
@@ -15,7 +15,7 @@ const Maintenance = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["rooms"],
+    queryKey: ["rooms-maintenance"],
     queryFn: async () => {
       const res = await axiosInstance.get("/rooms/maintenance");
       return res.data;
@@ -24,8 +24,8 @@ const Maintenance = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <span className="loading loading-spinner loading-lg text-[#BF1E2E]"></span>
+      <div className="flex justify-center items-center min-h-96">
+        <span className="loading loading-spinner loading-lg text-rose-700"></span>
       </div>
     );
   }
@@ -45,11 +45,12 @@ const Maintenance = () => {
   return (
     <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-2xl p-6 md:p-8">
       {/* Header */}
-      <div className="flex flex-row sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div className="flex flex-col gap-5">
-          <h1 className="text-lg font-bold text-[#BF1E2E]">Maintain Rooms</h1>
+      <div className="flex flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-lg font-bold text-rose-700">Maintain Rooms</h1>
           <p className="text-gray-500">List of under maintenance room/s</p>
         </div>
+
         <div className="flex flex-row gap-3">
           <Link to="/dashboard/rooms/maintenance_history">
             <button className="btn btn-outline btn-secondary">
@@ -67,17 +68,20 @@ const Maintenance = () => {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="table table-zebra w-full">
-          <thead className="bg-[#BF1E2E] text-white">
+          <thead className="bg-rose-700 text-white">
             <tr className="text-center">
               <th>#</th>
               <th>Image</th>
               <th>Room No</th>
-              <th>Name</th>
+              <th>Variant Name</th>
               <th>Type</th>
-              <th>Floor</th>
-              <th>Bed</th>
-              <th>Capacity</th>
-              <th>Price/Night</th>
+              <th>Max Occupancy</th>
+              <th>Assigned Person</th>
+              <th>Phone</th>
+              <th>Cost</th>
+              <th>Correctives</th>
+              <th>Work Begins</th>
+              <th>Work Ends</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -86,7 +90,7 @@ const Maintenance = () => {
           <tbody>
             {rooms.length === 0 ? (
               <tr>
-                <td colSpan="11" className="text-center py-10 text-gray-500">
+                <td colSpan="14" className="text-center py-10 text-gray-500">
                   No rooms under maintenance.
                 </td>
               </tr>
@@ -100,36 +104,47 @@ const Maintenance = () => {
                       <div className="mask mask-squircle w-12 h-12">
                         <img
                           src={
-                            room.Image ||
+                            room.image ||
                             "https://via.placeholder.com/150?text=No+Image"
                           }
-                          alt={room.RoomName}
+                          alt={room.variantName}
                         />
                       </div>
                     </div>
                   </td>
 
-                  <td className="font-semibold">{room.RoomNumber}</td>
-                  <td>{room.RoomName}</td>
-                  <td>{room.RoomType}</td>
-                  <td>{room.Floor || "-"}</td>
-                  <td>{room.BedType}</td>
-                  <td>{room.Capacity || "-"}</td>
-                  <td className="font-medium">${room.PricePerNight}</td>
+                  <td className="font-semibold">{room.roomNo}</td>
+                  <td>{room.variantName}</td>
+                  <td>{room.baseRoomType}</td>
+                  <td>{room.maxOccupancy || "-"}</td>
+                  <td>{room.assignedPerson || "-"}</td>
+                  <td>{room.assignedPersonNumber || "-"}</td>
+                  <td className="font-medium">৳{room.maintenanceCost || 0}</td>
+                  <td>{room.correctives || "-"}</td>
+                  <td>
+                    {room.workBegins
+                      ? new Date(room.workBegins).toLocaleString()
+                      : "-"}
+                  </td>
+                  <td>
+                    {room.workEnds
+                      ? new Date(room.workEnds).toLocaleString()
+                      : "-"}
+                  </td>
 
                   <td>
-                    <span className="badge badge-ghost bg-rose-800 text-white h-full">
-                      {room.RoomStatus}
+                    <span className="badge bg-rose-800 text-white w-28 h-11">
+                      {room.roomStatus}
                     </span>
                   </td>
 
                   <td>
-                    <div className="flex gap-2">
+                    <div className="flex justify-center">
                       <Link
                         to={`/dashboard/rooms/edit_maintenance/${room._id}`}
                       >
-                        <button className="btn btn-accent text-lg text-white rounded-lg bg-rose-800">
-                          <AiFillEdit />
+                        <button className="btn btn-sm bg-rose-800 text-white border-none">
+                          <AiFillEdit className="text-lg" />
                         </button>
                       </Link>
                     </div>
