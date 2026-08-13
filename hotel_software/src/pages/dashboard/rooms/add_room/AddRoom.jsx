@@ -1,8 +1,10 @@
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
+import { RiHome3Line } from "react-icons/ri";
+import { MdOutlineAddHomeWork } from "react-icons/md";
 
 const AddRoom = () => {
   const axiosInstance = useAxios();
@@ -114,7 +116,17 @@ const AddRoom = () => {
     <div className="max-w-6xl mx-auto p-4 md:p-6">
       {/* ================= HEADER ================= */}
       <div className="mb-8">
-        <h1 className="text-lg font-bold text-rose-700">Add Room</h1>
+        <div className="flex justify-between gap-3 mb-2">
+          <div className="flex flex-row gap-4 items-center">
+            <MdOutlineAddHomeWork className="bg-rose-400 h-10 w-10 text-white p-2 rounded-full" />
+            <h1 className="text-lg font-bold text-rose-700">Add Room</h1>
+          </div>
+          <Link to="/dashboard/rooms">
+            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+              <RiHome3Line className="text-xl" />
+            </button>
+          </Link>
+        </div>
 
         <p className="text-gray-500 mt-2">
           Add a new room to this room variant.

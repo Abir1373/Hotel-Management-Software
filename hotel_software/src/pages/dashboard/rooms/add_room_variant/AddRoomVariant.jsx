@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { FaLayerGroup, FaArrowLeft, FaSave } from "react-icons/fa";
 import Swal from "sweetalert2";
 import useAxios from "../../../../hooks/useAxios";
+import { RiHome3Line } from "react-icons/ri";
 
 const AddRoomVariant = () => {
   const axiosInstance = useAxios();
@@ -50,12 +51,21 @@ const AddRoomVariant = () => {
     <div className="p-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-            <FaLayerGroup className="text-2xl text-rose-700" />
-          </div>
+        <div className="flex justify-between">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <FaLayerGroup className="text-2xl text-rose-700" />
+            </div>
 
-          <h1 className="text-xl font-bold text-rose-700">Add Room Variant</h1>
+            <h1 className="text-xl font-bold text-rose-700">
+              Add Room Variant
+            </h1>
+          </div>
+          <Link to="/dashboard/rooms">
+            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+              <RiHome3Line className="text-xl" />
+            </button>
+          </Link>
         </div>
 
         <p className="text-gray-500 ml-9">

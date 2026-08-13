@@ -54,7 +54,7 @@ const RoomOverview = () => {
         {/* Header Buttons */}
         <div className="flex items-center gap-3">
           <Link to="/dashboard/rooms/add_room_variant">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-lg transition-colors border-none">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-800 text-white rounded-lg transition-colors border-none">
               <FaPlus />
               Add Room Variant
             </button>
@@ -84,7 +84,7 @@ const RoomOverview = () => {
           </p>
 
           <Link to="/dashboard/rooms/add_room_variant">
-            <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-lg transition-colors">
+            <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-400 text-white rounded-lg transition-colors">
               <FaPlus />
               Add Room Variant
             </button>
@@ -179,7 +179,7 @@ const RoomOverview = () => {
 
                     <button
                       onClick={() => handleDelete(item._id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-lg transition-colors border-none"
+                      className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-800 text-white rounded-lg transition-colors border-none"
                     >
                       <AiFillDelete />
                       Delete
