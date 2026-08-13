@@ -12,7 +12,6 @@ import Employees from "../pages/dashboard/employees/Employees";
 import Guests from "../pages/dashboard/guests/Guests";
 import Reservations from "../pages/dashboard/reservations/Reservations";
 import Settings from "../pages/dashboard/settings/Settings";
-import AddRoom from "../pages/dashboard/rooms/add_room/AddRoom";
 import RoomService from "../pages/dashboard/services/room_service/RoomService";
 import RestaurantOrders from "../pages/dashboard/services/restaurant_orders/RestaurantOrders";
 import LaundryService from "../pages/dashboard/services/laundry_service/LaundryService";
@@ -30,56 +29,89 @@ import Maintenance from "../pages/dashboard/rooms/maintenance/Maintenance";
 import EditMaintenance from "../pages/dashboard/rooms/maintenance/edit_maintenance/EditMaintenance";
 import MaintenanceHistory from "../pages/dashboard/rooms/maintenance/maintenance_history/MaintenanceHistory";
 import EditMaintenanceHistory from "../pages/dashboard/rooms/maintenance/edit_maintenance_history/EditMaintenanceHistory";
-import RoomList from "../pages/dashboard/rooms/room_list/RoomList";
-import EditRoom from "../pages/dashboard/rooms/room_list/edit_room/EditRoom";
+import AddRoomVariant from "../pages/dashboard/rooms/add_room_variant/AddRoomVariant";
+import RoomOverview from "../pages/dashboard/rooms/room_overview/RoomOverview";
 
 const Router = createBrowserRouter([
   {
     path: "/",
     Component: AuthLayout,
     children: [
-      { index: true, Component: Login },
+      {
+        index: true,
+        Component: Login,
+      },
       {
         path: "signup",
         Component: Signup,
       },
     ],
   },
+
   {
     path: "/dashboard",
     Component: DashboardLayout,
     children: [
-      { index: true, Component: Root },
+      {
+        index: true,
+        Component: Root,
+      },
+
       { path: "billing_and_payments", Component: Billing_and_Payments },
+
       { path: "rooms", Component: Rooms },
-      { path: "rooms/room_list", Component: RoomList },
-      { path: "rooms/room_list/edit_room/:id", Component: EditRoom },
-      { path: "rooms/add_room", Component: AddRoom },
+      // { path: "rooms/room_overview", Component: RoomOverview },
+      { path: "rooms/add_room_variant", Component: AddRoomVariant },
+      { path: "rooms/room_overview", Component: RoomOverview },
       { path: "rooms/maintenance", Component: Maintenance },
       { path: "rooms/edit_maintenance/:id", Component: EditMaintenance },
-      { path: "rooms/maintenance_history", Component: MaintenanceHistory },
+      {
+        path: "rooms/maintenance_history",
+        Component: MaintenanceHistory,
+      },
       {
         path: "rooms/edit_maintenance_history/:id",
         Component: EditMaintenanceHistory,
       },
+
       { path: "services", Component: Services },
       { path: "services/room_service", Component: RoomService },
-      { path: "services/restaurant_orders", Component: RestaurantOrders },
+      {
+        path: "services/restaurant_orders",
+        Component: RestaurantOrders,
+      },
       { path: "services/laundry_service", Component: LaundryService },
-      { path: "services/transport_service", Component: TransportService },
+      {
+        path: "services/transport_service",
+        Component: TransportService,
+      },
+
       { path: "check_in_out", Component: Check_in_Out },
       { path: "check_in_out/check_in", Component: CheckIn },
       { path: "check_in_out/check_out", Component: CheckOut },
+
       { path: "employees", Component: Employees },
       { path: "employees/add_employee", Component: AddEmployee },
-      { path: "employees/current_employees", Component: CurrentEmployees },
+      {
+        path: "employees/current_employees",
+        Component: CurrentEmployees,
+      },
       { path: "employees/past_employees", Component: PastEmployees },
       { path: "employees/payroll", Component: Payroll },
       { path: "employees/edit/:id", Component: EditEmployee },
+
       { path: "guests", Component: Guests },
+
       { path: "reservations", Component: Reservations },
-      { path: "reservations/new_reservation", Component: NewReservation },
-      { path: "reservations/group_bookings", Component: GroupBookings },
+      {
+        path: "reservations/new_reservation",
+        Component: NewReservation,
+      },
+      {
+        path: "reservations/group_bookings",
+        Component: GroupBookings,
+      },
+
       { path: "settings", Component: Settings },
     ],
   },

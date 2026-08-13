@@ -32,6 +32,21 @@ async function run() {
   try {
     await client.connect();
 
+    // =========================================================
+    // ALL COLLECTIONS
+    // =========================================================
+
+    const db = client.db("Hotel_Management_Software");
+
+    const employeeCollection = db.collection("Employees");
+    const roomCollection = db.collection("Rooms");
+    const maintenanceHistoryCollection = db.collection("Maintenance History");
+    const roomVariantCollection = db.collection("Room Variants");
+
+    // =========================================================
+    // ROOT
+    // =========================================================
+
     app.get("/", (req, res) => {
       res.send("Hotel Software Server is Running 🚀");
     });
@@ -40,16 +55,10 @@ async function run() {
     // EMPLOYEES
     // =========================================================
 
-    const employeeCollection = client
-      .db("Hotel_Management_Software")
-      .collection("Employees");
-
     // Add employee
     app.post("/employees", async (req, res) => {
       const employee = req.body;
-
       const result = await employeeCollection.insertOne(employee);
-
       res.status(201).send(result);
     });
 
@@ -62,7 +71,6 @@ async function run() {
           },
         })
         .toArray();
-
       res.send(employees);
     });
 
@@ -75,7 +83,6 @@ async function run() {
           },
         })
         .toArray();
-
       res.send(employees);
     });
 
@@ -123,28 +130,18 @@ async function run() {
     // ROOMS
     // =========================================================
 
-    const roomCollection = client
-      .db("Hotel_Management_Software")
-      .collection("Rooms");
-
     // Add room
     app.post("/rooms", async (req, res) => {
       const room = req.body;
-
       const result = await roomCollection.insertOne(room);
-
       res.status(201).send(result);
     });
 
     // Get all rooms
     app.get("/rooms", async (req, res) => {
       const rooms = await roomCollection.find().toArray();
-
       res.send(rooms);
     });
-
-    // IMPORTANT:
-    // Specific routes MUST come before /rooms/:id
 
     // Get maintenance rooms
     app.get("/rooms/maintenance", async (req, res) => {
@@ -155,7 +152,6 @@ async function run() {
           },
         })
         .toArray();
-
       res.send(rooms);
     });
 
@@ -180,7 +176,6 @@ async function run() {
     });
 
     // Get room by ID
-    // Keep this AFTER /rooms/maintenance
     app.get("/rooms/:id", async (req, res) => {
       const { id } = req.params;
 
@@ -200,8 +195,6 @@ async function run() {
     // Update room
     app.patch("/rooms/:id", async (req, res) => {
       const { id } = req.params;
-
-      // Prevent _id from being updated
       const { _id, ...updateData } = req.body;
 
       if (!ObjectId.isValid(id)) {
@@ -243,14 +236,9 @@ async function run() {
     // MAINTENANCE HISTORY
     // =========================================================
 
-    const maintenanceHistoryCollection = client
-      .db("Hotel_Management_Software")
-      .collection("Maintenance History");
-
     // Get all maintenance history
     app.get("/maintenance-history", async (req, res) => {
       const result = await maintenanceHistoryCollection.find().toArray();
-
       res.send(result);
     });
 
@@ -271,13 +259,7 @@ async function run() {
       res.send(result);
     });
 
-    // ---------------------------------------------------------
     // Edit current room maintenance
-    // When status becomes Available:
-    // 1. Save maintenance data to history
-    // 2. Clear maintenance fields from room
-    // ---------------------------------------------------------
-
     app.patch("/edit-maintenance-history/:id", async (req, res) => {
       const { id } = req.params;
 
@@ -293,7 +275,6 @@ async function run() {
       let room_res;
 
       if (cleanData.RoomStatus === "Available") {
-        // Save maintenance information to history
         history_res = await maintenanceHistoryCollection.insertOne({
           ...cleanData,
           roomID: {
@@ -302,7 +283,6 @@ async function run() {
           closedAt: new Date(),
         });
 
-        // Reset maintenance information in room
         room_res = await roomCollection.updateOne(
           {
             _id: new ObjectId(id),
@@ -319,7 +299,6 @@ async function run() {
           },
         );
       } else {
-        // Normal maintenance update
         room_res = await roomCollection.updateOne(
           {
             _id: new ObjectId(id),
@@ -336,10 +315,7 @@ async function run() {
       });
     });
 
-    // ---------------------------------------------------------
     // Edit an existing maintenance history record
-    // ---------------------------------------------------------
-
     app.patch("/maintenance-history/:id", async (req, res) => {
       const { id } = req.params;
 
@@ -377,6 +353,22 @@ async function run() {
         _id: new ObjectId(id),
       });
 
+      res.send(result);
+    });
+
+    // =========================================================
+    // ROOM VARIANTS
+    // =========================================================
+
+    // Add room variant
+    app.post("/add-room-variant", async (req, res) => {
+      const result = await roomVariantCollection.insertOne(req.body);
+      res.status(201).json(result);
+    });
+
+    // Get all room variants
+    app.get("/room-variants", async (req, res) => {
+      const result = await roomVariantCollection.find().toArray();
       res.send(result);
     });
 
