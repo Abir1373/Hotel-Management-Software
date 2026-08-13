@@ -31,8 +31,9 @@ import MaintenanceHistory from "../pages/dashboard/rooms/maintenance/maintenance
 import EditMaintenanceHistory from "../pages/dashboard/rooms/maintenance/edit_maintenance_history/EditMaintenanceHistory";
 import AddRoomVariant from "../pages/dashboard/rooms/add_room_variant/AddRoomVariant";
 import RoomOverview from "../pages/dashboard/rooms/room_overview/RoomOverview";
-import AddRoom from "../pages/dashboard/rooms/add_room/AddRoom";
 import EditRoomVariant from "../pages/dashboard/rooms/room_overview/edit_room_variant/EditRoomVariant";
+import AddRoom from "../pages/dashboard/rooms/room_overview/add_room/AddRoom";
+import RoomStatus from "../pages/dashboard/rooms/room_status/RoomStatus";
 
 const Router = createBrowserRouter([
   {
@@ -63,6 +64,7 @@ const Router = createBrowserRouter([
 
       { path: "rooms", Component: Rooms },
       { path: "rooms/add_room_variant", Component: AddRoomVariant },
+      { path: "rooms/room_status", Component: RoomStatus },
       { path: "rooms/room_overview", Component: RoomOverview },
       { path: "rooms/edit_room_variant/:id", Component: EditRoomVariant },
 

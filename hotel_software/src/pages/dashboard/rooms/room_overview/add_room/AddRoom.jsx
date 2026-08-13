@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
 import { RiHome3Line } from "react-icons/ri";
 import { MdOutlineAddHomeWork } from "react-icons/md";
+import useAxios from "../../../../../hooks/useAxios";
 
 const AddRoom = () => {
   const axiosInstance = useAxios();

@@ -55,7 +55,7 @@ const Rooms = () => {
 
         {/* Room Status */}
         <Link
-          to="/dashboard/rooms/status"
+          to="/dashboard/rooms/room_status"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
