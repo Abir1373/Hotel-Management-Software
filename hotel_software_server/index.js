@@ -369,6 +369,56 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/room-variants/:id", async (req, res) => {
+      const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({
+          message: "Invalid room variant ID",
+        });
+      }
+
+      const { _id, ...updateData } = req.body;
+
+      // Get existing variant
+      const existingVariant = await roomVariantCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (!existingVariant) {
+        return res.status(404).send({
+          message: "Room variant not found",
+        });
+      }
+
+      const oldVariantName = existingVariant.variantName;
+
+      // 1. Update the variant itself
+      const result = await roomVariantCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData },
+      );
+
+      // 2. Only update the shared fields in rooms
+      const roomsUpdateData = {
+        variantName: updateData.variantName,
+        baseRoomType: updateData.baseRoomType,
+        price: updateData.price,
+        maxOccupancy: updateData.maxOccupancy,
+        bedType: updateData.bedType,
+        amenities: updateData.amenities,
+        description: updateData.description,
+        image: updateData.image,
+      };
+
+      await roomCollection.updateMany(
+        { variantName: oldVariantName },
+        { $set: roomsUpdateData },
+      );
+
+      res.send(result);
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================

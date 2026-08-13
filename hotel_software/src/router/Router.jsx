@@ -32,6 +32,7 @@ import EditMaintenanceHistory from "../pages/dashboard/rooms/maintenance/edit_ma
 import AddRoomVariant from "../pages/dashboard/rooms/add_room_variant/AddRoomVariant";
 import RoomOverview from "../pages/dashboard/rooms/room_overview/RoomOverview";
 import AddRoom from "../pages/dashboard/rooms/add_room/AddRoom";
+import EditRoomVariant from "../pages/dashboard/rooms/room_overview/edit_room_variant/EditRoomVariant";
 
 const Router = createBrowserRouter([
   {
@@ -61,9 +62,10 @@ const Router = createBrowserRouter([
       { path: "billing_and_payments", Component: Billing_and_Payments },
 
       { path: "rooms", Component: Rooms },
-      // { path: "rooms/room_overview", Component: RoomOverview },
       { path: "rooms/add_room_variant", Component: AddRoomVariant },
       { path: "rooms/room_overview", Component: RoomOverview },
+      { path: "rooms/edit_room_variant/:id", Component: EditRoomVariant },
+
       { path: "rooms/add_room/:id", Component: AddRoom },
       { path: "rooms/maintenance", Component: Maintenance },
       { path: "rooms/edit_maintenance/:id", Component: EditMaintenance },

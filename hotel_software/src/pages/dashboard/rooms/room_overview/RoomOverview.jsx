@@ -161,27 +161,29 @@ const RoomOverview = () => {
                   </div>
 
                   {/* Buttons */}
-                  <div className="flex flex-wrap justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                  <div className="flex flex-nowrap justify-end items-center gap-2 mt-6 pt-4 border-t border-gray-100">
+                    {/* Edit */}
                     <Link to={`/dashboard/rooms/edit_room_variant/${item._id}`}>
-                      <button className="flex items-center gap-2 px-4 py-2 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
-                        <AiFillEdit />
+                      <button className="btn btn-sm h-10 border border-rose-700 text-rose-700 bg-transparent hover:bg-rose-700 hover:text-white gap-1.5">
+                        <AiFillEdit className="text-base" />
                         Edit
                       </button>
                     </Link>
 
-                    <Link
-                      to={`/dashboard/rooms/add_room/${item._id}`}
-                      className="flex items-center gap-2 px-4 py-2 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-                    >
-                      <FaPlus />
-                      Add Room
+                    {/* Add Room */}
+                    <Link to={`/dashboard/rooms/add_room/${item._id}`}>
+                      <button className="btn btn-sm h-10 border border-rose-700 text-rose-700 bg-transparent hover:bg-rose-700 hover:text-white gap-1.5">
+                        <FaPlus className="text-base" />
+                        Add Room
+                      </button>
                     </Link>
 
+                    {/* Delete */}
                     <button
                       onClick={() => handleDelete(item._id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-800 text-white rounded-lg transition-colors border-none"
+                      className="btn btn-sm h-10 bg-rose-700 hover:bg-rose-800 text-white border-none gap-1.5"
                     >
-                      <AiFillDelete />
+                      <AiFillDelete className="text-base" />
                       Delete
                     </button>
                   </div>
