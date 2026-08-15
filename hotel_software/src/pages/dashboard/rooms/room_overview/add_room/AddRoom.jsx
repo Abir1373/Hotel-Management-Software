@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { RiHome3Line } from "react-icons/ri";
@@ -70,27 +70,18 @@ const AddRoom = () => {
       workEnds: data.workEnds,
     };
 
-    try {
-      const res = await axiosInstance.post("/rooms", roomData);
+    const res = await axiosInstance.post("/rooms", roomData);
 
-      if (res.status === 201 || res.data.insertedId) {
-        Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Room added successfully",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-
-        navigate("/dashboard/rooms");
-      }
-    } catch (error) {
-      console.error(error);
+    if (res.status === 201 || res.data.insertedId) {
       Swal.fire({
-        icon: "error",
-        title: "Failed!",
-        text: "Something went wrong while adding the room",
+        icon: "success",
+        title: "Success!",
+        text: "Room added successfully",
+        showConfirmButton: false,
+        timer: 1500,
       });
+
+      navigate("/dashboard/rooms");
     }
   };
 
@@ -137,7 +128,7 @@ const AddRoom = () => {
       {/* SECTION 1 - ROOM VARIANT INFORMATION */}
       {/* ================================================= */}
 
-      <div className="card  shadow-xl  mb-8">
+      <div className="card shadow-xl mb-8">
         <div className="card-body">
           <h2 className="card-title text-xl text-rose-700 mb-5">
             Room Variant Information
@@ -147,7 +138,7 @@ const AddRoom = () => {
             {/* IMAGE */}
             <div>
               <img
-                src={variant.image}
+                src={`${axiosInstance.defaults.baseURL}${variant.image}`}
                 alt={variant.variantName}
                 className="w-full h-72 md:h-80 object-cover rounded-xl"
               />
@@ -227,15 +218,10 @@ const AddRoom = () => {
                 <option value="" disabled>
                   Select room status
                 </option>
-
                 <option value="Maintenance">Maintenance</option>
-
-                <option value="Maintenance">In Progress</option>
-
+                <option value="In Progress">In Progress</option>
                 <option value="Available">Available</option>
-
                 <option value="Occupied">Occupied</option>
-
                 <option value="Reserved">Reserved</option>
               </select>
 

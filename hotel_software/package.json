@@ -17,6 +17,7 @@
     "@tanstack/react-query": "^5.101.4",
     "aos": "^2.3.4",
     "axios": "^1.19.0",
+    "express-fileupload": "^1.5.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.84.0",

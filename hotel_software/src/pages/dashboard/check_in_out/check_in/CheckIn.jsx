@@ -1,20 +1,101 @@
+import { useForm } from "react-hook-form";
+import { MdOutlinePlaylistAddCheckCircle } from "react-icons/md";
+import { RiHome3Line } from "react-icons/ri";
+import { Link } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import useAxios from "../../../../hooks/useAxios";
+
 const CheckIn = () => {
+  const axiosInstance = useAxios();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
+
+  const selectedVariantId = watch("roomVariant");
+
+  // Get all room variants
+  const { data: roomVariants = [], isLoading: variantsLoading } = useQuery({
+    queryKey: ["room-variants"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/room-variants");
+      return res.data;
+    },
+  });
+
+  // Get rooms based on selected variant
+  const { data: rooms = [], isLoading: roomsLoading } = useQuery({
+    queryKey: ["rooms-by-variant", selectedVariantId],
+    queryFn: async () => {
+      const res = await axiosInstance.get(
+        `/rooms/variant/${selectedVariantId}`,
+      );
+      return res.data;
+    },
+    enabled: !!selectedVariantId,
+  });
+
+  const onSubmit = (data) => {
+    console.log(data);
+  };
+
   return (
     <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl p-8">
-      <h1 className="text-3xl font-bold text-[#BF1E2E] mb-8">Guest Check In</h1>
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+                <MdOutlinePlaylistAddCheckCircle className="text-xl text-white" />
+              </div>
 
-      <form className="space-y-6">
+              <h1 className="text-lg font-bold text-rose-700">
+                Guest Check In
+              </h1>
+            </div>
+
+            <p className="text-gray-500 ml-12">
+              Manage guest check-ins, room assignments, and stay details.
+            </p>
+          </div>
+
+          <Link to="/dashboard/check_in_out">
+            <button
+              type="button"
+              className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <RiHome3Line className="text-xl" />
+            </button>
+          </Link>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Guest Name */}
           <div>
             <label className="label">
               <span className="label-text">Guest Name</span>
             </label>
+
             <input
               type="text"
               placeholder="John Doe"
+              {...register("guestName", {
+                required: "Guest name is required",
+              })}
               className="bg-white input input-bordered w-full"
             />
+
+            {errors.guestName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.guestName.message}
+              </p>
+            )}
           </div>
 
           {/* Reservation ID */}
@@ -22,11 +103,46 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Reservation ID</span>
             </label>
+
             <input
               type="text"
               placeholder="RES-1001"
+              {...register("reservationId")}
               className="bg-white input input-bordered w-full"
             />
+          </div>
+
+          {/* Room Variant */}
+          <div>
+            <label className="label">
+              <span className="label-text">Room Variant</span>
+            </label>
+
+            <select
+              {...register("roomVariant", {
+                required: "Room variant is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                {variantsLoading
+                  ? "Loading room variants..."
+                  : "Select room variant"}
+              </option>
+
+              {roomVariants.map((variant) => (
+                <option key={variant._id} value={variant._id}>
+                  {variant.variantName}
+                </option>
+              ))}
+            </select>
+
+            {errors.roomVariant && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.roomVariant.message}
+              </p>
+            )}
           </div>
 
           {/* Room Number */}
@@ -34,25 +150,37 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Room Number</span>
             </label>
-            <input
-              type="text"
-              placeholder="101"
-              className="bg-white input input-bordered w-full"
-            />
-          </div>
 
-          {/* Room Type */}
-          <div>
-            <label className="label">
-              <span className="label-text">Room Type</span>
-            </label>
-            <select className="select select-bordered w-full bg-white">
-              <option>Single</option>
-              <option>Double</option>
-              <option>Deluxe</option>
-              <option>Suite</option>
-              <option>Family</option>
+            <select
+              {...register("roomNumber", {
+                required: "Room number is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue=""
+              disabled={!selectedVariantId || roomsLoading}
+            >
+              <option value="" disabled>
+                {!selectedVariantId
+                  ? "Select room variant first"
+                  : roomsLoading
+                    ? "Loading rooms..."
+                    : "Select room number"}
+              </option>
+
+              {rooms
+                .filter((room) => room.roomStatus === "Available")
+                .map((room) => (
+                  <option key={room._id} value={room.roomNo}>
+                    Room {room.roomNo}
+                  </option>
+                ))}
             </select>
+
+            {errors.roomNumber && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.roomNumber.message}
+              </p>
+            )}
           </div>
 
           {/* Check In Date */}
@@ -60,10 +188,20 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Check In Date</span>
             </label>
+
             <input
               type="date"
+              {...register("checkInDate", {
+                required: "Check in date is required",
+              })}
               className="bg-white input input-bordered w-full"
             />
+
+            {errors.checkInDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.checkInDate.message}
+              </p>
+            )}
           </div>
 
           {/* Check In Time */}
@@ -71,10 +209,20 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Check In Time</span>
             </label>
+
             <input
               type="time"
+              {...register("checkInTime", {
+                required: "Check in time is required",
+              })}
               className="bg-white input input-bordered w-full"
             />
+
+            {errors.checkInTime && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.checkInTime.message}
+              </p>
+            )}
           </div>
 
           {/* Number of Guests */}
@@ -82,11 +230,26 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Number of Guests</span>
             </label>
+
             <input
               type="number"
               placeholder="2"
+              {...register("numberOfGuests", {
+                required: "Number of guests is required",
+                valueAsNumber: true,
+                min: {
+                  value: 1,
+                  message: "At least 1 guest is required",
+                },
+              })}
               className="bg-white input input-bordered w-full"
             />
+
+            {errors.numberOfGuests && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.numberOfGuests.message}
+              </p>
+            )}
           </div>
 
           {/* NID Number */}
@@ -94,9 +257,11 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">NID Number</span>
             </label>
+
             <input
               type="text"
               placeholder="Enter National ID Number"
+              {...register("nidNumber")}
               className="bg-white input input-bordered w-full"
             />
           </div>
@@ -106,9 +271,11 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Contact Number</span>
             </label>
+
             <input
               type="tel"
-              placeholder="+1 234 567 890"
+              placeholder="017XXXXXXXX"
+              {...register("contactNumber")}
               className="bg-white input input-bordered w-full"
             />
           </div>
@@ -119,7 +286,9 @@ const CheckIn = () => {
           <label className="label">
             <span className="label-text">Special Requests</span>
           </label>
+
           <textarea
+            {...register("specialRequests")}
             className="textarea textarea-bordered w-full h-32 bg-white"
             placeholder="Any special requests from the guest..."
           ></textarea>

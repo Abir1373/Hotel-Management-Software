@@ -1,8 +1,6 @@
-import React from "react";
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
-import { RiEditLine } from "react-icons/ri";
 import { IoMdSkipBackward } from "react-icons/io";
 import Swal from "sweetalert2";
 import { MdOutlineViewInAr } from "react-icons/md";
@@ -121,13 +119,6 @@ const ViewRooms = () => {
                 key={room._id}
                 className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition duration-300"
               >
-                {/* Image */}
-                <img
-                  src={room.image}
-                  alt={room.variantName}
-                  className="w-full h-52 object-cover"
-                />
-
                 {/* Content */}
                 <div className="p-5">
                   {/* Room Number + Status */}
@@ -147,7 +138,6 @@ const ViewRooms = () => {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Room Type</span>
-
                       <span className="font-semibold text-gray-800 text-right">
                         {room.variantName}
                       </span>
@@ -155,7 +145,6 @@ const ViewRooms = () => {
 
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Base Type</span>
-
                       <span className="font-semibold text-gray-800">
                         {room.baseRoomType}
                       </span>
@@ -163,7 +152,6 @@ const ViewRooms = () => {
 
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Bed</span>
-
                       <span className="font-semibold text-gray-800">
                         {room.bedType}
                       </span>
@@ -171,19 +159,32 @@ const ViewRooms = () => {
 
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Occupancy</span>
-
                       <span className="font-semibold text-gray-800">
                         {room.maxOccupancy} Persons
                       </span>
                     </div>
                   </div>
 
-                  {/* Edit Button */}
+                  {/* Status Change - Styled */}
                   <div className="flex justify-center mt-6">
                     <select
                       defaultValue={room.roomStatus}
                       onChange={(e) => changeStatus(room._id, e.target.value)}
-                      className="select select-bordered bg-white"
+                      className={`select select-bordered font-medium w-full max-w-xs
+                        ${
+                          room.roomStatus === "Available"
+                            ? "border-emerald-400 text-emerald-700 bg-emerald-50"
+                            : room.roomStatus === "Maintenance"
+                              ? "border-red-400 text-red-700 bg-red-50"
+                              : room.roomStatus === "In Progress"
+                                ? "border-violet-400 text-violet-700 bg-violet-50"
+                                : room.roomStatus === "Occupied"
+                                  ? "border-orange-400 text-orange-700 bg-orange-50"
+                                  : room.roomStatus === "Reserved"
+                                    ? "border-blue-400 text-blue-700 bg-blue-50"
+                                    : "border-gray-300 text-gray-700 bg-white"
+                        }
+                      `}
                     >
                       <option value="Available">Available</option>
                       <option value="Maintenance">Maintenance</option>

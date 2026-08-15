@@ -2,17 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { GiMushroomHouse } from "react-icons/gi";
 import { RiHome3Line } from "react-icons/ri";
-import useAxios from "../../../../hooks/useAxios";
-import Swal from "sweetalert2";
+import { FaLayerGroup, FaPlus } from "react-icons/fa";
 import { FaEye } from "react-icons/fa6";
+import useAxios from "../../../../hooks/useAxios";
 
 const RoomStatus = () => {
   const axiosInstance = useAxios();
-  const {
-    data: variants = [],
-    isLoading,
-    refetch,
-  } = useQuery({
+
+  const { data: variants = [], isLoading } = useQuery({
     queryKey: ["room-variants"],
     queryFn: async () => {
       const res = await axiosInstance.get("/room-variants");
@@ -38,9 +35,7 @@ const RoomStatus = () => {
               <GiMushroomHouse className="text-2xl text-white" />
             </div>
 
-            <div className="flex flex-row">
-              <h1 className="text-lg font-bold text-rose-700">Room Status</h1>
-            </div>
+            <h1 className="text-lg font-bold text-rose-700">Room Status</h1>
           </div>
 
           <p className="text-gray-500 ml-9">
@@ -74,7 +69,7 @@ const RoomStatus = () => {
           </p>
 
           <Link to="/dashboard/rooms/add_room_variant">
-            <button className="w-9 h-9 inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-colors">
+            <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-colors">
               <FaPlus />
               Add Room Variant
             </button>
@@ -93,7 +88,7 @@ const RoomStatus = () => {
                 {item.image ? (
                   <figure className="w-full sm:w-44 sm:min-w-44 h-56 sm:h-auto bg-gray-100">
                     <img
-                      src={item.image}
+                      src={`${axiosInstance.defaults.baseURL}${item.image}`}
                       alt={item.variantName}
                       className="h-full w-full object-cover"
                     />
@@ -152,7 +147,7 @@ const RoomStatus = () => {
 
                   {/* Buttons */}
                   <div className="flex flex-nowrap justify-end items-center gap-2 mt-6 pt-4 border-t border-gray-100">
-                    {/* View Room */}
+                    {/* View Rooms */}
                     <Link to={`/dashboard/rooms/view_rooms/${item._id}`}>
                       <button className="btn btn-sm h-10 border border-rose-700 text-rose-700 bg-transparent hover:bg-rose-700 hover:text-white gap-1.5">
                         <FaEye className="text-base" />

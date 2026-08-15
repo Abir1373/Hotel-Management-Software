@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { RiHome3Line } from "react-icons/ri";
 import { AiFillEdit } from "react-icons/ai";
 import { FaHistory } from "react-icons/fa";
@@ -116,8 +116,9 @@ const Maintenance = () => {
                       <div className="mask mask-squircle w-12 h-12">
                         <img
                           src={
-                            room.image ||
-                            "https://via.placeholder.com/150?text=No+Image"
+                            room.image
+                              ? `${axiosInstance.defaults.baseURL}${room.image}`
+                              : "https://via.placeholder.com/150?text=No+Image"
                           }
                           alt={room.variantName}
                         />

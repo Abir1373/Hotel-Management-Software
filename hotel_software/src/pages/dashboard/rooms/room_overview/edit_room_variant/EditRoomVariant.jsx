@@ -1,6 +1,5 @@
-import React from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { RiHome3Line } from "react-icons/ri";
 import Swal from "sweetalert2";
@@ -38,12 +37,31 @@ const EditRoomVariant = () => {
       bedType: variant?.bedType || "",
       amenities: variant?.amenities || "",
       description: variant?.description || "",
-      image: variant?.image || "",
     },
   });
 
   const onSubmit = async (data) => {
-    const res = await axiosInstance.patch(`/room-variants/${id}`, data);
+    const imageFile = data.image?.[0];
+
+    const formData = new FormData();
+    formData.append("variantName", data.variantName);
+    formData.append("baseRoomType", data.baseRoomType);
+    formData.append("price", data.price);
+    formData.append("maxOccupancy", data.maxOccupancy);
+    formData.append("bedType", data.bedType || "");
+    formData.append("amenities", data.amenities || "");
+    formData.append("description", data.description || "");
+
+    // Only send new image if user selected one
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+    const res = await axiosInstance.patch(`/room-variants/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     if (res.data.modifiedCount > 0 || res.data.matchedCount > 0) {
       await Swal.fire({
@@ -100,8 +118,8 @@ const EditRoomVariant = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
-              <RiHome3Line className="text-2xl text-rose-900" />
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <RiHome3Line className="text-xl text-white" />
             </div>
 
             <h1 className="text-lg font-bold text-rose-800">
@@ -124,28 +142,37 @@ const EditRoomVariant = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="card bg-white shadow-md border border-gray-100">
           <div className="card-body p-8 space-y-6">
+            {/* Current Image Preview */}
+            {variant.image && (
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">Current Image</span>
+                </label>
+
+                <div className="rounded-lg overflow-hidden border border-gray-200">
+                  <img
+                    src={`${axiosInstance.defaults.baseURL}${variant.image}`}
+                    alt={variant.variantName}
+                    className="w-full h-64 object-cover"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* New Image Upload */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-medium">Image URL</span>
+                <span className="label-text font-medium">
+                  Change Image (optional)
+                </span>
               </label>
 
               <input
-                type="url"
-                placeholder="https://example.com/room-image.jpg"
-                {...register("image", {
-                  pattern: {
-                    value: /^https?:\/\/.+/i,
-                    message: "Please enter a valid image URL",
-                  },
-                })}
-                className="input input-bordered w-full bg-white"
+                type="file"
+                accept="image/*"
+                {...register("image")}
+                className="file-input file-input-bordered w-full bg-white"
               />
-
-              {errors.image && (
-                <p className="text-error text-sm mt-1">
-                  {errors.image.message}
-                </p>
-              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -262,12 +289,6 @@ const EditRoomVariant = () => {
                   {...register("bedType")}
                   className="input input-bordered w-full bg-white"
                 />
-
-                {errors.bedType && (
-                  <p className="text-error text-sm mt-1">
-                    {errors.bedType.message}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -296,22 +317,6 @@ const EditRoomVariant = () => {
                 className="textarea textarea-bordered w-full bg-white"
               ></textarea>
             </div>
-
-            {variant.image && (
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Current Image</span>
-                </label>
-
-                <div className="rounded-lg overflow-hidden border border-gray-200">
-                  <img
-                    src={variant.image}
-                    alt={variant.variantName}
-                    className="w-full h-64 object-cover"
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="flex justify-end gap-3 pt-5">
               <Link to="/dashboard/rooms/room_overview">

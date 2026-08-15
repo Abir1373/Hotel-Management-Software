@@ -28,41 +28,66 @@ const AddRoomVariant = () => {
   });
 
   const onSubmit = async (data) => {
-    const payload = {
-      ...data,
-      price: Number(data.price),
-      maxOccupancy: Number(data.maxOccupancy),
-    };
+    const imageFile = data.image?.[0];
 
-    await axiosInstance.post("/add-room-variant", payload);
+    if (!imageFile) {
+      Swal.fire({
+        title: "Image Required",
+        text: "Please select a room image.",
+        icon: "warning",
+        confirmButtonColor: "#9f1239",
+      });
+      return;
+    }
 
-    Swal.fire({
-      title: "Success!",
-      text: "Room variant added successfully.",
-      icon: "success",
-      confirmButtonColor: "#9f1239",
+    const formData = new FormData();
+    formData.append("image", imageFile);
+    formData.append("variantName", data.variantName);
+    formData.append("baseRoomType", data.baseRoomType);
+    formData.append("price", data.price);
+    formData.append("maxOccupancy", data.maxOccupancy);
+    formData.append("bedType", data.bedType || "");
+    formData.append("amenities", data.amenities || "");
+    formData.append("description", data.description || "");
+
+    const res = await axiosInstance.post("/add-room-variant", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
 
-    reset();
-    navigate("/dashboard/rooms");
+    if (res.data.insertedId) {
+      await Swal.fire({
+        title: "Success!",
+        text: "Room variant added successfully.",
+        icon: "success",
+        confirmButtonColor: "#9f1239",
+      });
+
+      reset();
+      navigate("/dashboard/rooms");
+    }
   };
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <FaLayerGroup className="text-2xl text-rose-700" />
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <FaLayerGroup className="text-xl text-white" />
             </div>
 
             <h1 className="text-lg font-bold text-rose-700">
               Add Room Variant
             </h1>
           </div>
+
           <Link to="/dashboard/rooms">
-            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+            <button
+              type="button"
+              className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
               <RiHome3Line className="text-xl" />
             </button>
           </Link>
@@ -73,21 +98,28 @@ const AddRoomVariant = () => {
         </p>
       </div>
 
-      {/* Form Card */}
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Image URL */}
+          {/* Image */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Image URL
+              Room Image <span className="text-rose-700">*</span>
             </label>
 
             <input
-              type="url"
-              placeholder="https://example.com/room-image.jpg"
-              {...register("image")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
+              type="file"
+              accept="image/*"
+              {...register("image", {
+                required: "Room image is required",
+              })}
+              className="file-input file-input-bordered w-full bg-white"
             />
+
+            {errors.image && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.image.message}
+              </p>
+            )}
           </div>
 
           {/* Row 1 */}
@@ -147,7 +179,7 @@ const AddRoomVariant = () => {
 
               <input
                 type="number"
-                placeholder="e.g. 150"
+                placeholder="e.g. 550"
                 min="0"
                 {...register("price", {
                   required: "Price is required",
@@ -210,7 +242,7 @@ const AddRoomVariant = () => {
               type="text"
               placeholder="e.g. WiFi, AC, Mini Bar, Balcony"
               {...register("amenities")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
             />
           </div>
 

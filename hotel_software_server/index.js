@@ -2,10 +2,12 @@
 require("node:dns").setServers(["8.8.8.8", "1.1.1.1"]);
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const fileUpload = require("express-fileupload");
+const path = require("path");
+const fs = require("fs");
 
 dotenv.config();
 
@@ -15,6 +17,8 @@ const port = process.env.port || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(fileUpload());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dmnxhxd.mongodb.net/?appName=Cluster0`;
@@ -351,7 +355,45 @@ async function run() {
 
     // Add room variant
     app.post("/add-room-variant", async (req, res) => {
-      const result = await roomVariantCollection.insertOne(req.body);
+      if (!req.files || !req.files.image) {
+        return res.status(400).json({ message: "Image is required" });
+      }
+
+      const image = req.files.image;
+
+      if (!image.mimetype.startsWith("image/")) {
+        return res
+          .status(400)
+          .json({ message: "Only image files are allowed" });
+      }
+
+      const uploadDir = path.join(__dirname, "uploads", "room-variants");
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const uniqueName =
+        Date.now() +
+        "-" +
+        Math.round(Math.random() * 1e9) +
+        path.extname(image.name);
+
+      const uploadPath = path.join(uploadDir, uniqueName);
+      await image.mv(uploadPath);
+
+      const roomVariant = {
+        variantName: req.body.variantName,
+        baseRoomType: req.body.baseRoomType,
+        price: Number(req.body.price),
+        maxOccupancy: Number(req.body.maxOccupancy),
+        bedType: req.body.bedType || "",
+        amenities: req.body.amenities || "",
+        description: req.body.description || "",
+        image: `/uploads/room-variants/${uniqueName}`,
+        createdAt: new Date(),
+      };
+
+      const result = await roomVariantCollection.insertOne(roomVariant);
       res.status(201).json(result);
     });
 
@@ -361,14 +403,30 @@ async function run() {
       res.send(result);
     });
 
+    // Get single room variant by ID  ← THIS WAS MISSING
     app.get("/room-variants/:id", async (req, res) => {
       const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({
+          message: "Invalid room variant ID",
+        });
+      }
+
       const result = await roomVariantCollection.findOne({
         _id: new ObjectId(id),
       });
+
+      if (!result) {
+        return res.status(404).send({
+          message: "Room variant not found",
+        });
+      }
+
       res.send(result);
     });
 
+    // Update room variant
     app.patch("/room-variants/:id", async (req, res) => {
       const { id } = req.params;
 
@@ -378,9 +436,6 @@ async function run() {
         });
       }
 
-      const { _id, ...updateData } = req.body;
-
-      // Get existing variant
       const existingVariant = await roomVariantCollection.findOne({
         _id: new ObjectId(id),
       });
@@ -393,13 +448,50 @@ async function run() {
 
       const oldVariantName = existingVariant.variantName;
 
+      const updateData = {
+        variantName: req.body.variantName,
+        baseRoomType: req.body.baseRoomType,
+        price: Number(req.body.price),
+        maxOccupancy: Number(req.body.maxOccupancy),
+        bedType: req.body.bedType || "",
+        amenities: req.body.amenities || "",
+        description: req.body.description || "",
+      };
+
+      // If a new image was uploaded
+      if (req.files && req.files.image) {
+        const image = req.files.image;
+
+        if (!image.mimetype.startsWith("image/")) {
+          return res
+            .status(400)
+            .json({ message: "Only image files are allowed" });
+        }
+
+        const uploadDir = path.join(__dirname, "uploads", "room-variants");
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        const uniqueName =
+          Date.now() +
+          "-" +
+          Math.round(Math.random() * 1e9) +
+          path.extname(image.name);
+
+        const uploadPath = path.join(uploadDir, uniqueName);
+        await image.mv(uploadPath);
+
+        updateData.image = `/uploads/room-variants/${uniqueName}`;
+      }
+
       // 1. Update the variant itself
       const result = await roomVariantCollection.updateOne(
         { _id: new ObjectId(id) },
         { $set: updateData },
       );
 
-      // 2. Only update the shared fields in rooms
+      // 2. Update related rooms
       const roomsUpdateData = {
         variantName: updateData.variantName,
         baseRoomType: updateData.baseRoomType,
@@ -408,8 +500,11 @@ async function run() {
         bedType: updateData.bedType,
         amenities: updateData.amenities,
         description: updateData.description,
-        image: updateData.image,
       };
+
+      if (updateData.image) {
+        roomsUpdateData.image = updateData.image;
+      }
 
       await roomCollection.updateMany(
         { variantName: oldVariantName },
@@ -419,6 +514,7 @@ async function run() {
       res.send(result);
     });
 
+    // Delete room variant
     app.delete("/room-variants/:id", async (req, res) => {
       const { id } = req.params;
 
@@ -428,7 +524,6 @@ async function run() {
         });
       }
 
-      // Get existing variant
       const existingVariant = await roomVariantCollection.findOne({
         _id: new ObjectId(id),
       });
@@ -454,6 +549,7 @@ async function run() {
       res.send(result);
     });
 
+    // Get rooms by variant ID
     app.get("/rooms/variant/:variantId", async (req, res) => {
       const { variantId } = req.params;
 
@@ -484,7 +580,6 @@ async function run() {
     });
   } finally {
     // Keep MongoDB connection open while server is running
-    // await client.close();
   }
 }
 

@@ -41,7 +41,7 @@ const RoomOverview = () => {
             icon: "success",
             confirmButtonColor: "#BF1E2E",
           });
-          refetch(); // if you have react-query refetch
+          refetch();
         }
       }
     });
@@ -61,8 +61,8 @@ const RoomOverview = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <FaLayerGroup className="text-2xl text-rose-700" />
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <FaLayerGroup className="text-xl text-white" />
             </div>
 
             <h1 className="text-lg font-bold text-rose-700">Room Overview</h1>
@@ -125,7 +125,7 @@ const RoomOverview = () => {
                 {item.image ? (
                   <figure className="w-full sm:w-44 sm:min-w-44 h-56 sm:h-auto bg-gray-100">
                     <img
-                      src={item.image}
+                      src={`${axiosInstance.defaults.baseURL}${item.image}`}
                       alt={item.variantName}
                       className="h-full w-full object-cover"
                     />
