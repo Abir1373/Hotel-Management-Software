@@ -454,6 +454,18 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/rooms/variant/:variantId", async (req, res) => {
+      const { variantId } = req.params;
+
+      const rooms = await roomCollection
+        .find({
+          variantId: variantId,
+        })
+        .toArray();
+
+      res.send(rooms);
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================
