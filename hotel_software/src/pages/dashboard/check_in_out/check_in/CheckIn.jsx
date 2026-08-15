@@ -1,12 +1,14 @@
 import { useForm } from "react-hook-form";
 import { MdOutlinePlaylistAddCheckCircle } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
+import Swal from "sweetalert2";
 
 const CheckIn = () => {
   const axiosInstance = useAxios();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -17,7 +19,6 @@ const CheckIn = () => {
 
   const selectedVariantId = watch("roomVariant");
 
-  // Get all room variants
   const { data: roomVariants = [], isLoading: variantsLoading } = useQuery({
     queryKey: ["room-variants"],
     queryFn: async () => {
@@ -26,7 +27,6 @@ const CheckIn = () => {
     },
   });
 
-  // Get rooms based on selected variant
   const { data: rooms = [], isLoading: roomsLoading } = useQuery({
     queryKey: ["rooms-by-variant", selectedVariantId],
     queryFn: async () => {
@@ -38,8 +38,20 @@ const CheckIn = () => {
     enabled: !!selectedVariantId,
   });
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const onSubmit = async (data) => {
+    const res = await axiosInstance.post("/check-in", data);
+
+    if (res.data.insertedId) {
+      await Swal.fire({
+        title: "Success!",
+        text: "Guest checked in successfully.",
+        icon: "success",
+        confirmButtonColor: "#9f1239",
+      });
+
+      // Optional: reset form or navigate
+      navigate("/dashboard/check_in_out");
+    }
   };
 
   return (
@@ -98,18 +110,128 @@ const CheckIn = () => {
             )}
           </div>
 
-          {/* Reservation ID */}
+          {/* Guest Address */}
           <div>
             <label className="label">
-              <span className="label-text">Reservation ID</span>
+              <span className="label-text">Guest Address</span>
             </label>
 
             <input
               type="text"
-              placeholder="RES-1001"
-              {...register("reservationId")}
+              placeholder="Enter guest address"
+              {...register("guestAddress", {
+                required: "Guest address is required",
+              })}
               className="bg-white input input-bordered w-full"
             />
+
+            {errors.guestAddress && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.guestAddress.message}
+              </p>
+            )}
+          </div>
+
+          {/* Contact Number */}
+          <div>
+            <label className="label">
+              <span className="label-text">Contact Number</span>
+            </label>
+
+            <input
+              type="tel"
+              placeholder="017XXXXXXXX"
+              {...register("contactNumber", {
+                required: "Contact number is required",
+              })}
+              className="bg-white input input-bordered w-full"
+            />
+
+            {errors.contactNumber && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.contactNumber.message}
+              </p>
+            )}
+          </div>
+
+          {/* Guest Designation */}
+          <div>
+            <label className="label">
+              <span className="label-text">Guest Designation</span>
+            </label>
+
+            <input
+              type="text"
+              placeholder="e.g. Manager, Student, Businessman"
+              {...register("designation", {
+                required: "Designation is required",
+              })}
+              className="bg-white input input-bordered w-full"
+            />
+
+            {errors.designation && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.designation.message}
+              </p>
+            )}
+          </div>
+
+          {/* NID Number */}
+          <div>
+            <label className="label">
+              <span className="label-text">NID Number</span>
+            </label>
+
+            <input
+              type="text"
+              placeholder="Enter National ID Number"
+              {...register("nidNumber")}
+              className="bg-white input input-bordered w-full"
+            />
+          </div>
+
+          {/* NID Image */}
+          <div>
+            <label className="label">
+              <span className="label-text">NID Image</span>
+            </label>
+
+            <input
+              type="file"
+              accept="image/*"
+              {...register("nidImage", {
+                required: "NID image is required",
+              })}
+              className="file-input file-input-bordered w-full bg-white"
+            />
+
+            {errors.nidImage && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.nidImage.message}
+              </p>
+            )}
+          </div>
+
+          {/* Person Image */}
+          <div>
+            <label className="label">
+              <span className="label-text">Person Image</span>
+            </label>
+
+            <input
+              type="file"
+              accept="image/*"
+              {...register("personImage", {
+                required: "Person image is required",
+              })}
+              className="file-input file-input-bordered w-full bg-white"
+            />
+
+            {errors.personImage && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.personImage.message}
+              </p>
+            )}
           </div>
 
           {/* Room Variant */}
@@ -250,34 +372,6 @@ const CheckIn = () => {
                 {errors.numberOfGuests.message}
               </p>
             )}
-          </div>
-
-          {/* NID Number */}
-          <div>
-            <label className="label">
-              <span className="label-text">NID Number</span>
-            </label>
-
-            <input
-              type="text"
-              placeholder="Enter National ID Number"
-              {...register("nidNumber")}
-              className="bg-white input input-bordered w-full"
-            />
-          </div>
-
-          {/* Contact Number */}
-          <div>
-            <label className="label">
-              <span className="label-text">Contact Number</span>
-            </label>
-
-            <input
-              type="tel"
-              placeholder="017XXXXXXXX"
-              {...register("contactNumber")}
-              className="bg-white input input-bordered w-full"
-            />
           </div>
         </div>
 

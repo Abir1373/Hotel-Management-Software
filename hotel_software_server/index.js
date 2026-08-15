@@ -46,6 +46,7 @@ async function run() {
     const roomCollection = db.collection("Rooms");
     const maintenanceHistoryCollection = db.collection("Maintenance History");
     const roomVariantCollection = db.collection("Room Variants");
+    const checkInCollection = db.collection("CheckInList");
 
     // =========================================================
     // ROOT
@@ -560,6 +561,17 @@ async function run() {
         .toArray();
 
       res.send(rooms);
+    });
+
+    // Check-Ins
+    app.post("/check-in", async (req, res) => {
+      const checkInData = {
+        ...req.body,
+        createdAt: new Date(),
+      };
+
+      const result = await checkInCollection.insertOne(checkInData);
+      res.status(201).send(result);
     });
 
     // =========================================================
