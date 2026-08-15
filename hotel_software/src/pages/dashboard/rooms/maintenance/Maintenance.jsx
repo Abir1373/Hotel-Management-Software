@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { RiHome3Line } from "react-icons/ri";
 import { AiFillEdit } from "react-icons/ai";
 import { FaHistory } from "react-icons/fa";
+import { LuNetwork } from "react-icons/lu";
 
 const Maintenance = () => {
   const axiosInstance = useAxios();
@@ -47,7 +48,18 @@ const Maintenance = () => {
       {/* Header */}
       <div className="flex flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex flex-col gap-2">
-          <h1 className="text-lg font-bold text-rose-700">Maintain Rooms</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <LuNetwork className="text-2xl text-rose-400" />
+            </div>
+
+            <div className="flex flex-row">
+              <h1 className="text-lg font-bold text-rose-700">
+                Maintain Rooms
+              </h1>
+            </div>
+          </div>
+
           <p className="text-gray-500">List of under maintenance room/s</p>
         </div>
 

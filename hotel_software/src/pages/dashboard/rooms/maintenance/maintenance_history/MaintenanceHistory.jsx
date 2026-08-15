@@ -5,6 +5,7 @@ import { AiFillEdit, AiFillDelete } from "react-icons/ai";
 import Swal from "sweetalert2";
 import useAxios from "../../../../../hooks/useAxios";
 import { RiHome3Line } from "react-icons/ri";
+import { MdManageHistory } from "react-icons/md";
 
 const MaintenanceHistory = () => {
   const axiosInstance = useAxios();
@@ -58,9 +59,17 @@ const MaintenanceHistory = () => {
     <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-lg font-bold text-[#BF1E2E]">
-          Maintenance History
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+            <MdManageHistory className="text-2xl text-rose-400" />
+          </div>
+
+          <div className="flex flex-row">
+            <h1 className="text-lg font-bold text-[#BF1E2E]">
+              Maintenance History
+            </h1>
+          </div>
+        </div>
 
         <Link to="/dashboard/rooms">
           <button type="button" className="btn btn-outline btn-secondary">

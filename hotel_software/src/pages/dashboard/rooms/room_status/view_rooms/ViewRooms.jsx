@@ -77,7 +77,7 @@ const ViewRooms = () => {
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
               <MdOutlineViewInAr className="text-2xl text-rose-400" />
             </div>
-            <h1 className="text-xl font-bold text-rose-800">View Rooms</h1>
+            <h1 className="text-xl font-bold text-rose-400">View Rooms</h1>
           </div>
           <Link to="/dashboard/rooms/room_status">
             <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
