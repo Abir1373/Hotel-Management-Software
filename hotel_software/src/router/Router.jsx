@@ -33,9 +33,8 @@ import AddRoomVariant from "../pages/dashboard/rooms/add_room_variant/AddRoomVar
 import RoomOverview from "../pages/dashboard/rooms/room_overview/RoomOverview";
 import EditRoomVariant from "../pages/dashboard/rooms/room_overview/edit_room_variant/EditRoomVariant";
 import AddRoom from "../pages/dashboard/rooms/room_overview/add_room/AddRoom";
-import RoomStatus from "../pages/dashboard/rooms/room_status/view_rooms/RoomStatus";
-import ViewRooms from "../pages/dashboard/rooms/room_status/view_rooms/ViewRooms";
-
+import ViewRooms from "../pages/dashboard/rooms/room_status/ViewRooms";
+import RoomStatus from "../pages/dashboard/rooms/room_status/RoomStatus";
 const Router = createBrowserRouter([
   {
     path: "/",

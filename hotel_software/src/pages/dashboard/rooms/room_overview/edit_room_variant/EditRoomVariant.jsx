@@ -101,10 +101,10 @@ const EditRoomVariant = () => {
         <div>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
-              <RiHome3Line className="text-2xl text-rose-500" />
+              <RiHome3Line className="text-2xl text-rose-900" />
             </div>
 
-            <h1 className="text-xl font-bold text-rose-800">
+            <h1 className="text-lg font-bold text-rose-800">
               Edit Room Variant
             </h1>
           </div>
@@ -115,10 +115,7 @@ const EditRoomVariant = () => {
         </div>
 
         <Link to="/dashboard/rooms/room_overview">
-          <button
-            type="button"
-            className="btn btn-outline border-rose-800 text-rose-800 hover:bg-rose-800 hover:text-white"
-          >
+          <button className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
             <RiHome3Line className="text-2xl" />
           </button>
         </Link>

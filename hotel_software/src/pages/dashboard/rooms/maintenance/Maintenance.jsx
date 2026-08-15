@@ -49,8 +49,8 @@ const Maintenance = () => {
       <div className="flex flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <LuNetwork className="text-2xl text-rose-400" />
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <LuNetwork className="text-xl text-white" />
             </div>
 
             <div className="flex flex-row">
@@ -65,13 +65,13 @@ const Maintenance = () => {
 
         <div className="flex flex-row gap-3">
           <Link to="/dashboard/rooms/maintenance_history">
-            <button className="btn btn-outline btn-secondary">
-              <FaHistory className="text-2xl" />
+            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+              <FaHistory className="text-xl" />
             </button>
           </Link>
           <Link to="/dashboard/rooms">
-            <button className="btn btn-outline btn-secondary">
-              <RiHome3Line className="text-2xl" />
+            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+              <RiHome3Line className="text-xl" />
             </button>
           </Link>
         </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import useAxios from "../../../../../hooks/useAxios";
+import useAxios from "../../../../hooks/useAxios";
 import { RiEditLine } from "react-icons/ri";
 import { IoMdSkipBackward } from "react-icons/io";
 import Swal from "sweetalert2";
@@ -74,14 +74,14 @@ const ViewRooms = () => {
       <div className="mb-8">
         <div className="flex flex-row justify-between">
           <div className="flex flex-row gap-5 justify-center items-center">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <MdOutlineViewInAr className="text-2xl text-rose-400" />
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <MdOutlineViewInAr className="text-2xl text-white" />
             </div>
-            <h1 className="text-xl font-bold text-rose-400">View Rooms</h1>
+            <h1 className="text-lg font-bold text-rose-700">View Rooms</h1>
           </div>
           <Link to="/dashboard/rooms/room_status">
-            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
-              <IoMdSkipBackward className="text-xl" />
+            <button className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+              <IoMdSkipBackward className="text-lg" />
             </button>
           </Link>
         </div>

@@ -60,8 +60,8 @@ const MaintenanceHistory = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-            <MdManageHistory className="text-2xl text-rose-400" />
+          <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <MdManageHistory className="text-2xl text-white" />
           </div>
 
           <div className="flex flex-row">
@@ -72,8 +72,8 @@ const MaintenanceHistory = () => {
         </div>
 
         <Link to="/dashboard/rooms">
-          <button type="button" className="btn btn-outline btn-secondary">
-            <RiHome3Line className="text-2xl" />
+          <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+            <RiHome3Line className="text-xl" />
           </button>
         </Link>
       </div>

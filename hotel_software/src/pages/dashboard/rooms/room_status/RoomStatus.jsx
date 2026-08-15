@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { GiMushroomHouse } from "react-icons/gi";
 import { RiHome3Line } from "react-icons/ri";
-import useAxios from "../../../../../hooks/useAxios";
+import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
 import { FaEye } from "react-icons/fa6";
 
@@ -34,12 +34,12 @@ const RoomStatus = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <GiMushroomHouse className="text-2xl text-rose-400" />
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <GiMushroomHouse className="text-2xl text-white" />
             </div>
 
             <div className="flex flex-row">
-              <h1 className="text-xl font-bold text-rose-400">Room Status</h1>
+              <h1 className="text-lg font-bold text-rose-700">Room Status</h1>
             </div>
           </div>
 
@@ -74,7 +74,7 @@ const RoomStatus = () => {
           </p>
 
           <Link to="/dashboard/rooms/add_room_variant">
-            <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-400 text-white rounded-lg transition-colors">
+            <button className="w-9 h-9 inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-colors">
               <FaPlus />
               Add Room Variant
             </button>
@@ -108,7 +108,7 @@ const RoomStatus = () => {
                 <div className="p-6 flex-1">
                   {/* Title + Price */}
                   <div className="flex justify-between items-start gap-3 mb-4">
-                    <h2 className="text-xl font-bold text-rose-400">
+                    <h2 className="text-lg font-bold text-rose-700">
                       {item.variantName || "Unnamed Variant"}
                     </h2>
 

@@ -57,7 +57,7 @@ const AddRoomVariant = () => {
               <FaLayerGroup className="text-2xl text-rose-700" />
             </div>
 
-            <h1 className="text-xl font-bold text-rose-700">
+            <h1 className="text-lg font-bold text-rose-700">
               Add Room Variant
             </h1>
           </div>

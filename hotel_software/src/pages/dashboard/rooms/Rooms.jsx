@@ -6,10 +6,10 @@ const Rooms = () => {
   return (
     <div className="p-6">
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-          <MdMeetingRoom className="text-2xl text-rose-400" />
+        <div className="w-12 h-12 rounded-full bg-rose-700 flex items-center justify-center">
+          <MdMeetingRoom className="text-2xl text-white" />
         </div>
-        <h1 className="text-xl font-bold text-rose-400">Room Management</h1>
+        <h1 className="text-lg font-bold text-rose-700">Room Management</h1>
       </div>
 
       <p className="text-gray-500 mb-10 ml-9">
@@ -23,10 +23,10 @@ const Rooms = () => {
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaBed className="text-xl text-rose-400 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+            <FaBed className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-rose-400 mb-3">
+          <h2 className="text-lg font-bold text-rose-700 mb-3">
             Room Overview
           </h2>
 
@@ -41,10 +41,10 @@ const Rooms = () => {
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaLayerGroup className="text-xl text-rose-400 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+            <FaLayerGroup className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-rose-400 mb-3">
+          <h2 className="text-lg font-bold text-rose-700 mb-3">
             Add Room Variant
           </h2>
 
@@ -59,10 +59,10 @@ const Rooms = () => {
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaDoorOpen className="text-xl text-rose-400 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+            <FaDoorOpen className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-rose-400 mb-3">Room Status</h2>
+          <h2 className="text-lg font-bold text-rose-700 mb-3">Room Status</h2>
 
           <p className="text-gray-600 text-sm">
             Monitor available, occupied, reserved, and vacant rooms.
@@ -75,10 +75,10 @@ const Rooms = () => {
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaTools className="text-xl text-rose-400 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+            <FaTools className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-rose-400 mb-3">Maintenance</h2>
+          <h2 className="text-lg font-bold text-rose-700 mb-3">Maintenance</h2>
 
           <p className="text-gray-600 text-sm">
             Track rooms under maintenance and schedule repairs.

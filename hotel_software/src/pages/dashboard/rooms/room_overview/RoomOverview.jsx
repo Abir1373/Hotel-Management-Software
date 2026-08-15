@@ -62,10 +62,10 @@ const RoomOverview = () => {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-              <FaLayerGroup className="text-2xl text-rose-400" />
+              <FaLayerGroup className="text-2xl text-rose-700" />
             </div>
 
-            <h1 className="text-xl font-bold text-rose-400">Room Overview</h1>
+            <h1 className="text-lg font-bold text-rose-700">Room Overview</h1>
           </div>
 
           <p className="text-gray-500 ml-9">
@@ -76,15 +76,15 @@ const RoomOverview = () => {
         {/* Header Buttons */}
         <div className="flex items-center gap-3">
           <Link to="/dashboard/rooms/add_room_variant">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-800 text-white rounded-lg transition-colors border-none">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-rose-700 text-white rounded-lg transition-colors border-none">
               <FaPlus />
-              Add Room Variant
+              <span className="text-sm">Add Room Variant</span>
             </button>
           </Link>
 
           <Link to="/dashboard/rooms">
-            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
-              <RiHome3Line className="text-xl" />
+            <button className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+              <RiHome3Line className="text-2xl" />
             </button>
           </Link>
         </div>
@@ -140,7 +140,7 @@ const RoomOverview = () => {
                 <div className="p-6 flex-1">
                   {/* Title + Price */}
                   <div className="flex justify-between items-start gap-3 mb-4">
-                    <h2 className="text-xl font-bold text-rose-400">
+                    <h2 className="text-lg font-bold text-rose-700">
                       {item.variantName || "Unnamed Variant"}
                     </h2>
 

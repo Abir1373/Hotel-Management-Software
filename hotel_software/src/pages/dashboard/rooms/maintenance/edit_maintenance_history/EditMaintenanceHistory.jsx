@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../../hooks/useAxios";
 import Swal from "sweetalert2";
 import { FaBackward } from "react-icons/fa";
+import { MdTimelapse } from "react-icons/md";
 
 const EditMaintenanceHistory = () => {
   const { id } = useParams();
@@ -88,22 +89,27 @@ const EditMaintenanceHistory = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-lg font-bold text-rose-800">
-            Edit Maintenance History
-          </h1>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <MdTimelapse className="text-2xl text-white" />
+            </div>
+
+            <div className="flex flex-row">
+              <h1 className="text-lg font-bold text-rose-800">
+                Edit Maintenance History
+              </h1>
+            </div>
+          </div>
 
           <p className="text-gray-500 mt-1">Update maintenance record</p>
         </div>
 
         <Link to="/dashboard/rooms/maintenance_history">
-          <button
-            type="button"
-            className="btn btn-outline border-rose-800 text-rose-800 hover:bg-rose-800 hover:text-white"
-          >
+          <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
             <FaBackward className="text-sm" />
           </button>
         </Link>
