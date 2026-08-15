@@ -14,7 +14,6 @@ const AddRoom = () => {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -30,6 +29,7 @@ const AddRoom = () => {
   });
 
   // Get room variant
+
   const {
     data: variant = {},
     isLoading,
@@ -42,8 +42,6 @@ const AddRoom = () => {
     },
     enabled: !!id,
   });
-
-  const roomStatus = watch("roomStatus");
 
   const onSubmit = async (data) => {
     const roomData = {

@@ -1,4 +1,3 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import { Link, useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";

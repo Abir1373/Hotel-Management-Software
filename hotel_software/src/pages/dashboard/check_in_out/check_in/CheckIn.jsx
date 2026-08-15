@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { MdOutlinePlaylistAddCheckCircle } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { Link, useNavigate } from "react-router";
@@ -13,11 +13,14 @@ const CheckIn = () => {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm();
 
-  const selectedVariantId = watch("roomVariant");
+  const selectedVariantId = useWatch({
+    control,
+    name: "roomVariant",
+  });
 
   const { data: roomVariants = [], isLoading: variantsLoading } = useQuery({
     queryKey: ["room-variants"],
@@ -26,7 +29,6 @@ const CheckIn = () => {
       return res.data;
     },
   });
-
   const { data: rooms = [], isLoading: roomsLoading } = useQuery({
     queryKey: ["rooms-by-variant", selectedVariantId],
     queryFn: async () => {
@@ -55,7 +57,7 @@ const CheckIn = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl p-8">
+    <div className="mx-auto bg-white shadow-lg rounded-2xl p-5">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between">
