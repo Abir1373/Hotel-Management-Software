@@ -169,14 +169,18 @@ const PresentGuestList = () => {
                       </option>
 
                       <option value="Ban" className="bg-white text-black">
-                        Banned
+                        Ban
                       </option>
                     </select>
                   </td>
                   <td>
-                    <button className="btn btn-accent text-xl text-white m-2 rouded-2xl">
-                      <FaUserEdit />
-                    </button>
+                    <Link
+                      to={`/dashboard/guests/edit_guest_info/${checkIn._id}`}
+                    >
+                      <button className="btn btn-accent text-xl text-white m-2 rounded-2xl">
+                        <FaUserEdit />
+                      </button>
+                    </Link>
                   </td>
                 </tr>
               ))

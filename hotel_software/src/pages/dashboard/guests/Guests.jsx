@@ -5,8 +5,8 @@ const Guests = () => {
   return (
     <div className="p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-          <FaVanShuttle className="text-2xl text-[#BF1E2E]" />
+        <div className="w-12 h-12 rounded-full bg-rose-700 flex items-center justify-center">
+          <FaVanShuttle className="text-2xl text-white" />
         </div>
 
         <h1 className="text-xl font-bold text-[#BF1E2E]">Guest Management</h1>

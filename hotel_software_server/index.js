@@ -579,6 +579,43 @@ async function run() {
       res.send(result);
     });
 
+    // Get single check-in
+    app.get("/check-in/:id", async (req, res) => {
+      const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ message: "Invalid ID" });
+      }
+
+      const result = await checkInCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      res.send(result);
+    });
+
+    app.patch("/check-in/:id", async (req, res) => {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({
+          message: "Invalid guest ID",
+        });
+      }
+
+      const result = await checkInCollection.updateOne(
+        {
+          _id: new ObjectId(id),
+        },
+        {
+          $set: updateData,
+        },
+      );
+
+      res.send(result);
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================
