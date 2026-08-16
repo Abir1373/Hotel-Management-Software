@@ -574,6 +574,11 @@ async function run() {
       res.status(201).send(result);
     });
 
+    app.get("/check-in", async (req, res) => {
+      const result = await checkInCollection.find().toArray();
+      res.send(result);
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================

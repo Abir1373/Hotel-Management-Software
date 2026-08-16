@@ -35,6 +35,7 @@ import EditRoomVariant from "../pages/dashboard/rooms/room_overview/edit_room_va
 import AddRoom from "../pages/dashboard/rooms/room_overview/add_room/AddRoom";
 import ViewRooms from "../pages/dashboard/rooms/room_status/ViewRooms";
 import RoomStatus from "../pages/dashboard/rooms/room_status/RoomStatus";
+import PresentGuestList from "../pages/dashboard/guests/present_guest_list/PresentGuestList";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -111,6 +112,7 @@ const Router = createBrowserRouter([
       { path: "employees/edit/:id", Component: EditEmployee },
 
       { path: "guests", Component: Guests },
+      { path: "guests/present_guest_list", Component: PresentGuestList },
 
       { path: "reservations", Component: Reservations },
       {

@@ -1,10 +1,11 @@
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { MdOutlinePlaylistAddCheckCircle } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
+import { useMemo } from "react";
 
 const CheckIn = () => {
   const axiosInstance = useAxios();
@@ -13,15 +14,20 @@ const CheckIn = () => {
   const {
     register,
     handleSubmit,
-    control,
+    watch,
     formState: { errors },
-  } = useForm();
-
-  const selectedVariantId = useWatch({
-    control,
-    name: "roomVariant",
+  } = useForm({
+    defaultValues: {
+      advancePayment: 0,
+    },
   });
 
+  const selectedVariantId = watch("roomVariant");
+  const checkInDate = watch("checkInDate");
+  const checkOutDate = watch("checkOutDate");
+  const advancePayment = watch("advancePayment");
+
+  // Get all room variants
   const { data: roomVariants = [], isLoading: variantsLoading } = useQuery({
     queryKey: ["room-variants"],
     queryFn: async () => {
@@ -29,6 +35,8 @@ const CheckIn = () => {
       return res.data;
     },
   });
+
+  // Get rooms of selected variant
   const { data: rooms = [], isLoading: roomsLoading } = useQuery({
     queryKey: ["rooms-by-variant", selectedVariantId],
     queryFn: async () => {
@@ -40,8 +48,89 @@ const CheckIn = () => {
     enabled: !!selectedVariantId,
   });
 
+  // Selected variant object
+  const selectedVariant = useMemo(() => {
+    return roomVariants.find((v) => v._id === selectedVariantId);
+  }, [roomVariants, selectedVariantId]);
+
+  // Calculate number of nights
+  const nights = useMemo(() => {
+    if (!checkInDate || !checkOutDate) return 0;
+
+    const inDate = new Date(checkInDate);
+    const outDate = new Date(checkOutDate);
+
+    const diffTime = outDate - inDate;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays > 0 ? diffDays : 0;
+  }, [checkInDate, checkOutDate]);
+
+  // Calculate total amount
+  const totalAmount = useMemo(() => {
+    if (!selectedVariant || nights === 0) return 0;
+    return selectedVariant.price * nights;
+  }, [selectedVariant, nights]);
+
+  // Calculate due amount
+  const dueAmount = useMemo(() => {
+    const advance = Number(advancePayment) || 0;
+    return totalAmount - advance >= 0 ? totalAmount - advance : 0;
+  }, [totalAmount, advancePayment]);
+
   const onSubmit = async (data) => {
-    const res = await axiosInstance.post("/check-in", data);
+    const nidImageFile = data.nidImage?.[0];
+    const personImageFile = data.personImage?.[0];
+
+    if (!nidImageFile || !personImageFile) {
+      Swal.fire({
+        title: "Images Required",
+        text: "Please upload both NID image and Person image.",
+        icon: "warning",
+        confirmButtonColor: "#9f1239",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+
+    // Guest Info
+    formData.append("guestName", data.guestName);
+    formData.append("guestAddress", data.guestAddress);
+    formData.append("contactNumber", data.contactNumber);
+    formData.append("designation", data.designation);
+    formData.append("nidNumber", data.nidNumber || "");
+
+    // Images
+    formData.append("nidImage", nidImageFile);
+    formData.append("personImage", personImageFile);
+
+    // Room Info
+    formData.append("roomVariantId", data.roomVariant);
+    formData.append("roomVariantName", selectedVariant?.variantName || "");
+    formData.append("roomNumber", data.roomNumber);
+    formData.append("pricePerNight", selectedVariant?.price || 0);
+
+    // Stay Info
+    formData.append("checkInDate", data.checkInDate);
+    formData.append("checkInTime", data.checkInTime);
+    formData.append("checkOutDate", data.checkOutDate);
+    formData.append("numberOfNights", nights);
+    formData.append("numberOfGuests", data.numberOfGuests);
+
+    // Payment Info
+    formData.append("totalAmount", totalAmount);
+    formData.append("advancePayment", Number(data.advancePayment) || 0);
+    formData.append("dueAmount", dueAmount);
+
+    formData.append("specialRequests", data.specialRequests || "");
+    formData.append("status", "Normal");
+
+    const res = await axiosInstance.post("/check-in", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     if (res.data.insertedId) {
       await Swal.fire({
@@ -51,13 +140,12 @@ const CheckIn = () => {
         confirmButtonColor: "#9f1239",
       });
 
-      // Optional: reset form or navigate
       navigate("/dashboard/check_in_out");
     }
   };
 
   return (
-    <div className="mx-auto bg-white shadow-lg rounded-2xl p-5">
+    <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between">
@@ -95,7 +183,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Guest Name</span>
             </label>
-
             <input
               type="text"
               placeholder="John Doe"
@@ -104,7 +191,6 @@ const CheckIn = () => {
               })}
               className="bg-white input input-bordered w-full"
             />
-
             {errors.guestName && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.guestName.message}
@@ -117,7 +203,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Guest Address</span>
             </label>
-
             <input
               type="text"
               placeholder="Enter guest address"
@@ -126,7 +211,6 @@ const CheckIn = () => {
               })}
               className="bg-white input input-bordered w-full"
             />
-
             {errors.guestAddress && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.guestAddress.message}
@@ -139,7 +223,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Contact Number</span>
             </label>
-
             <input
               type="tel"
               placeholder="017XXXXXXXX"
@@ -148,7 +231,6 @@ const CheckIn = () => {
               })}
               className="bg-white input input-bordered w-full"
             />
-
             {errors.contactNumber && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.contactNumber.message}
@@ -161,7 +243,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Guest Designation</span>
             </label>
-
             <input
               type="text"
               placeholder="e.g. Manager, Student, Businessman"
@@ -170,7 +251,6 @@ const CheckIn = () => {
               })}
               className="bg-white input input-bordered w-full"
             />
-
             {errors.designation && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.designation.message}
@@ -183,7 +263,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">NID Number</span>
             </label>
-
             <input
               type="text"
               placeholder="Enter National ID Number"
@@ -197,7 +276,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">NID Image</span>
             </label>
-
             <input
               type="file"
               accept="image/*"
@@ -206,7 +284,6 @@ const CheckIn = () => {
               })}
               className="file-input file-input-bordered w-full bg-white"
             />
-
             {errors.nidImage && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.nidImage.message}
@@ -219,7 +296,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Person Image</span>
             </label>
-
             <input
               type="file"
               accept="image/*"
@@ -228,7 +304,6 @@ const CheckIn = () => {
               })}
               className="file-input file-input-bordered w-full bg-white"
             />
-
             {errors.personImage && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.personImage.message}
@@ -241,7 +316,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Room Variant</span>
             </label>
-
             <select
               {...register("roomVariant", {
                 required: "Room variant is required",
@@ -254,14 +328,12 @@ const CheckIn = () => {
                   ? "Loading room variants..."
                   : "Select room variant"}
               </option>
-
               {roomVariants.map((variant) => (
                 <option key={variant._id} value={variant._id}>
-                  {variant.variantName}
+                  {variant.variantName} — ৳{variant.price}/night
                 </option>
               ))}
             </select>
-
             {errors.roomVariant && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.roomVariant.message}
@@ -274,7 +346,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Room Number</span>
             </label>
-
             <select
               {...register("roomNumber", {
                 required: "Room number is required",
@@ -290,7 +361,6 @@ const CheckIn = () => {
                     ? "Loading rooms..."
                     : "Select room number"}
               </option>
-
               {rooms
                 .filter((room) => room.roomStatus === "Available")
                 .map((room) => (
@@ -299,7 +369,6 @@ const CheckIn = () => {
                   </option>
                 ))}
             </select>
-
             {errors.roomNumber && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.roomNumber.message}
@@ -312,7 +381,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Check In Date</span>
             </label>
-
             <input
               type="date"
               {...register("checkInDate", {
@@ -320,10 +388,28 @@ const CheckIn = () => {
               })}
               className="bg-white input input-bordered w-full"
             />
-
             {errors.checkInDate && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.checkInDate.message}
+              </p>
+            )}
+          </div>
+
+          {/* Check Out Date */}
+          <div>
+            <label className="label">
+              <span className="label-text">Check Out Date</span>
+            </label>
+            <input
+              type="date"
+              {...register("checkOutDate", {
+                required: "Check out date is required",
+              })}
+              className="bg-white input input-bordered w-full"
+            />
+            {errors.checkOutDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.checkOutDate.message}
               </p>
             )}
           </div>
@@ -333,7 +419,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Check In Time</span>
             </label>
-
             <input
               type="time"
               {...register("checkInTime", {
@@ -341,7 +426,6 @@ const CheckIn = () => {
               })}
               className="bg-white input input-bordered w-full"
             />
-
             {errors.checkInTime && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.checkInTime.message}
@@ -354,7 +438,6 @@ const CheckIn = () => {
             <label className="label">
               <span className="label-text">Number of Guests</span>
             </label>
-
             <input
               type="number"
               placeholder="2"
@@ -368,10 +451,73 @@ const CheckIn = () => {
               })}
               className="bg-white input input-bordered w-full"
             />
-
             {errors.numberOfGuests && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.numberOfGuests.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ========== PAYMENT SUMMARY ========== */}
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 space-y-4">
+          <h3 className="text-lg font-bold text-rose-700 mb-2">
+            Payment Summary
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Price Per Night */}
+            <div>
+              <p className="text-sm text-gray-500">Price / Night</p>
+              <p className="text-lg font-semibold text-gray-800">
+                ৳{selectedVariant?.price || 0}
+              </p>
+            </div>
+
+            {/* Number of Nights */}
+            <div>
+              <p className="text-sm text-gray-500">Number of Nights</p>
+              <p className="text-lg font-semibold text-gray-800">{nights}</p>
+            </div>
+
+            {/* Total Amount */}
+            <div>
+              <p className="text-sm text-gray-500">Total Amount</p>
+              <p className="text-lg font-bold text-rose-700">
+                ৳{totalAmount.toLocaleString()}
+              </p>
+            </div>
+
+            {/* Due Amount */}
+            <div>
+              <p className="text-sm text-gray-500">Due Amount</p>
+              <p className="text-lg font-bold text-orange-600">
+                ৳{dueAmount.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Advance Payment Input */}
+          <div className="max-w-xs mt-4">
+            <label className="label">
+              <span className="label-text font-medium">Advance Payment</span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              placeholder="0"
+              {...register("advancePayment", {
+                valueAsNumber: true,
+                min: {
+                  value: 0,
+                  message: "Advance cannot be negative",
+                },
+              })}
+              className="bg-white input input-bordered w-full"
+            />
+            {errors.advancePayment && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.advancePayment.message}
               </p>
             )}
           </div>
@@ -382,7 +528,6 @@ const CheckIn = () => {
           <label className="label">
             <span className="label-text">Special Requests</span>
           </label>
-
           <textarea
             {...register("specialRequests")}
             className="textarea textarea-bordered w-full h-32 bg-white"
