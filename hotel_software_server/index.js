@@ -572,6 +572,18 @@ async function run() {
       };
 
       const result = await checkInCollection.insertOne(checkInData);
+
+      // Update room status to Occupied
+      await roomCollection.updateOne(
+        {
+          roomNo: req.body.roomNumber,
+          variantId: req.body.roomVariantId,
+        },
+        {
+          $set: { roomStatus: "Occupied" },
+        },
+      );
+
       res.status(201).send(result);
     });
 
