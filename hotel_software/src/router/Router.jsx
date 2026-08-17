@@ -38,6 +38,7 @@ import RoomStatus from "../pages/dashboard/rooms/room_status/RoomStatus";
 import PresentGuestList from "../pages/dashboard/guests/present_guest_list/PresentGuestList";
 import EditGuestInfo from "../pages/dashboard/guests/present_guest_list/edit_guest_info/EditGuestInfo";
 import BlackListedGuests from "../pages/dashboard/guests/black_listed_guests/BlackListedGuests";
+import FoodMenu from "../pages/dashboard/services/restaurant_orders/food_menu/FoodMenu";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -92,6 +93,10 @@ const Router = createBrowserRouter([
       {
         path: "services/restaurant_orders",
         Component: RestaurantOrders,
+      },
+      {
+        path: "services/restaurant_orders/food_menu",
+        Component: FoodMenu,
       },
       { path: "services/laundry_service", Component: LaundryService },
       {

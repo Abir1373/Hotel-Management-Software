@@ -48,6 +48,7 @@ async function run() {
     const roomVariantCollection = db.collection("Room Variants");
     const checkInCollection = db.collection("CheckInList");
     const bannedGuestCollection = db.collection("Banned Guests");
+    const foodMenuCollection = db.collection("Food Menu");
 
     // =========================================================
     // ROOT
@@ -707,6 +708,59 @@ async function run() {
       res.send({
         exists: !!result,
       });
+    });
+
+    // =========================================================
+    // FOOD MENU
+    // =========================================================
+
+    // Add food item
+    app.post("/food-menu", async (req, res) => {
+      const foodItem = {
+        ...req.body,
+        createdAt: new Date(),
+      };
+
+      const result = await foodMenuCollection.insertOne(foodItem);
+      res.status(201).send(result);
+    });
+
+    // Get all food items
+    app.get("/food-menu", async (req, res) => {
+      const result = await foodMenuCollection.find().toArray();
+      res.send(result);
+    });
+
+    // Delete food item
+    app.delete("/food-menu/:id", async (req, res) => {
+      const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ message: "Invalid food item ID" });
+      }
+
+      const result = await foodMenuCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+
+      res.send(result);
+    });
+
+    // Update food item
+    app.patch("/food-menu/:id", async (req, res) => {
+      const { id } = req.params;
+      const { _id, ...updateData } = req.body;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ message: "Invalid food item ID" });
+      }
+
+      const result = await foodMenuCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData },
+      );
+
+      res.send(result);
     });
 
     // =========================================================
