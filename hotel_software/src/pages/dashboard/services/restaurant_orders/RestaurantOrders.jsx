@@ -6,6 +6,7 @@ import { RiHome3Line } from "react-icons/ri";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
+import { IoFastFoodSharp } from "react-icons/io5";
 
 const RestaurantOrders = () => {
   const axiosInstance = useAxios();
@@ -65,27 +66,32 @@ const RestaurantOrders = () => {
   return (
     <div className="max-w-5xl mx-auto p-6">
       {/* Header */}
-      <div className="flex justify-between mb-5">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
-              <MdRestaurantMenu className="text-xl text-white" />
-            </div>
+      <div className="flex justify-between items-center mb-6">
+        {/* Left Side */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-rose-700 flex items-center justify-center shadow-md">
+            <MdRestaurantMenu className="text-xl text-white" />
+          </div>
 
+          <div>
             <h1 className="text-lg font-bold text-rose-700">
               Restaurant Order
             </h1>
+            <p className="text-sm text-gray-500">
+              Create a new restaurant food order.
+            </p>
           </div>
-
-          <p className="text-gray-500 ml-12">
-            Create a new restaurant food order.
-          </p>
         </div>
 
-        <div className="flex flex-row gap-7">
+        {/* Right Side Buttons */}
+        <div className="flex items-center gap-2">
           <Link to="/dashboard/services/restaurant_orders/food_menu">
-            <button className="btn btn-outline btn-secondary hover:bg-rose-700">
-              Food Menu
+            <button
+              type="button"
+              className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              title="Food Menu"
+            >
+              <IoFastFoodSharp className="text-xl" />
             </button>
           </Link>
 
@@ -93,6 +99,7 @@ const RestaurantOrders = () => {
             <button
               type="button"
               className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              title="Back to Services"
             >
               <RiHome3Line className="text-xl" />
             </button>
