@@ -6,21 +6,22 @@ const RoomService = () => {
   return (
     <div className="max-w-5xl mx-auto p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
-            <MdRoomService className="text-xl text-rose-700" />
-          </div>
 
-          <div>
-            <h1 className="text-xl font-bold text-rose-700">
+      <div className="flex justify-between mb-5">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <MdRoomService className="text-xl text-white" />
+            </div>
+
+            <h1 className="text-lg font-bold text-rose-700">
               Room Service Request
             </h1>
-
-            <p className="text-gray-500 text-sm mt-1">
-              Create a new room service request.
-            </p>
           </div>
+
+          <p className="text-gray-500 ml-12">
+            Create a new room service request.
+          </p>
         </div>
 
         <Link to="/dashboard/services">
@@ -83,14 +84,8 @@ const RoomService = () => {
 
             <select className="select select-bordered w-full bg-white">
               <option value="">Select service</option>
-              <option value="Breakfast">Breakfast</option>
-              <option value="Lunch">Lunch</option>
-              <option value="Dinner">Dinner</option>
-              <option value="Beverages">Beverages</option>
               <option value="Housekeeping">Housekeeping</option>
-              <option value="Laundry">Laundry</option>
               <option value="Room Cleaning">Room Cleaning</option>
-              <option value="Extra Bed">Extra Bed</option>
               <option value="Other">Other</option>
             </select>
           </div>

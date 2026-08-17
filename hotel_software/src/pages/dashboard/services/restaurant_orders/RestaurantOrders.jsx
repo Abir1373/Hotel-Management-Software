@@ -1,172 +1,178 @@
+import { MdRestaurantMenu } from "react-icons/md";
+import { RiHome3Line } from "react-icons/ri";
+import { Link } from "react-router";
+
 const RestaurantOrders = () => {
   return (
-    <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl p-8">
-      <h1 className="text-3xl font-bold text-[#BF1E2E] mb-8">
-        Restaurant Order
-      </h1>
+    <div className="max-w-5xl mx-auto p-6">
+      {/* Header */}
+      <div className="flex justify-between mb-5">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <MdRestaurantMenu className="text-xl text-white" />
+            </div>
 
-      <form className="space-y-6">
+            <h1 className="text-lg font-bold text-rose-700">
+              Restaurant Order
+            </h1>
+          </div>
+
+          <p className="text-gray-500 ml-12">
+            Create a new restaurant food order.
+          </p>
+        </div>
+
+        <Link to="/dashboard/services">
+          <button
+            type="button"
+            className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+          >
+            <RiHome3Line className="text-xl" />
+          </button>
+        </Link>
+      </div>
+
+      {/* Form */}
+      <form className="bg-white shadow-lg rounded-2xl p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Order ID */}
+          {/* Room Number */}
           <div>
             <label className="label">
-              <span className="label-text">Order ID</span>
+              <span className="label-text font-medium">Room Number</span>
             </label>
             <input
               type="text"
-              placeholder="ORD-1001"
-              className="bg-white input input-bordered w-full"
+              placeholder="e.g. 01"
+              className="input input-bordered w-full bg-white"
             />
           </div>
 
           {/* Guest Name */}
           <div>
             <label className="label">
-              <span className="label-text">Guest Name</span>
+              <span className="label-text font-medium">Guest Name</span>
             </label>
             <input
               type="text"
-              placeholder="John Doe"
-              className="bg-white input input-bordered w-full"
-            />
-          </div>
-
-          {/* Room Number */}
-          <div>
-            <label className="label">
-              <span className="label-text">Room Number</span>
-            </label>
-            <input
-              type="text"
-              placeholder="101"
-              className="bg-white input input-bordered w-full"
-            />
-          </div>
-
-          {/* Table Number */}
-          <div>
-            <label className="label">
-              <span className="label-text">Table Number</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Optional"
-              className="bg-white input input-bordered w-full"
+              placeholder="Enter guest name"
+              className="input input-bordered w-full bg-white"
             />
           </div>
 
           {/* Food Item */}
           <div>
             <label className="label">
-              <span className="label-text">Food Item</span>
+              <span className="label-text font-medium">Food Item</span>
             </label>
             <input
               type="text"
-              placeholder="Burger, Pasta..."
-              className="bg-white input input-bordered w-full"
+              placeholder="e.g. Chicken Biryani"
+              className="input input-bordered w-full bg-white"
             />
           </div>
 
           {/* Quantity */}
           <div>
             <label className="label">
-              <span className="label-text">Quantity</span>
+              <span className="label-text font-medium">Quantity</span>
             </label>
             <input
               type="number"
               placeholder="1"
-              className="bg-white input input-bordered w-full"
+              min="1"
+              className="input input-bordered w-full bg-white"
             />
           </div>
 
           {/* Order Date */}
           <div>
             <label className="label">
-              <span className="label-text">Order Date</span>
+              <span className="label-text font-medium">Order Date</span>
             </label>
             <input
               type="date"
-              className="bg-white input input-bordered w-full"
+              className="input input-bordered w-full bg-white"
             />
           </div>
 
           {/* Order Time */}
           <div>
             <label className="label">
-              <span className="label-text">Order Time</span>
+              <span className="label-text font-medium">Order Time</span>
             </label>
             <input
               type="time"
-              className="bg-white input input-bordered w-full"
+              className="input input-bordered w-full bg-white"
             />
-          </div>
-
-          {/* Payment Method */}
-          <div>
-            <label className="label">
-              <span className="label-text">Payment Method</span>
-            </label>
-            <select className="select select-bordered w-full bg-white">
-              <option>Cash</option>
-              <option>Credit Card</option>
-              <option>Debit Card</option>
-              <option>Online Payment</option>
-              <option>Room Charge</option>
-            </select>
-          </div>
-
-          {/* Order Status */}
-          <div>
-            <label className="label">
-              <span className="label-text">Order Status</span>
-            </label>
-            <select className="select select-bordered w-full bg-white">
-              <option>Pending</option>
-              <option>Preparing</option>
-              <option>Ready</option>
-              <option>Served</option>
-              <option>Cancelled</option>
-            </select>
           </div>
 
           {/* Total Amount */}
           <div>
             <label className="label">
-              <span className="label-text">Total Amount ($)</span>
+              <span className="label-text font-medium">Total Amount</span>
             </label>
             <input
               type="number"
-              placeholder="0.00"
-              className="bg-white input input-bordered w-full"
+              placeholder="Enter total amount"
+              className="input input-bordered w-full bg-white"
             />
           </div>
 
           {/* Assigned Waiter */}
           <div>
             <label className="label">
-              <span className="label-text">Assigned Waiter</span>
+              <span className="label-text font-medium">Assigned Waiter</span>
             </label>
             <input
               type="text"
-              placeholder="Staff Name"
-              className="bg-white input input-bordered w-full"
+              placeholder="Enter waiter name"
+              className="input input-bordered w-full bg-white"
             />
+          </div>
+
+          {/* Payment Method */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Payment Method</span>
+            </label>
+            <select className="select select-bordered w-full bg-white">
+              <option value="">Select payment method</option>
+              <option value="Cash">Cash</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="Online Payment">Online Payment</option>
+              <option value="Room Charge">Room Charge</option>
+            </select>
+          </div>
+
+          {/* Payment Status */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Payment Status</span>
+            </label>
+            <select className="select select-bordered w-full bg-white">
+              <option value="">Select status</option>
+              <option value="Due">Due</option>
+              <option value="Paid">Paid</option>
+            </select>
           </div>
         </div>
 
-        {/* Special Instructions */}
-        <div>
+        {/* Special Instruction */}
+        <div className="mt-6">
           <label className="label">
-            <span className="label-text">Special Instructions</span>
+            <span className="label-text font-medium">Special Instruction</span>
           </label>
           <textarea
-            className="textarea textarea-bordered w-full h-32 bg-white"
-            placeholder="Extra cheese, no onions..."
+            rows="4"
+            placeholder="Enter any special requests..."
+            className="textarea textarea-bordered w-full bg-white"
           ></textarea>
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex justify-end gap-4 mt-8">
           <button
             type="reset"
             className="btn btn-outline border-[#BF1E2E] text-[#BF1E2E] hover:bg-[#BF1E2E] hover:text-white"
@@ -176,9 +182,9 @@ const RestaurantOrders = () => {
 
           <button
             type="submit"
-            className="btn bg-[#BF1E2E] text-white hover:bg-red-800 border-none"
+            className="btn bg-[#BF1E2E] text-white hover:bg-red-800 border-none px-8"
           >
-            Save Order
+            Submit Order
           </button>
         </div>
       </form>
