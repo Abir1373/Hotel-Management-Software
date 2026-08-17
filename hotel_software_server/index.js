@@ -619,41 +619,82 @@ async function run() {
 
     // Banned Guest
     app.post("/banned-guests", async (req, res) => {
-      const {
-        checkinId,
-        designation,
-        guestName,
-        guestAddress,
-        nidNumber,
-        contactNumber,
-      } = req.body;
+      const { checkinId } = req.body;
 
-      const result = await bannedGuestCollection.insertOne({
-        checkinId,
-        designation,
-        guestName,
-        guestAddress,
-        nidNumber,
-        contactNumber,
+      // Find the check-in record
+      const checkIn = await checkInCollection.findOne({
+        _id: new ObjectId(checkinId),
       });
 
-      res.status(201).send(result);
+      if (!checkIn) {
+        return res.status(404).send({
+          message: "Check-in record not found",
+        });
+      }
+
+      // Change check-in status to Ban
+      const result2 = await checkInCollection.updateOne(
+        { _id: new ObjectId(checkinId) },
+        {
+          $set: {
+            status: "Ban",
+          },
+        },
+      );
+
+      // Insert complete guest information into banned guests
+      const result = await bannedGuestCollection.insertOne({
+        checkinId: checkIn._id,
+        designation: checkIn.designation,
+        guestName: checkIn.guestName,
+        guestAddress: checkIn.guestAddress,
+        nidNumber: checkIn.nidNumber,
+        contactNumber: checkIn.contactNumber,
+      });
+
+      res.status(201).send({
+        result,
+        result2,
+      });
     });
 
     app.delete("/banned-guests/:checkinId", async (req, res) => {
       const { checkinId } = req.params;
 
       const result = await bannedGuestCollection.deleteOne({
-        checkinId: checkinId,
+        checkinId: new ObjectId(checkinId),
       });
 
-      res.send(result);
-    });
+      const result2 = await checkInCollection.updateOne(
+        { _id: new ObjectId(checkinId) },
+        {
+          $set: {
+            status: "Normal",
+          },
+        },
+      );
 
+      res.send({
+        result,
+        result2,
+      });
+    });
     app.get("/banned-guests", async (req, res) => {
       const result = await bannedGuestCollection.find().toArray();
 
       res.send(result);
+    });
+
+    app.get("/banned-guests/check/:nidNumber", async (req, res) => {
+      const { nidNumber } = req.params;
+
+      const result = await bannedGuestCollection.findOne({
+        nidNumber: nidNumber,
+      });
+
+      res.send({
+        exists: !!result,
+      });
     });
 
     // =========================================================

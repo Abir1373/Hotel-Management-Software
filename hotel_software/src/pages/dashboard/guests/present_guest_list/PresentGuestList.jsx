@@ -14,6 +14,7 @@ const PresentGuestList = () => {
     data: checkIns = [],
     isLoading,
     isError,
+    refetch,
     error,
   } = useQuery({
     queryKey: ["check-ins"],
@@ -35,6 +36,7 @@ const PresentGuestList = () => {
           confirmButtonColor: "#BF1E2E",
         });
       }
+      refetch();
     } else {
       const bannedGuest = {
         checkinId: checkIn._id,
@@ -45,6 +47,23 @@ const PresentGuestList = () => {
         contactNumber: checkIn.contactNumber,
       };
 
+      // Check whether NID already exists
+      const checkNid = await axiosInstance.get(
+        `/banned-guests/check/${checkIn.nidNumber}`,
+      );
+
+      if (checkNid.data.exists) {
+        Swal.fire({
+          title: "Already Blacklisted!",
+          text: `${checkIn.guestName} is already in the blacklisted guest list.`,
+          icon: "warning",
+          confirmButtonColor: "#BF1E2E",
+        });
+
+        return;
+      }
+
+      // NID doesn't exist, so insert guest
       const res = await axiosInstance.post("/banned-guests", bannedGuest);
 
       if (res.data.insertedId) {
@@ -55,6 +74,7 @@ const PresentGuestList = () => {
           confirmButtonColor: "#BF1E2E",
         });
       }
+      refetch();
     }
   };
 
