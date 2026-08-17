@@ -5,6 +5,7 @@ import { RiHome3Line } from "react-icons/ri";
 import { MdOutlinePlaylistAddCheckCircle } from "react-icons/md";
 import { FaUserEdit } from "react-icons/fa";
 import { IoMdTrash } from "react-icons/io";
+import Swal from "sweetalert2";
 
 const PresentGuestList = () => {
   const axiosInstance = useAxios();
@@ -22,11 +23,38 @@ const PresentGuestList = () => {
     },
   });
 
-  const Guest_Status_Change = (checkInId, status) => {
+  const Guest_Status_Change = async (checkInId, status, checkIn) => {
     if (status === "Normal") {
-      console.log("first");
+      const res = await axiosInstance.delete(`/banned-guests/${checkInId}`);
+
+      if (res.data.deletedCount > 0) {
+        Swal.fire({
+          title: "Guest Status Updated!",
+          text: "Guest has been removed from the banned guest list.",
+          icon: "success",
+          confirmButtonColor: "#BF1E2E",
+        });
+      }
     } else {
-      console.log("second");
+      const bannedGuest = {
+        checkinId: checkIn._id,
+        designation: checkIn.designation,
+        guestName: checkIn.guestName,
+        guestAddress: checkIn.guestAddress,
+        nidNumber: checkIn.nidNumber,
+        contactNumber: checkIn.contactNumber,
+      };
+
+      const res = await axiosInstance.post("/banned-guests", bannedGuest);
+
+      if (res.data.insertedId) {
+        Swal.fire({
+          title: "Guest Banned!",
+          text: `${checkIn.guestName} has been added to the banned guest list.`,
+          icon: "success",
+          confirmButtonColor: "#BF1E2E",
+        });
+      }
     }
   };
 
@@ -156,7 +184,11 @@ const PresentGuestList = () => {
                     <select
                       defaultValue={checkIn.status}
                       onChange={(e) =>
-                        Guest_Status_Change(checkIn._id, e.target.value)
+                        Guest_Status_Change(
+                          checkIn._id,
+                          e.target.value,
+                          checkIn,
+                        )
                       }
                       className={`select select-sm w-32 font-semibold text-white border-none outline-none ${
                         checkIn.status === "Ban"

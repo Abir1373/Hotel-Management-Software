@@ -47,6 +47,7 @@ async function run() {
     const maintenanceHistoryCollection = db.collection("Maintenance History");
     const roomVariantCollection = db.collection("Room Variants");
     const checkInCollection = db.collection("CheckInList");
+    const bannedGuestCollection = db.collection("Banned Guests");
 
     // =========================================================
     // ROOT
@@ -612,6 +613,45 @@ async function run() {
           $set: updateData,
         },
       );
+
+      res.send(result);
+    });
+
+    // Banned Guest
+    app.post("/banned-guests", async (req, res) => {
+      const {
+        checkinId,
+        designation,
+        guestName,
+        guestAddress,
+        nidNumber,
+        contactNumber,
+      } = req.body;
+
+      const result = await bannedGuestCollection.insertOne({
+        checkinId,
+        designation,
+        guestName,
+        guestAddress,
+        nidNumber,
+        contactNumber,
+      });
+
+      res.status(201).send(result);
+    });
+
+    app.delete("/banned-guests/:checkinId", async (req, res) => {
+      const { checkinId } = req.params;
+
+      const result = await bannedGuestCollection.deleteOne({
+        checkinId: checkinId,
+      });
+
+      res.send(result);
+    });
+
+    app.get("/banned-guests", async (req, res) => {
+      const result = await bannedGuestCollection.find().toArray();
 
       res.send(result);
     });

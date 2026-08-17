@@ -37,6 +37,7 @@ import ViewRooms from "../pages/dashboard/rooms/room_status/ViewRooms";
 import RoomStatus from "../pages/dashboard/rooms/room_status/RoomStatus";
 import PresentGuestList from "../pages/dashboard/guests/present_guest_list/PresentGuestList";
 import EditGuestInfo from "../pages/dashboard/guests/present_guest_list/edit_guest_info/EditGuestInfo";
+import BlackListedGuests from "../pages/dashboard/guests/black_listed_guests/BlackListedGuests";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -115,6 +116,7 @@ const Router = createBrowserRouter([
       { path: "guests", Component: Guests },
       { path: "guests/present_guest_list", Component: PresentGuestList },
       { path: "guests/edit_guest_info/:id", Component: EditGuestInfo },
+      { path: "guests/black_listed_guests", Component: BlackListedGuests },
 
       { path: "reservations", Component: Reservations },
       {
