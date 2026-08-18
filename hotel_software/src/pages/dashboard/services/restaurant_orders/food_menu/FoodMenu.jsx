@@ -94,7 +94,7 @@ const FoodMenu = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between mb-5">
         <div>

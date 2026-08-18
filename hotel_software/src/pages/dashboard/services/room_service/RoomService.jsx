@@ -1,12 +1,60 @@
+import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { MdRoomService } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import useAxios from "../../../../hooks/useAxios";
+import Swal from "sweetalert2";
 
 const RoomService = () => {
-  return (
-    <div className="max-w-5xl mx-auto p-6">
-      {/* Header */}
+  const axiosInstance = useAxios();
+  const navigate = useNavigate();
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
+
+  const selectedRoom = watch("roomNumber");
+
+  // Get current check-in guests
+  const { data: checkIns = [], isLoading } = useQuery({
+    queryKey: ["check-ins"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/check-in");
+      return res.data;
+    },
+  });
+
+  // Find selected guest/room
+  const selectedCheckIn = checkIns.find(
+    (checkIn) => checkIn.roomNumber === selectedRoom,
+  );
+
+  const onSubmit = async (data) => {
+    const serviceData = {
+      ...data,
+      checkinId: selectedCheckIn?._id,
+    };
+
+    const res = await axiosInstance.post("/room-service", serviceData);
+
+    if (res.data.insertedId) {
+      Swal.fire({
+        title: "Success!",
+        text: "Room service request submitted successfully.",
+        icon: "success",
+        confirmButtonColor: "#BF1E2E",
+      });
+    }
+    navigate("/dashboard/services");
+  };
+
+  return (
+    <div className="mx-auto p-6">
+      {/* Header */}
       <div className="flex justify-between mb-5">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -35,7 +83,10 @@ const RoomService = () => {
       </div>
 
       {/* Form */}
-      <form className="bg-white shadow-lg rounded-2xl p-8">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white shadow-lg rounded-2xl p-8"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Room Number */}
           <div>
@@ -43,11 +94,30 @@ const RoomService = () => {
               <span className="label-text font-medium">Room Number</span>
             </label>
 
-            <input
-              type="text"
-              placeholder="e.g. 01"
-              className="input input-bordered w-full bg-white"
-            />
+            <select
+              {...register("roomNumber", {
+                required: "Room number is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue=""
+              disabled={isLoading}
+            >
+              <option value="" disabled>
+                {isLoading ? "Loading rooms..." : "Select room number"}
+              </option>
+
+              {checkIns.map((checkIn) => (
+                <option key={checkIn._id} value={checkIn.roomNumber}>
+                  Room {checkIn.roomNumber}
+                </option>
+              ))}
+            </select>
+
+            {errors.roomNumber && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.roomNumber.message}
+              </p>
+            )}
           </div>
 
           {/* Room Variant Name */}
@@ -58,8 +128,35 @@ const RoomService = () => {
 
             <input
               type="text"
-              placeholder="e.g. Couple Room Suite"
-              className="input input-bordered w-full bg-white"
+              value={selectedCheckIn?.roomVariantName || ""}
+              readOnly
+              className="input input-bordered w-full bg-gray-100"
+            />
+
+            <input
+              type="hidden"
+              value={selectedCheckIn?.roomVariantName || ""}
+              {...register("roomVariantName")}
+            />
+          </div>
+
+          {/* NID Number */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">NID Number</span>
+            </label>
+
+            <input
+              type="text"
+              value={selectedCheckIn?.nidNumber || ""}
+              readOnly
+              className="input input-bordered w-full bg-gray-100"
+            />
+
+            <input
+              type="hidden"
+              value={selectedCheckIn?.nidNumber || ""}
+              {...register("nidNumber")}
             />
           </div>
 
@@ -71,8 +168,15 @@ const RoomService = () => {
 
             <input
               type="text"
-              placeholder="Enter guest NID"
-              className="input input-bordered w-full bg-white"
+              value={selectedCheckIn?.guestName || ""}
+              readOnly
+              className="input input-bordered w-full bg-gray-100"
+            />
+
+            <input
+              type="hidden"
+              value={selectedCheckIn?.guestName || ""}
+              {...register("orderedBy")}
             />
           </div>
 
@@ -82,12 +186,29 @@ const RoomService = () => {
               <span className="label-text font-medium">Service Requested</span>
             </label>
 
-            <select className="select select-bordered w-full bg-white">
-              <option value="">Select service</option>
+            <select
+              {...register("serviceRequested", {
+                required: "Service is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Select service
+              </option>
+
               <option value="Housekeeping">Housekeeping</option>
+
               <option value="Room Cleaning">Room Cleaning</option>
+
               <option value="Other">Other</option>
             </select>
+
+            {errors.serviceRequested && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.serviceRequested.message}
+              </p>
+            )}
           </div>
 
           {/* Service Date */}
@@ -98,8 +219,17 @@ const RoomService = () => {
 
             <input
               type="date"
+              {...register("serviceDate", {
+                required: "Service date is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+
+            {errors.serviceDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.serviceDate.message}
+              </p>
+            )}
           </div>
 
           {/* Service Time */}
@@ -110,8 +240,17 @@ const RoomService = () => {
 
             <input
               type="time"
+              {...register("serviceTime", {
+                required: "Service time is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+
+            {errors.serviceTime && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.serviceTime.message}
+              </p>
+            )}
           </div>
 
           {/* Assigned Staff */}
@@ -122,7 +261,7 @@ const RoomService = () => {
 
             <input
               type="text"
-              placeholder="Enter staff name"
+              {...register("assignedStaff")}
               className="input input-bordered w-full bg-white"
             />
           </div>
@@ -135,7 +274,10 @@ const RoomService = () => {
 
             <input
               type="number"
-              placeholder="Enter service charge"
+              min="0"
+              {...register("totalCharge", {
+                valueAsNumber: true,
+              })}
               className="input input-bordered w-full bg-white"
             />
           </div>
@@ -149,7 +291,7 @@ const RoomService = () => {
 
           <textarea
             rows="4"
-            placeholder="Enter any special requests..."
+            {...register("specialInstructions")}
             className="textarea textarea-bordered w-full bg-white"
           ></textarea>
         </div>

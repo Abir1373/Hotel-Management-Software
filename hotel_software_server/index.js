@@ -49,6 +49,7 @@ async function run() {
     const checkInCollection = db.collection("CheckInList");
     const bannedGuestCollection = db.collection("Banned Guests");
     const foodMenuCollection = db.collection("Food Menu");
+    const roomServiceCollection = db.collection("Room Services");
 
     // =========================================================
     // ROOT
@@ -761,6 +762,17 @@ async function run() {
       );
 
       res.send(result);
+    });
+
+    // Room Services
+
+    app.post("/room-service", async (req, res) => {
+      const result = await roomServiceCollection.insertOne({
+        ...req.body,
+        createdAt: new Date(),
+      });
+
+      res.status(201).send(result);
     });
 
     // =========================================================
