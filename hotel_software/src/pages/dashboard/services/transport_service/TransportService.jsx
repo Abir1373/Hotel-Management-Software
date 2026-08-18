@@ -1,8 +1,59 @@
+import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { FaCar } from "react-icons/fa";
 import { RiHome3Line } from "react-icons/ri";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import Swal from "sweetalert2";
+import useAxios from "../../../../hooks/useAxios";
 
 const TransportService = () => {
+  const axiosInstance = useAxios();
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
+
+  const selectedRoom = watch("roomNumber");
+
+  // Get current check-in guests
+  const { data: checkIns = [], isLoading } = useQuery({
+    queryKey: ["check-ins"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/check-in");
+      return res.data;
+    },
+  });
+
+  // Find selected guest/room
+  const selectedCheckIn = checkIns.find(
+    (checkIn) => checkIn.roomNumber === selectedRoom,
+  );
+
+  const onSubmit = async (data) => {
+    const transportData = {
+      ...data,
+      checkinId: selectedCheckIn?._id,
+      guestName: selectedCheckIn?.guestName || "",
+      contactNumber: selectedCheckIn?.contactNumber || "",
+    };
+
+    const res = await axiosInstance.post("/transport-service", transportData);
+
+    if (res.data.insertedId) {
+      Swal.fire({
+        title: "Success!",
+        text: "Transport service booking submitted successfully.",
+        icon: "success",
+        confirmButtonColor: "#BF1E2E",
+      });
+    }
+    navigate("/dashboard/services");
+  };
+
   return (
     <div className="mx-auto p-6">
       {/* Header */}
@@ -34,8 +85,40 @@ const TransportService = () => {
       </div>
 
       {/* Form */}
-      <form className="bg-white shadow-lg rounded-2xl p-8">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white shadow-lg rounded-2xl p-8"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Room Number */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Room Number</span>
+            </label>
+            <select
+              {...register("roomNumber", {
+                required: "Room number is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue=""
+              disabled={isLoading}
+            >
+              <option value="" disabled>
+                {isLoading ? "Loading rooms..." : "Select room number"}
+              </option>
+              {checkIns.map((checkIn) => (
+                <option key={checkIn._id} value={checkIn.roomNumber}>
+                  Room {checkIn.roomNumber}
+                </option>
+              ))}
+            </select>
+            {errors.roomNumber && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.roomNumber.message}
+              </p>
+            )}
+          </div>
+
           {/* Guest Name */}
           <div>
             <label className="label">
@@ -43,20 +126,9 @@ const TransportService = () => {
             </label>
             <input
               type="text"
-              placeholder="Enter guest name"
-              className="input input-bordered w-full bg-white"
-            />
-          </div>
-
-          {/* Room Number */}
-          <div>
-            <label className="label">
-              <span className="label-text font-medium">Room Number</span>
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. 01"
-              className="input input-bordered w-full bg-white"
+              value={selectedCheckIn?.guestName || ""}
+              readOnly
+              className="input input-bordered w-full bg-gray-100"
             />
           </div>
 
@@ -67,8 +139,9 @@ const TransportService = () => {
             </label>
             <input
               type="tel"
-              placeholder="e.g. 017XXXXXXXX"
-              className="input input-bordered w-full bg-white"
+              value={selectedCheckIn?.contactNumber || ""}
+              readOnly
+              className="input input-bordered w-full bg-gray-100"
             />
           </div>
 
@@ -80,8 +153,16 @@ const TransportService = () => {
             <input
               type="text"
               placeholder="Enter pickup location"
+              {...register("pickupLocation", {
+                required: "Pickup location is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.pickupLocation && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.pickupLocation.message}
+              </p>
+            )}
           </div>
 
           {/* Destination */}
@@ -92,8 +173,16 @@ const TransportService = () => {
             <input
               type="text"
               placeholder="Enter destination"
+              {...register("destination", {
+                required: "Destination is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.destination && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.destination.message}
+              </p>
+            )}
           </div>
 
           {/* Pickup Date */}
@@ -103,8 +192,16 @@ const TransportService = () => {
             </label>
             <input
               type="date"
+              {...register("pickupDate", {
+                required: "Pickup date is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.pickupDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.pickupDate.message}
+              </p>
+            )}
           </div>
 
           {/* Pickup Time */}
@@ -114,8 +211,16 @@ const TransportService = () => {
             </label>
             <input
               type="time"
+              {...register("pickupTime", {
+                required: "Pickup time is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.pickupTime && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.pickupTime.message}
+              </p>
+            )}
           </div>
 
           {/* Vehicle Type */}
@@ -126,8 +231,16 @@ const TransportService = () => {
             <input
               type="text"
               placeholder="e.g. Sedan, SUV, Microbus"
+              {...register("vehicleType", {
+                required: "Vehicle type is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.vehicleType && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.vehicleType.message}
+              </p>
+            )}
           </div>
 
           {/* Driver Number */}
@@ -138,6 +251,7 @@ const TransportService = () => {
             <input
               type="tel"
               placeholder="Enter driver contact number"
+              {...register("driverNumber")}
               className="input input-bordered w-full bg-white"
             />
           </div>
@@ -150,20 +264,36 @@ const TransportService = () => {
             <input
               type="number"
               placeholder="Enter fare amount"
+              {...register("fare", {
+                valueAsNumber: true,
+              })}
               className="input input-bordered w-full bg-white"
             />
           </div>
 
-          {/* Booking Status */}
+          {/* Payment Status */}
           <div>
             <label className="label">
-              <span className="label-text font-medium">Booking Status</span>
+              <span className="label-text font-medium">Payment Status</span>
             </label>
-            <select className="select select-bordered w-full bg-white">
-              <option value="">Select status</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="Canceled">Canceled</option>
+            <select
+              {...register("paymentStatus", {
+                required: "Payment status is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Select status
+              </option>
+              <option value="Due">Due</option>
+              <option value="Paid">Paid</option>
             </select>
+            {errors.paymentStatus && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.paymentStatus.message}
+              </p>
+            )}
           </div>
         </div>
 

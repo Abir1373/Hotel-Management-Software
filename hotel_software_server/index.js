@@ -50,6 +50,7 @@ async function run() {
     const bannedGuestCollection = db.collection("Banned Guests");
     const foodMenuCollection = db.collection("Food Menu");
     const roomServiceCollection = db.collection("Room Services");
+    const transportServiceCollection = db.collection("Transport Services");
 
     // =========================================================
     // ROOT
@@ -772,6 +773,20 @@ async function run() {
         createdAt: new Date(),
       });
 
+      res.status(201).send(result);
+    });
+
+    // =========================================================
+    // TRANSPORT SERVICE
+    // =========================================================
+
+    app.post("/transport-service", async (req, res) => {
+      const transportData = {
+        ...req.body,
+        createdAt: new Date(),
+      };
+
+      const result = await transportServiceCollection.insertOne(transportData);
       res.status(201).send(result);
     });
 
