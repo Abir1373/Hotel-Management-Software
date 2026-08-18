@@ -807,6 +807,22 @@ async function run() {
     });
 
     // =========================================================
+    // RESTAURNT ORDERS
+    // =========================================================
+
+    app.post("/restaurant-orders", async (req, res) => {
+      const orderData = req.body;
+
+      const result = await restaurantOrderCollection.insertOne(orderData);
+
+      res.send({
+        success: true,
+        message: "Restaurant order created successfully",
+        insertedId: result.insertedId,
+      });
+    });
+
+    // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================
 

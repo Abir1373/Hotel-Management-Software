@@ -4,17 +4,38 @@ import { useQuery } from "@tanstack/react-query";
 import { MdRestaurantMenu } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { FaPlus, FaTrash } from "react-icons/fa";
-import { Link } from "react-router";
-import useAxios from "../../../../hooks/useAxios";
 import { IoFastFoodSharp } from "react-icons/io5";
+import { Link, useNavigate } from "react-router";
+import useAxios from "../../../../hooks/useAxios";
+import Swal from "sweetalert2";
 
 const RestaurantOrders = () => {
   const axiosInstance = useAxios();
-  const { register, handleSubmit, reset } = useForm();
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm();
 
   const [foodItems, setFoodItems] = useState([
     { itemName: "", quantity: 1, price: 0 },
   ]);
+
+  // Store the full selected check-in object
+  const [selectedCheckIn, setSelectedCheckIn] = useState(null);
+
+  // Get current check-in guests
+  const { data: checkIns = [], isLoading } = useQuery({
+    queryKey: ["check-ins"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/check-in");
+      return res.data;
+    },
+  });
 
   // Fetch food menu
   const { data: menuItems = [] } = useQuery({
@@ -24,6 +45,23 @@ const RestaurantOrders = () => {
       return res.data;
     },
   });
+
+  const handleRoomChange = (e) => {
+    const roomNo = e.target.value;
+    setValue("roomNumber", roomNo);
+
+    const foundCheckIn = checkIns.find(
+      (checkIn) => checkIn.roomNumber === roomNo,
+    );
+
+    if (foundCheckIn) {
+      setSelectedCheckIn(foundCheckIn); // store full check-in info
+      setValue("guestName", foundCheckIn.guestName || "");
+    } else {
+      setSelectedCheckIn(null);
+      setValue("guestName", "");
+    }
+  };
 
   const handleAddFoodItem = () => {
     setFoodItems([...foodItems, { itemName: "", quantity: 1, price: 0 }]);
@@ -53,21 +91,32 @@ const RestaurantOrders = () => {
     return sum + Number(item.quantity || 0) * Number(item.price || 0);
   }, 0);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     const orderData = {
       ...data,
       foodItems,
       totalAmount,
+      // Send the full check-in information when a room is selected
+      checkInInfo: selectedCheckIn || null,
     };
-    console.log(orderData);
-    // Later: axiosInstance.post("/restaurant-orders", orderData)
+
+    const res = await axiosInstance.post("/restaurant-orders", orderData);
+
+    if (res.data.insertedId) {
+      await Swal.fire({
+        title: "Success!",
+        text: "Restaurant order submitted successfully.",
+        icon: "success",
+        confirmButtonColor: "#BF1E2E",
+      });
+      navigate("/dashboard/services");
+    }
   };
 
   return (
     <div className="mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        {/* Left Side */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-rose-700 flex items-center justify-center shadow-md">
             <MdRestaurantMenu className="text-xl text-white" />
@@ -83,7 +132,6 @@ const RestaurantOrders = () => {
           </div>
         </div>
 
-        {/* Right Side Buttons */}
         <div className="flex items-center gap-2">
           <Link to="/dashboard/services/restaurant_orders/food_menu">
             <button
@@ -113,20 +161,30 @@ const RestaurantOrders = () => {
         className="bg-white shadow-lg rounded-2xl p-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Room Number */}
+          {/* Room Number (Optional) */}
           <div>
             <label className="label">
               <span className="label-text font-medium">Room Number</span>
             </label>
-            <input
-              type="text"
-              placeholder="e.g. 01"
+            <select
               {...register("roomNumber")}
-              className="input input-bordered w-full bg-white"
-            />
+              onChange={handleRoomChange}
+              className="select select-bordered w-full bg-white"
+              defaultValue=""
+              disabled={isLoading}
+            >
+              <option value="">
+                {isLoading ? "Loading rooms..." : "Select room (optional)"}
+              </option>
+              {checkIns.map((checkIn) => (
+                <option key={checkIn._id} value={checkIn.roomNumber}>
+                  Room {checkIn.roomNumber}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Guest Name */}
+          {/* Guest Name (Editable) */}
           <div>
             <label className="label">
               <span className="label-text font-medium">Guest Name</span>
@@ -134,9 +192,16 @@ const RestaurantOrders = () => {
             <input
               type="text"
               placeholder="Enter guest name"
-              {...register("guestName")}
+              {...register("guestName", {
+                required: "Guest name is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.guestName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.guestName.message}
+              </p>
+            )}
           </div>
 
           {/* Order Date */}
@@ -146,9 +211,16 @@ const RestaurantOrders = () => {
             </label>
             <input
               type="date"
-              {...register("orderDate")}
+              {...register("orderDate", {
+                required: "Order date is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.orderDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.orderDate.message}
+              </p>
+            )}
           </div>
 
           {/* Order Time */}
@@ -158,9 +230,16 @@ const RestaurantOrders = () => {
             </label>
             <input
               type="time"
-              {...register("orderTime")}
+              {...register("orderTime", {
+                required: "Order time is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.orderTime && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.orderTime.message}
+              </p>
+            )}
           </div>
 
           {/* Assigned Waiter */}
@@ -182,16 +261,26 @@ const RestaurantOrders = () => {
               <span className="label-text font-medium">Payment Method</span>
             </label>
             <select
-              {...register("paymentMethod")}
+              {...register("paymentMethod", {
+                required: "Payment method is required",
+              })}
               className="select select-bordered w-full bg-white"
+              defaultValue=""
             >
-              <option value="">Select payment method</option>
+              <option value="" disabled>
+                Select payment method
+              </option>
               <option value="Cash">Cash</option>
               <option value="Credit Card">Credit Card</option>
               <option value="Debit Card">Debit Card</option>
               <option value="Online Payment">Online Payment</option>
               <option value="Room Charge">Room Charge</option>
             </select>
+            {errors.paymentMethod && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.paymentMethod.message}
+              </p>
+            )}
           </div>
 
           {/* Payment Status */}
@@ -200,13 +289,23 @@ const RestaurantOrders = () => {
               <span className="label-text font-medium">Payment Status</span>
             </label>
             <select
-              {...register("paymentStatus")}
+              {...register("paymentStatus", {
+                required: "Payment status is required",
+              })}
               className="select select-bordered w-full bg-white"
+              defaultValue=""
             >
-              <option value="">Select status</option>
+              <option value="" disabled>
+                Select status
+              </option>
               <option value="Due">Due</option>
               <option value="Paid">Paid</option>
             </select>
+            {errors.paymentStatus && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.paymentStatus.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -328,6 +427,7 @@ const RestaurantOrders = () => {
             onClick={() => {
               reset();
               setFoodItems([{ itemName: "", quantity: 1, price: 0 }]);
+              setSelectedCheckIn(null); // also clear selected check-in
             }}
             className="btn btn-outline border-[#BF1E2E] text-[#BF1E2E] hover:bg-[#BF1E2E] hover:text-white"
           >
