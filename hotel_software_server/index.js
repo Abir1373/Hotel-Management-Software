@@ -51,6 +51,8 @@ async function run() {
     const foodMenuCollection = db.collection("Food Menu");
     const roomServiceCollection = db.collection("Room Services");
     const transportServiceCollection = db.collection("Transport Services");
+    const laundryServiceCollection = db.collection("Laundry Services");
+    const restaurantOrderCollection = db.collection("Restaurant Orders");
 
     // =========================================================
     // ROOT
@@ -787,6 +789,20 @@ async function run() {
       };
 
       const result = await transportServiceCollection.insertOne(transportData);
+      res.status(201).send(result);
+    });
+
+    // =========================================================
+    // LAUNDRY SERVICE
+    // =========================================================
+
+    app.post("/laundry-service", async (req, res) => {
+      const laundryData = {
+        ...req.body,
+        createdAt: new Date(),
+      };
+
+      const result = await laundryServiceCollection.insertOne(laundryData);
       res.status(201).send(result);
     });
 
