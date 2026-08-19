@@ -5,14 +5,16 @@ import { MdMeetingRoom } from "react-icons/md";
 const Rooms = () => {
   return (
     <div className="p-6">
-      <div className="flex items-center gap-3 mb-2">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
-          <MdMeetingRoom className="text-2xl text-white" />
+          <MdMeetingRoom className="text-xl text-white" />
         </div>
+
         <h1 className="text-lg font-bold text-rose-700">Room Management</h1>
       </div>
 
-      <p className="text-gray-500 mb-10 ml-9">
+      <p className="text-gray-500 mb-10">
         Manage hotel rooms, availability, and maintenance.
       </p>
 
@@ -20,10 +22,10 @@ const Rooms = () => {
         {/* Room Overview */}
         <Link
           to="/dashboard/rooms/room_overview"
-          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaBed className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaBed className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
           <h2 className="text-lg font-bold text-rose-700 mb-3">
@@ -38,10 +40,10 @@ const Rooms = () => {
         {/* Add Room Variant */}
         <Link
           to="/dashboard/rooms/add_room_variant"
-          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaLayerGroup className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaLayerGroup className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
           <h2 className="text-lg font-bold text-rose-700 mb-3">
@@ -56,10 +58,10 @@ const Rooms = () => {
         {/* Room Status */}
         <Link
           to="/dashboard/rooms/room_status"
-          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaDoorOpen className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaDoorOpen className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
           <h2 className="text-lg font-bold text-rose-700 mb-3">Room Status</h2>
@@ -72,10 +74,10 @@ const Rooms = () => {
         {/* Maintenance */}
         <Link
           to="/dashboard/rooms/maintenance"
-          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-700"
+          className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-rose-700">
-            <FaTools className="text-xl text-rose-700 transition-all duration-300 group-hover:text-white group-hover:scale-110" />
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
+            <FaTools className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
           <h2 className="text-lg font-bold text-rose-700 mb-3">Maintenance</h2>

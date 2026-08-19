@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router";
 import {
   FaFileInvoiceDollar,
@@ -11,12 +10,13 @@ import { RiCoinsFill } from "react-icons/ri";
 const Billing_and_Payments = () => {
   return (
     <div className="p-6">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-          <RiCoinsFill className="text-2xl text-[#BF1E2E]" />
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+          <RiCoinsFill className="text-xl text-white" />
         </div>
 
-        <h1 className="text-xl font-bold text-[#BF1E2E]">Billing & Payments</h1>
+        <h1 className="text-lg font-bold text-rose-700">Billing & Payments</h1>
       </div>
 
       <p className="text-gray-500 mb-10">
@@ -33,7 +33,7 @@ const Billing_and_Payments = () => {
             <FaFileInvoiceDollar className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">
+          <h2 className="text-lg font-bold text-rose-700 mb-3">
             Guest Invoices
           </h2>
 
@@ -51,7 +51,7 @@ const Billing_and_Payments = () => {
             <FaMoneyCheckAlt className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">Payments</h2>
+          <h2 className="text-lg font-bold text-rose-700 mb-3">Payments</h2>
 
           <p className="text-gray-600 text-sm">
             Record guest payments and monitor completed transactions.
@@ -67,7 +67,7 @@ const Billing_and_Payments = () => {
             <FaUndoAlt className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">Refunds</h2>
+          <h2 className="text-lg font-bold text-rose-700 mb-3">Refunds</h2>
 
           <p className="text-gray-600 text-sm">
             Process and track guest refunds for cancelled bookings.
@@ -83,7 +83,7 @@ const Billing_and_Payments = () => {
             <FaHistory className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">
+          <h2 className="text-lg font-bold text-rose-700 mb-3">
             Payment History
           </h2>
 

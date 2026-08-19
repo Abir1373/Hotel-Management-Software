@@ -1,22 +1,24 @@
 import { Link } from "react-router";
 import { FaUsers, FaUserSlash, FaHistory } from "react-icons/fa";
 import { FaVanShuttle } from "react-icons/fa6";
+
 const Guests = () => {
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
           <FaVanShuttle className="text-xl text-white" />
         </div>
 
-        <h1 className="text-xl font-bold text-[#BF1E2E]">Guest Management</h1>
+        <h1 className="text-lg font-bold text-rose-700">Guest Management</h1>
       </div>
 
       <p className="text-gray-500 mb-10">
         Manage guest information, registrations, and stay history.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {/* Present Guest List */}
         <Link
           to="/dashboard/guests/present_guest_list"
@@ -26,7 +28,7 @@ const Guests = () => {
             <FaUsers className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">
+          <h2 className="text-lg font-bold text-rose-700 mb-3">
             Present Guest List
           </h2>
 
@@ -44,7 +46,7 @@ const Guests = () => {
             <FaUserSlash className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">
+          <h2 className="text-lg font-bold text-rose-700 mb-3">
             Blacklisted Guests
           </h2>
 
@@ -63,7 +65,7 @@ const Guests = () => {
             <FaHistory className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-xl font-bold text-[#BF1E2E] mb-3">
+          <h2 className="text-lg font-bold text-rose-700 mb-3">
             Guests History
           </h2>
 
