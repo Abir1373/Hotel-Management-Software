@@ -860,6 +860,31 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/restaurant-orders/:id", async (req, res) => {
+      const result = await restaurantOrderCollection.findOne({
+        _id: new ObjectId(req.params.id),
+      });
+      res.send(result);
+    });
+    // Update Restaurant Order (only foodItems + paymentStatus + totalAmount)
+    app.patch("/restaurant-orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const { foodItems, paymentStatus, totalAmount } = req.body;
+
+      const result = await restaurantOrderCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            foodItems,
+            paymentStatus,
+            totalAmount,
+          },
+        },
+      );
+
+      res.send(result);
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================

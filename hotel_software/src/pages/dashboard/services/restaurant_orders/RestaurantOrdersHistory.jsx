@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { MdRestaurantMenu, MdWorkHistory } from "react-icons/md";
+import { MdEdit, MdRestaurantMenu, MdWorkHistory } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
+import { FaFileInvoiceDollar } from "react-icons/fa";
 
 const RestaurantOrdersHistory = () => {
   const axiosInstance = useAxios();
@@ -90,6 +91,7 @@ const RestaurantOrdersHistory = () => {
                   <th className="font-semibold">Payment Method</th>
                   <th className="font-semibold text-right">Total</th>
                   <th className="font-semibold text-center">Status</th>
+                  <th className="font-semibold text-center">Action</th>
                 </tr>
               </thead>
 
@@ -154,6 +156,38 @@ const RestaurantOrdersHistory = () => {
                       >
                         {order.paymentStatus}
                       </span>
+                    </td>
+
+                    {/* ===== Fixed Action Buttons ===== */}
+                    <td>
+                      <div className="flex items-center justify-center gap-2">
+                        {/* Invoice Button */}
+                        <Link
+                          to={`/dashboard/services/restaurant_orders/invoice/${order._id}`}
+                        >
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white gap-1"
+                            title="Generate Invoice"
+                          >
+                            <FaFileInvoiceDollar />
+                            Invoice
+                          </button>
+                        </Link>
+
+                        {/* Update Order Button */}
+                        <Link
+                          to={`/dashboard/services/restaurant_orders/edit_restaurant_history/${order._id}`}
+                        >
+                          <button
+                            type="button"
+                            className="btn btn-sm bg-[#BF1E2E] text-white hover:bg-red-800 border-none gap-1"
+                          >
+                            <MdEdit />
+                            Update
+                          </button>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -43,6 +43,8 @@ import RoomServiceHistory from "../pages/dashboard/services/room_service/RoomSer
 import RestaurantOrdersHistory from "../pages/dashboard/services/restaurant_orders/RestaurantOrdersHistory";
 import LaundryServiceHistory from "../pages/dashboard/services/laundry_service/LaundryServiceHistory";
 import TransportServiceHistory from "../pages/dashboard/services/transport_service/TransportServiceHistory";
+import EditRestaurantHistory from "../pages/dashboard/services/restaurant_orders/edit_restaurant_history/EditRestaurantHistory";
+import RestaurantInvoice from "../pages/dashboard/services/restaurant_orders/restaurant_invoice/RestaurantInvoice";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -105,6 +107,14 @@ const Router = createBrowserRouter([
       {
         path: "services/restaurant_orders/restaurant_orders_history",
         Component: RestaurantOrdersHistory,
+      },
+      {
+        path: "services/restaurant_orders/edit_restaurant_history/:id",
+        Component: EditRestaurantHistory,
+      },
+      {
+        path: "services/restaurant_orders/invoice/:id",
+        Component: RestaurantInvoice,
       },
       {
         path: "services/restaurant_orders/food_menu",
