@@ -778,6 +778,16 @@ async function run() {
       res.status(201).send(result);
     });
 
+    // Get All Room Service History
+    app.get("/room-service", async (req, res) => {
+      const result = await roomServiceCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      res.send(result);
+    });
+
     // =========================================================
     // TRANSPORT SERVICE
     // =========================================================
@@ -790,6 +800,15 @@ async function run() {
 
       const result = await transportServiceCollection.insertOne(transportData);
       res.status(201).send(result);
+    });
+    // Get All Transport Service History
+    app.get("/transport-service", async (req, res) => {
+      const result = await transportServiceCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      res.send(result);
     });
 
     // =========================================================
@@ -806,6 +825,15 @@ async function run() {
       res.status(201).send(result);
     });
 
+    // Get All Laundry Service History
+    app.get("/laundry-service", async (req, res) => {
+      const result = await laundryServiceCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
+      res.send(result);
+    });
+
     // =========================================================
     // RESTAURNT ORDERS
     // =========================================================
@@ -820,6 +848,16 @@ async function run() {
         message: "Restaurant order created successfully",
         insertedId: result.insertedId,
       });
+    });
+
+    // Get All Restaurant Orders History
+    app.get("/restaurant-orders", async (req, res) => {
+      const result = await restaurantOrderCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      res.send(result);
     });
 
     // =========================================================

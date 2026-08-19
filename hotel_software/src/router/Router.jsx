@@ -39,6 +39,10 @@ import PresentGuestList from "../pages/dashboard/guests/present_guest_list/Prese
 import EditGuestInfo from "../pages/dashboard/guests/present_guest_list/edit_guest_info/EditGuestInfo";
 import BlackListedGuests from "../pages/dashboard/guests/black_listed_guests/BlackListedGuests";
 import FoodMenu from "../pages/dashboard/services/restaurant_orders/food_menu/FoodMenu";
+import RoomServiceHistory from "../pages/dashboard/services/room_service/RoomServiceHistory";
+import RestaurantOrdersHistory from "../pages/dashboard/services/restaurant_orders/RestaurantOrdersHistory";
+import LaundryServiceHistory from "../pages/dashboard/services/laundry_service/LaundryServiceHistory";
+import TransportServiceHistory from "../pages/dashboard/services/transport_service/TransportServiceHistory";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -91,8 +95,16 @@ const Router = createBrowserRouter([
       { path: "services", Component: Services },
       { path: "services/room_service", Component: RoomService },
       {
+        path: "services/room_service/room_service_history",
+        Component: RoomServiceHistory,
+      },
+      {
         path: "services/restaurant_orders",
         Component: RestaurantOrders,
+      },
+      {
+        path: "services/restaurant_orders/restaurant_orders_history",
+        Component: RestaurantOrdersHistory,
       },
       {
         path: "services/restaurant_orders/food_menu",
@@ -100,8 +112,16 @@ const Router = createBrowserRouter([
       },
       { path: "services/laundry_service", Component: LaundryService },
       {
+        path: "services/laundry_service/laundry_service_history",
+        Component: LaundryServiceHistory,
+      },
+      {
         path: "services/transport_service",
         Component: TransportService,
+      },
+      {
+        path: "services/transport_service/transport_service_history",
+        Component: TransportServiceHistory,
       },
 
       { path: "check_in_out", Component: Check_in_Out },

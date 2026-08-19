@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { MdRoomService } from "react-icons/md";
+import { MdRoomService, MdWorkHistory } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { Link, useNavigate } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
@@ -19,7 +19,6 @@ const RoomService = () => {
 
   const selectedRoom = watch("roomNumber");
 
-  // Get current check-in guests
   const { data: checkIns = [], isLoading } = useQuery({
     queryKey: ["check-ins"],
     queryFn: async () => {
@@ -28,28 +27,31 @@ const RoomService = () => {
     },
   });
 
-  // Find selected guest/room
   const selectedCheckIn = checkIns.find(
     (checkIn) => checkIn.roomNumber === selectedRoom,
   );
 
   const onSubmit = async (data) => {
+    // Manually add guest info here (no useEffect needed)
     const serviceData = {
       ...data,
-      checkinId: selectedCheckIn?._id,
+      checkinId: selectedCheckIn?._id || "",
+      roomVariantName: selectedCheckIn?.roomVariantName || "",
+      nidNumber: selectedCheckIn?.nidNumber || "",
+      orderedBy: selectedCheckIn?.guestName || "",
     };
 
     const res = await axiosInstance.post("/room-service", serviceData);
 
     if (res.data.insertedId) {
-      Swal.fire({
+      await Swal.fire({
         title: "Success!",
         text: "Room service request submitted successfully.",
         icon: "success",
         confirmButtonColor: "#BF1E2E",
       });
+      navigate("/dashboard/services");
     }
-    navigate("/dashboard/services");
   };
 
   return (
@@ -61,25 +63,33 @@ const RoomService = () => {
             <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
               <MdRoomService className="text-xl text-white" />
             </div>
-
             <h1 className="text-lg font-bold text-rose-700">
               Room Service Request
             </h1>
           </div>
-
           <p className="text-gray-500 ml-12">
             Create a new room service request.
           </p>
         </div>
 
-        <Link to="/dashboard/services">
-          <button
-            type="button"
-            className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-          >
-            <RiHome3Line className="text-xl" />
-          </button>
-        </Link>
+        <div className="flex flex-row gap-3">
+          <Link to="/dashboard/services/room_service/room_service_history">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <MdWorkHistory className="text-xl" />
+            </button>
+          </Link>
+          <Link to="/dashboard/services">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <RiHome3Line className="text-xl" />
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Form */}
@@ -93,7 +103,6 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Room Number</span>
             </label>
-
             <select
               {...register("roomNumber", {
                 required: "Room number is required",
@@ -105,14 +114,12 @@ const RoomService = () => {
               <option value="" disabled>
                 {isLoading ? "Loading rooms..." : "Select room number"}
               </option>
-
               {checkIns.map((checkIn) => (
                 <option key={checkIn._id} value={checkIn.roomNumber}>
                   Room {checkIn.roomNumber}
                 </option>
               ))}
             </select>
-
             {errors.roomNumber && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.roomNumber.message}
@@ -125,18 +132,11 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Room Variant Name</span>
             </label>
-
             <input
               type="text"
               value={selectedCheckIn?.roomVariantName || ""}
               readOnly
               className="input input-bordered w-full bg-gray-100"
-            />
-
-            <input
-              type="hidden"
-              value={selectedCheckIn?.roomVariantName || ""}
-              {...register("roomVariantName")}
             />
           </div>
 
@@ -145,18 +145,11 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">NID Number</span>
             </label>
-
             <input
               type="text"
               value={selectedCheckIn?.nidNumber || ""}
               readOnly
               className="input input-bordered w-full bg-gray-100"
-            />
-
-            <input
-              type="hidden"
-              value={selectedCheckIn?.nidNumber || ""}
-              {...register("nidNumber")}
             />
           </div>
 
@@ -165,18 +158,11 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Ordered By</span>
             </label>
-
             <input
               type="text"
               value={selectedCheckIn?.guestName || ""}
               readOnly
               className="input input-bordered w-full bg-gray-100"
-            />
-
-            <input
-              type="hidden"
-              value={selectedCheckIn?.guestName || ""}
-              {...register("orderedBy")}
             />
           </div>
 
@@ -185,7 +171,6 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Service Requested</span>
             </label>
-
             <select
               {...register("serviceRequested", {
                 required: "Service is required",
@@ -196,14 +181,10 @@ const RoomService = () => {
               <option value="" disabled>
                 Select service
               </option>
-
               <option value="Housekeeping">Housekeeping</option>
-
               <option value="Room Cleaning">Room Cleaning</option>
-
               <option value="Other">Other</option>
             </select>
-
             {errors.serviceRequested && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.serviceRequested.message}
@@ -216,7 +197,6 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Service Date</span>
             </label>
-
             <input
               type="date"
               {...register("serviceDate", {
@@ -224,7 +204,6 @@ const RoomService = () => {
               })}
               className="input input-bordered w-full bg-white"
             />
-
             {errors.serviceDate && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.serviceDate.message}
@@ -237,7 +216,6 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Service Time</span>
             </label>
-
             <input
               type="time"
               {...register("serviceTime", {
@@ -245,7 +223,6 @@ const RoomService = () => {
               })}
               className="input input-bordered w-full bg-white"
             />
-
             {errors.serviceTime && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.serviceTime.message}
@@ -258,7 +235,6 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Assigned Staff</span>
             </label>
-
             <input
               type="text"
               {...register("assignedStaff")}
@@ -271,7 +247,6 @@ const RoomService = () => {
             <label className="label">
               <span className="label-text font-medium">Total Charge</span>
             </label>
-
             <input
               type="number"
               min="0"
@@ -288,7 +263,6 @@ const RoomService = () => {
           <label className="label">
             <span className="label-text font-medium">Special Instructions</span>
           </label>
-
           <textarea
             rows="4"
             {...register("specialInstructions")}

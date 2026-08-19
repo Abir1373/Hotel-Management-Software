@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { MdLocalLaundryService } from "react-icons/md";
+import { MdLocalLaundryService, MdWorkHistory } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router";
@@ -98,14 +98,24 @@ const LaundryService = () => {
           </p>
         </div>
 
-        <Link to="/dashboard/services">
-          <button
-            type="button"
-            className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-          >
-            <RiHome3Line className="text-xl" />
-          </button>
-        </Link>
+        <div className="flex flex-row gap-3">
+          <Link to="/dashboard/services/laundry_service/laundry_service_history">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <MdWorkHistory className="text-xl" />
+            </button>
+          </Link>
+          <Link to="/dashboard/services">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <RiHome3Line className="text-xl" />
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Form */}

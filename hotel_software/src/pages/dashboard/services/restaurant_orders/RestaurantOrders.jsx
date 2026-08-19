@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { MdRestaurantMenu } from "react-icons/md";
+import { MdRestaurantMenu, MdWorkHistory } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { IoFastFoodSharp } from "react-icons/io5";
@@ -132,7 +132,7 @@ const RestaurantOrders = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Link to="/dashboard/services/restaurant_orders/food_menu">
             <button
               type="button"
@@ -140,6 +140,15 @@ const RestaurantOrders = () => {
               title="Food Menu"
             >
               <IoFastFoodSharp className="text-xl" />
+            </button>
+          </Link>
+
+          <Link to="/dashboard/services/restaurant_orders/restaurant_orders_history">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <MdWorkHistory className="text-xl" />
             </button>
           </Link>
 

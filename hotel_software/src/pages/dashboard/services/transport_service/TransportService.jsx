@@ -5,6 +5,7 @@ import { RiHome3Line } from "react-icons/ri";
 import { Link, useNavigate } from "react-router";
 import Swal from "sweetalert2";
 import useAxios from "../../../../hooks/useAxios";
+import { MdWorkHistory } from "react-icons/md";
 
 const TransportService = () => {
   const axiosInstance = useAxios();
@@ -74,14 +75,24 @@ const TransportService = () => {
           </p>
         </div>
 
-        <Link to="/dashboard/services">
-          <button
-            type="button"
-            className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-          >
-            <RiHome3Line className="text-xl" />
-          </button>
-        </Link>
+        <div className="flex flex-row gap-3">
+          <Link to="/dashboard/services/transport_service/transport_service_history">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <MdWorkHistory className="text-xl" />
+            </button>
+          </Link>
+          <Link to="/dashboard/services">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <RiHome3Line className="text-xl" />
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Form */}
