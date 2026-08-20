@@ -306,6 +306,31 @@ const TransportService = () => {
               </p>
             )}
           </div>
+
+          {/* Active Status */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Active Status</span>
+            </label>
+            <select
+              {...register("active_status", {
+                required: "Active status is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue="active"
+            >
+              <option value="" disabled>
+                Select status
+              </option>
+              <option value="active">Active</option>
+              <option value="left">Left</option>
+            </select>
+            {errors.active_status && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.active_status.message}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Buttons */}

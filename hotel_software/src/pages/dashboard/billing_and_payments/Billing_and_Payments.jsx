@@ -44,7 +44,7 @@ const Billing_and_Payments = () => {
 
         {/* Payments */}
         <Link
-          to="/dashboard/billing/payments"
+          to="/dashboard/billing_and_payments/payments"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">

@@ -55,7 +55,7 @@ const RestaurantOrders = () => {
     );
 
     if (foundCheckIn) {
-      setSelectedCheckIn(foundCheckIn); // store full check-in info
+      setSelectedCheckIn(foundCheckIn);
       setValue("guestName", foundCheckIn.guestName || "");
     } else {
       setSelectedCheckIn(null);
@@ -96,7 +96,6 @@ const RestaurantOrders = () => {
       ...data,
       foodItems,
       totalAmount,
-      // Send the full check-in information when a room is selected
       checkInInfo: selectedCheckIn || null,
     };
 
@@ -316,6 +315,31 @@ const RestaurantOrders = () => {
               </p>
             )}
           </div>
+
+          {/* Active Status */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Active Status</span>
+            </label>
+            <select
+              {...register("active_status", {
+                required: "Active status is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue="active"
+            >
+              <option value="" disabled>
+                Select status
+              </option>
+              <option value="active">Active</option>
+              <option value="left">Left</option>
+            </select>
+            {errors.active_status && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.active_status.message}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* ========== Food Items Section ========== */}
@@ -436,7 +460,7 @@ const RestaurantOrders = () => {
             onClick={() => {
               reset();
               setFoodItems([{ itemName: "", quantity: 1, price: 0 }]);
-              setSelectedCheckIn(null); // also clear selected check-in
+              setSelectedCheckIn(null);
             }}
             className="btn btn-outline border-[#BF1E2E] text-[#BF1E2E] hover:bg-[#BF1E2E] hover:text-white"
           >

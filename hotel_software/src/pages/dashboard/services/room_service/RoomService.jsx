@@ -32,7 +32,6 @@ const RoomService = () => {
   );
 
   const onSubmit = async (data) => {
-    // Manually add guest info here (no useEffect needed)
     const serviceData = {
       ...data,
       checkinId: selectedCheckIn?._id || "",
@@ -255,6 +254,31 @@ const RoomService = () => {
               })}
               className="input input-bordered w-full bg-white"
             />
+          </div>
+
+          {/* Active Status */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Active Status</span>
+            </label>
+            <select
+              {...register("active_status", {
+                required: "Active status is required",
+              })}
+              className="select select-bordered w-full bg-white"
+              defaultValue="active"
+            >
+              <option value="" disabled>
+                Select status
+              </option>
+              <option value="active">Active</option>
+              <option value="left">Left</option>
+            </select>
+            {errors.active_status && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.active_status.message}
+              </p>
+            )}
           </div>
         </div>
 
