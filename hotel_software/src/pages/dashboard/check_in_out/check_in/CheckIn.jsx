@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
-import { useMemo } from "react";
 
 const CheckIn = () => {
   const axiosInstance = useAxios();
@@ -49,34 +48,25 @@ const CheckIn = () => {
   });
 
   // Selected variant object
-  const selectedVariant = useMemo(() => {
-    return roomVariants.find((v) => v._id === selectedVariantId);
-  }, [roomVariants, selectedVariantId]);
+  const selectedVariant = roomVariants.find((v) => v._id === selectedVariantId);
 
   // Calculate number of nights
-  const nights = useMemo(() => {
-    if (!checkInDate || !checkOutDate) return 0;
-
+  let nights = 0;
+  if (checkInDate && checkOutDate) {
     const inDate = new Date(checkInDate);
     const outDate = new Date(checkOutDate);
-
     const diffTime = outDate - inDate;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays > 0 ? diffDays : 0;
-  }, [checkInDate, checkOutDate]);
+    nights = diffDays > 0 ? diffDays : 0;
+  }
 
   // Calculate total amount
-  const totalAmount = useMemo(() => {
-    if (!selectedVariant || nights === 0) return 0;
-    return selectedVariant.price * nights;
-  }, [selectedVariant, nights]);
+  const totalAmount =
+    selectedVariant && nights > 0 ? selectedVariant.price * nights : 0;
 
   // Calculate due amount
-  const dueAmount = useMemo(() => {
-    const advance = Number(advancePayment) || 0;
-    return totalAmount - advance >= 0 ? totalAmount - advance : 0;
-  }, [totalAmount, advancePayment]);
+  const advance = Number(advancePayment) || 0;
+  const dueAmount = totalAmount - advance >= 0 ? totalAmount - advance : 0;
 
   const onSubmit = async (data) => {
     const nidImageFile = data.nidImage?.[0];

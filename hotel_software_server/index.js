@@ -842,7 +842,40 @@ async function run() {
     app.post("/restaurant-orders", async (req, res) => {
       const orderData = req.body;
 
+      // 1. Insert the restaurant order
       const result = await restaurantOrderCollection.insertOne(orderData);
+
+      // 2. If order is linked to a check-in guest → update Check-In document
+      if (orderData.checkInInfo && orderData.checkInInfo._id) {
+        const checkInId = orderData.checkInInfo._id;
+
+        const foodItemsToPush = (orderData.foodItems || []).map((item) => ({
+          itemName: item.itemName,
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.price) || 0,
+          totalPrice: (Number(item.quantity) || 0) * (Number(item.price) || 0),
+          orderedAt: new Date(),
+        }));
+
+        const totalAmountToAdd = Number(orderData.totalAmount) || 0;
+
+        const updateResult = await checkInCollection.updateOne(
+          { _id: new ObjectId(checkInId) },
+          {
+            $push: {
+              restaurantOrders: {
+                orderId: result.insertedId,
+                foodItems: foodItemsToPush,
+                totalAmount: totalAmountToAdd,
+                orderedAt: new Date(),
+              },
+            },
+            $inc: {
+              restaurantTotalAmount: totalAmountToAdd,
+            },
+          },
+        );
+      }
 
       res.send({
         success: true,
