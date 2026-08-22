@@ -241,21 +241,6 @@ const RoomService = () => {
             />
           </div>
 
-          {/* Total Charge */}
-          <div>
-            <label className="label">
-              <span className="label-text font-medium">Total Charge</span>
-            </label>
-            <input
-              type="number"
-              min="0"
-              {...register("totalCharge", {
-                valueAsNumber: true,
-              })}
-              className="input input-bordered w-full bg-white"
-            />
-          </div>
-
           {/* Active Status */}
           <div>
             <label className="label">

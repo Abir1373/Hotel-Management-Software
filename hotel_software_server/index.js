@@ -780,11 +780,12 @@ async function run() {
 
     // Get All Room Service History
     app.get("/room-service", async (req, res) => {
+      const { active } = req.query;
+      const filter = active ? { active_status: "active" } : {};
       const result = await roomServiceCollection
-        .find()
+        .find(filter)
         .sort({ createdAt: -1 })
         .toArray();
-
       res.send(result);
     });
 

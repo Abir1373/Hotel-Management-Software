@@ -48,7 +48,6 @@ import RestaurantInvoice from "../pages/dashboard/services/restaurant_orders/res
 import Payments from "../pages/dashboard/billing_and_payments/payments/Payments";
 import LaundryServiceDues from "../pages/dashboard/billing_and_payments/payments/laundry_service_dues/LaundryServiceDues";
 import RestaurantDues from "../pages/dashboard/billing_and_payments/payments/restaurant_dues/RestaurantDues";
-import RoomServiceDues from "../pages/dashboard/billing_and_payments/payments/room_service_dues/RoomServiceDues";
 import TransportServiceDues from "../pages/dashboard/billing_and_payments/payments/transport_service_dues/TransportServiceDues";
 const Router = createBrowserRouter([
   {
@@ -84,10 +83,6 @@ const Router = createBrowserRouter([
       {
         path: "billing_and_payments/payments/restaurant_dues",
         Component: RestaurantDues,
-      },
-      {
-        path: "billing_and_payments/payments/room_service_dues",
-        Component: RoomServiceDues,
       },
       {
         path: "billing_and_payments/payments/transport_service_dues",
