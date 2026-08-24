@@ -35,24 +35,43 @@ const TransportService = () => {
   );
 
   const onSubmit = async (data) => {
+    if (!selectedCheckIn?._id) {
+      Swal.fire({
+        title: "Error",
+        text: "Please select a valid room",
+        icon: "error",
+        confirmButtonColor: "#BF1E2E",
+      });
+      return;
+    }
+
     const transportData = {
       ...data,
-      checkinId: selectedCheckIn?._id,
-      guestName: selectedCheckIn?.guestName || "",
-      contactNumber: selectedCheckIn?.contactNumber || "",
+      checkinId: selectedCheckIn._id,
+      guestName: selectedCheckIn.guestName || "",
+      contactNumber: selectedCheckIn.contactNumber || "",
     };
 
-    const res = await axiosInstance.post("/transport-service", transportData);
+    try {
+      const res = await axiosInstance.post("/transport-service", transportData);
 
-    if (res.data.insertedId) {
+      if (res.data.insertedId) {
+        Swal.fire({
+          title: "Success!",
+          text: "Transport service booking submitted successfully.",
+          icon: "success",
+          confirmButtonColor: "#BF1E2E",
+        });
+        navigate("/dashboard/services");
+      }
+    } catch (err) {
       Swal.fire({
-        title: "Success!",
-        text: "Transport service booking submitted successfully.",
-        icon: "success",
+        title: "Error",
+        text: "Failed to submit transport booking",
+        icon: "error",
         confirmButtonColor: "#BF1E2E",
       });
     }
-    navigate("/dashboard/services");
   };
 
   return (

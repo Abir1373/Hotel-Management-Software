@@ -59,25 +59,44 @@ const LaundryService = () => {
   }, 0);
 
   const onSubmit = async (data) => {
+    if (!selectedCheckIn?._id) {
+      Swal.fire({
+        title: "Error",
+        text: "Please select a valid room",
+        icon: "error",
+        confirmButtonColor: "#BF1E2E",
+      });
+      return;
+    }
+
     const laundryData = {
       ...data,
-      checkinId: selectedCheckIn?._id,
-      guestName: selectedCheckIn?.guestName || "",
+      checkinId: selectedCheckIn._id,
+      guestName: selectedCheckIn.guestName || "",
       clothItems,
       totalCost,
     };
 
-    const res = await axiosInstance.post("/laundry-service", laundryData);
+    try {
+      const res = await axiosInstance.post("/laundry-service", laundryData);
 
-    if (res.data.insertedId) {
+      if (res.data.insertedId) {
+        Swal.fire({
+          title: "Success!",
+          text: "Laundry service request submitted successfully.",
+          icon: "success",
+          confirmButtonColor: "#BF1E2E",
+        });
+        navigate("/dashboard/services");
+      }
+    } catch (err) {
       Swal.fire({
-        title: "Success!",
-        text: "Laundry service request submitted successfully.",
-        icon: "success",
+        title: "Error",
+        text: "Failed to submit laundry request",
+        icon: "error",
         confirmButtonColor: "#BF1E2E",
       });
     }
-    navigate("/dashboard/services");
   };
 
   return (

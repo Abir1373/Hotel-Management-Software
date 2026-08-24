@@ -45,10 +45,7 @@ import LaundryServiceHistory from "../pages/dashboard/services/laundry_service/L
 import TransportServiceHistory from "../pages/dashboard/services/transport_service/TransportServiceHistory";
 import EditRestaurantHistory from "../pages/dashboard/services/restaurant_orders/edit_restaurant_history/EditRestaurantHistory";
 import RestaurantInvoice from "../pages/dashboard/services/restaurant_orders/restaurant_invoice/RestaurantInvoice";
-import Payments from "../pages/dashboard/billing_and_payments/payments/Payments";
-import LaundryServiceDues from "../pages/dashboard/billing_and_payments/payments/laundry_service_dues/LaundryServiceDues";
-import RestaurantDues from "../pages/dashboard/billing_and_payments/payments/restaurant_dues/RestaurantDues";
-import TransportServiceDues from "../pages/dashboard/billing_and_payments/payments/transport_service_dues/TransportServiceDues";
+import Dues from "../pages/dashboard/billing_and_payments/dues/Dues";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -75,19 +72,7 @@ const Router = createBrowserRouter([
       },
 
       { path: "billing_and_payments", Component: Billing_and_Payments },
-      { path: "billing_and_payments/payments", Component: Payments },
-      {
-        path: "billing_and_payments/payments/laundry_service_dues",
-        Component: LaundryServiceDues,
-      },
-      {
-        path: "billing_and_payments/payments/restaurant_dues",
-        Component: RestaurantDues,
-      },
-      {
-        path: "billing_and_payments/payments/transport_service_dues",
-        Component: TransportServiceDues,
-      },
+      { path: "billing_and_payments/dues", Component: Dues },
 
       { path: "rooms", Component: Rooms },
       { path: "rooms/add_room_variant", Component: AddRoomVariant },

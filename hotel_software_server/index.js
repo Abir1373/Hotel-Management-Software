@@ -794,14 +794,47 @@ async function run() {
     // =========================================================
 
     app.post("/transport-service", async (req, res) => {
-      const transportData = {
-        ...req.body,
-        createdAt: new Date(),
-      };
+      try {
+        const transportData = {
+          ...req.body,
+          createdAt: new Date(),
+        };
 
-      const result = await transportServiceCollection.insertOne(transportData);
-      res.status(201).send(result);
+        // 1. Save the transport request
+        const result =
+          await transportServiceCollection.insertOne(transportData);
+
+        // 2. Only if paymentStatus is "Due" → add to check-in
+        if (req.body.paymentStatus === "Due" && req.body.checkinId) {
+          const transportOrder = {
+            orderId: result.insertedId,
+            pickupLocation: req.body.pickupLocation || "",
+            destination: req.body.destination || "",
+            pickupDate: req.body.pickupDate || "",
+            pickupTime: req.body.pickupTime || "",
+            vehicleType: req.body.vehicleType || "",
+            driverNumber: req.body.driverNumber || "",
+            fare: Number(req.body.fare) || 0,
+            paymentStatus: "Due",
+            orderedAt: new Date(),
+          };
+
+          await checkInCollection.updateOne(
+            { _id: new ObjectId(req.body.checkinId) },
+            {
+              $push: { transportOrders: transportOrder },
+              $inc: { transportTotalAmount: transportOrder.fare },
+            },
+          );
+        }
+
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Transport service error:", error);
+        res.status(500).send({ message: "Failed to create transport service" });
+      }
     });
+
     // Get All Transport Service History
     app.get("/transport-service", async (req, res) => {
       const result = await transportServiceCollection
@@ -817,13 +850,50 @@ async function run() {
     // =========================================================
 
     app.post("/laundry-service", async (req, res) => {
-      const laundryData = {
-        ...req.body,
-        createdAt: new Date(),
-      };
+      try {
+        const laundryData = {
+          ...req.body,
+          createdAt: new Date(),
+        };
 
-      const result = await laundryServiceCollection.insertOne(laundryData);
-      res.status(201).send(result);
+        // 1. Save the laundry request
+        const result = await laundryServiceCollection.insertOne(laundryData);
+
+        // 2. Only if paymentStatus is "Due" → add to check-in
+        if (req.body.paymentStatus === "Due" && req.body.checkinId) {
+          const laundryOrder = {
+            orderId: result.insertedId,
+            clothItems: (req.body.clothItems || []).map((item) => ({
+              clothName: item.clothName || "",
+              quantity: Number(item.quantity) || 0,
+              price: Number(item.price) || 0,
+              totalPrice:
+                (Number(item.quantity) || 0) * (Number(item.price) || 0),
+            })),
+            totalCost: Number(req.body.totalCost) || 0,
+            laundryType: req.body.laundryType || "",
+            pickupDate: req.body.pickupDate || "",
+            deliveryDate: req.body.deliveryDate || "",
+            assignedStaff: req.body.assignedStaff || "",
+            specialInstructions: req.body.specialInstructions || "",
+            paymentStatus: "Due",
+            orderedAt: new Date(),
+          };
+
+          await checkInCollection.updateOne(
+            { _id: new ObjectId(req.body.checkinId) },
+            {
+              $push: { laundryOrders: laundryOrder },
+              $inc: { laundryTotalAmount: laundryOrder.totalCost },
+            },
+          );
+        }
+
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Laundry service error:", error);
+        res.status(500).send({ message: "Failed to create laundry service" });
+      }
     });
 
     // Get All Laundry Service History
@@ -905,6 +975,16 @@ async function run() {
       const id = req.params.id;
       const { foodItems, paymentStatus, totalAmount } = req.body;
 
+      // 1. Get the existing order first
+      const existingOrder = await restaurantOrderCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (!existingOrder) {
+        return res.status(404).send({ message: "Order not found" });
+      }
+
+      // 2. Update the restaurant order
       const result = await restaurantOrderCollection.updateOne(
         { _id: new ObjectId(id) },
         {
@@ -915,6 +995,41 @@ async function run() {
           },
         },
       );
+
+      // 3. If this order is linked to a check-in → update Check-In document
+      if (existingOrder.checkInInfo && existingOrder.checkInInfo._id) {
+        const checkInId = existingOrder.checkInInfo._id;
+        const oldTotalAmount = Number(existingOrder.totalAmount) || 0;
+        const newTotalAmount = Number(totalAmount) || 0;
+        const difference = newTotalAmount - oldTotalAmount;
+
+        // Prepare updated food items
+        const updatedFoodItems = (foodItems || []).map((item) => ({
+          itemName: item.itemName,
+          quantity: Number(item.quantity) || 0,
+          unitPrice: Number(item.price) || 0,
+          totalPrice: (Number(item.quantity) || 0) * (Number(item.price) || 0),
+          orderedAt: new Date(),
+        }));
+
+        // Update the specific order inside restaurantOrders array
+        const updateResult = await checkInCollection.updateOne(
+          {
+            _id: new ObjectId(checkInId),
+            "restaurantOrders.orderId": new ObjectId(id),
+          },
+          {
+            $set: {
+              "restaurantOrders.$.foodItems": updatedFoodItems,
+              "restaurantOrders.$.totalAmount": newTotalAmount,
+              "restaurantOrders.$.paymentStatus": paymentStatus,
+            },
+            $inc: {
+              restaurantTotalAmount: difference, // adjust total by difference
+            },
+          },
+        );
+      }
 
       res.send(result);
     });

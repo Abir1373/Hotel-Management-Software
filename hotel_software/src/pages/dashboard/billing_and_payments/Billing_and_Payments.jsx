@@ -42,19 +42,19 @@ const Billing_and_Payments = () => {
           </p>
         </Link>
 
-        {/* Payments */}
+        {/* Dues */}
         <Link
-          to="/dashboard/billing_and_payments/payments"
+          to="/dashboard/billing_and_payments/dues"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
             <FaMoneyCheckAlt className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-lg font-bold text-rose-700 mb-3">Payments</h2>
+          <h2 className="text-lg font-bold text-rose-700 mb-3">All Dues</h2>
 
           <p className="text-gray-600 text-sm">
-            Record guest payments and monitor completed transactions.
+            Record guest due payments and monitor transactions.
           </p>
         </Link>
 
