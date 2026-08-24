@@ -47,7 +47,9 @@ const AllGuestDues = () => {
             <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
               <MdPayments className="text-xl text-white" />
             </div>
-            <h1 className="text-lg font-bold text-rose-700">All Guest Dues</h1>
+            <h1 className="text-lg font-bold text-rose-700">
+              Services Total Dues
+            </h1>
           </div>
           <p className="text-gray-500 ml-12">
             View all due amounts from check-in. Search by room number.
