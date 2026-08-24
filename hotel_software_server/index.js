@@ -597,6 +597,59 @@ async function run() {
       res.send(result);
     });
 
+    // GET /check-in/all-dues
+    app.get("/check-in/all-dues", async (req, res) => {
+      try {
+        const checkIns = await checkInCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+
+        const duesList = checkIns.map((checkIn) => {
+          const roomDue = Number(checkIn.dueAmount) || 0;
+
+          // Restaurant – only Due orders
+          const restaurantDue = (checkIn.restaurantOrders || [])
+            .filter((o) => o.paymentStatus === "Due")
+            .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+
+          // Laundry – only Due
+          const laundryDue = (checkIn.laundryOrders || [])
+            .filter((o) => o.paymentStatus === "Due")
+            .reduce((sum, o) => sum + (Number(o.totalCost) || 0), 0);
+
+          // Transport – only Due
+          const transportDue = (checkIn.transportOrders || [])
+            .filter((o) => o.paymentStatus === "Due")
+            .reduce((sum, o) => sum + (Number(o.fare) || 0), 0);
+
+          const totalDue = roomDue + restaurantDue + laundryDue + transportDue;
+
+          return {
+            _id: checkIn._id,
+            roomNumber: checkIn.roomNumber,
+            guestName: checkIn.guestName,
+            contactNumber: checkIn.contactNumber,
+            checkInDate: checkIn.checkInDate,
+            checkOutDate: checkIn.checkOutDate,
+            roomDue,
+            restaurantDue,
+            laundryDue,
+            transportDue,
+            totalDue,
+          };
+        });
+
+        // Optional: only show guests who have some due
+        // const onlyWithDue = duesList.filter((d) => d.totalDue > 0);
+
+        res.send(duesList);
+      } catch (error) {
+        console.error("Get all dues error:", error);
+        res.status(500).send({ message: "Failed to get dues" });
+      }
+    });
+
     // Get single check-in
     app.get("/check-in/:id", async (req, res) => {
       const { id } = req.params;
