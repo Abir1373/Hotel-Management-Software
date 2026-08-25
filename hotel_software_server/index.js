@@ -186,6 +186,73 @@ async function run() {
       res.send(room);
     });
 
+    // Get available rooms by date range
+    app.get("/rooms/available", async (req, res) => {
+      try {
+        const { arriving, departure } = req.query;
+
+        if (!arriving || !departure) {
+          return res.status(400).send({
+            message: "arriving and departure dates are required",
+          });
+        }
+
+        // All check-ins that overlap the selected range
+        // Overlap: checkInDate < departure AND checkOutDate > arriving
+        const overlappingCheckIns = await checkInCollection
+          .find({
+            checkInDate: { $lt: departure },
+            checkOutDate: { $gt: arriving },
+          })
+          .toArray();
+
+        const occupiedRoomNos = [
+          ...new Set(overlappingCheckIns.map((c) => String(c.roomNumber))),
+        ];
+
+        // All rooms except occupied + exclude Maintenance
+        const availableRooms = await roomCollection
+          .find({
+            roomNo: { $nin: occupiedRoomNos },
+            roomStatus: { $nin: ["Maintenance", "In Progress"] },
+          })
+          .toArray();
+
+        // Group by variant
+        const grouped = {};
+        for (const room of availableRooms) {
+          const key = room.variantName || "Other";
+          if (!grouped[key]) {
+            grouped[key] = {
+              variantName: room.variantName,
+              baseRoomType: room.baseRoomType,
+              price: room.price,
+              maxOccupancy: room.maxOccupancy,
+              bedType: room.bedType,
+              amenities: room.amenities,
+              image: room.image,
+              rooms: [],
+            };
+          }
+          grouped[key].rooms.push({
+            _id: room._id,
+            roomNo: room.roomNo,
+            roomStatus: room.roomStatus,
+          });
+        }
+
+        res.send({
+          arriving,
+          departure,
+          totalAvailable: availableRooms.length,
+          variants: Object.values(grouped),
+        });
+      } catch (error) {
+        console.error("Available rooms error:", error);
+        res.status(500).send({ message: "Failed to get available rooms" });
+      }
+    });
+
     // Get room by ID
     app.get("/rooms/:id", async (req, res) => {
       const { id } = req.params;

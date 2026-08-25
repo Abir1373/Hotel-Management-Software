@@ -19,8 +19,6 @@ import TransportService from "../pages/dashboard/services/transport_service/Tran
 import CheckIn from "../pages/dashboard/check_in_out/check_in/CheckIn";
 import CheckOut from "../pages/dashboard/check_in_out/check_out/CheckOut";
 import AddEmployee from "../pages/dashboard/employees/add_employee/AddEmployee";
-import NewReservation from "../pages/dashboard/reservations/new_reservation/NewReservation";
-import GroupBookings from "../pages/dashboard/reservations/group_reservation/GroupBookings";
 import CurrentEmployees from "../pages/dashboard/employees/current_employees/CurrentEmployees";
 import EditEmployee from "../pages/dashboard/employees/edit_employee_info/EditEmployee";
 import PastEmployees from "../pages/dashboard/employees/past_employees/PastEmployees";
@@ -46,6 +44,7 @@ import TransportServiceHistory from "../pages/dashboard/services/transport_servi
 import EditRestaurantHistory from "../pages/dashboard/services/restaurant_orders/edit_restaurant_history/EditRestaurantHistory";
 import RestaurantInvoice from "../pages/dashboard/services/restaurant_orders/restaurant_invoice/RestaurantInvoice";
 import Dues from "../pages/dashboard/billing_and_payments/dues/Dues";
+
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -156,15 +155,6 @@ const Router = createBrowserRouter([
       { path: "guests/black_listed_guests", Component: BlackListedGuests },
 
       { path: "reservations", Component: Reservations },
-      {
-        path: "reservations/new_reservation",
-        Component: NewReservation,
-      },
-      {
-        path: "reservations/group_bookings",
-        Component: GroupBookings,
-      },
-
       { path: "settings", Component: Settings },
     ],
   },
