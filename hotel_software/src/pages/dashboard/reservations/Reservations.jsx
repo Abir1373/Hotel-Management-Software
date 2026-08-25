@@ -1,38 +1,49 @@
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { LuBookImage } from "react-icons/lu";
+import Swal from "sweetalert2";
 import useAxios from "../../../hooks/useAxios";
 
 const Reservations = () => {
   const axiosInstance = useAxios();
 
-  const { register, watch } = useForm({
+  const {
+    register,
+    watch,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       month: new Date().toISOString().slice(0, 7),
+      guestName: "",
+      contactNumber: "",
       arrivingDate: "",
       departureDate: "",
     },
   });
 
   const selectedMonth = watch("month");
+  const guestName = watch("guestName");
+  const contactNumber = watch("contactNumber");
   const arrivingDate = watch("arrivingDate");
   const departureDate = watch("departureDate");
 
   const [year, month] = (selectedMonth || "").split("-").map(Number);
   const daysInMonth = year && month ? new Date(year, month, 0).getDate() : 0;
 
-  // Highlight days inside arriving → departure
   const isInRange = (day) => {
     if (!arrivingDate || !departureDate) return false;
-    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(
+      day,
+    ).padStart(2, "0")}`;
     return dateStr >= arrivingDate && dateStr < departureDate;
   };
 
-  // Fetch available rooms only when both dates are set
   const {
     data: availability,
     isLoading,
     isFetching,
+    refetch,
   } = useQuery({
     queryKey: ["available-rooms", arrivingDate, departureDate],
     queryFn: async () => {
@@ -44,8 +55,86 @@ const Reservations = () => {
       });
       return res.data;
     },
-    enabled: !!arrivingDate && !!departureDate,
+    enabled: false,
   });
+
+  const onFindRooms = () => {
+    if (!arrivingDate || !departureDate) return;
+
+    if (departureDate <= arrivingDate) {
+      Swal.fire({
+        title: "Invalid dates",
+        text: "Departure date must be after arriving date.",
+        icon: "warning",
+        confirmButtonColor: "#BF1E2E",
+      });
+      return;
+    }
+
+    refetch();
+  };
+
+  const handleReserve = async (room, variant) => {
+    if (!guestName || !contactNumber || !arrivingDate || !departureDate) {
+      Swal.fire({
+        title: "Missing info",
+        text: "Please fill guest name, contact, and dates first.",
+        icon: "warning",
+        confirmButtonColor: "#BF1E2E",
+      });
+      return;
+    }
+
+    const reservationData = {
+      guestName,
+      contactNumber,
+      arrivingDate,
+      departureDate,
+      room: {
+        _id: room._id,
+        variantId: room.variantId || "",
+        variantName: room.variantName || variant.variantName || "",
+        baseRoomType: room.baseRoomType || variant.baseRoomType || "",
+        price: room.price ?? variant.price ?? 0,
+        maxOccupancy: room.maxOccupancy ?? variant.maxOccupancy ?? 0,
+        bedType: room.bedType || variant.bedType || "",
+        amenities: room.amenities || variant.amenities || "",
+        description: room.description || "",
+        image: room.image || variant.image || "",
+        roomStatus: room.roomStatus || "Available",
+        roomNo: room.roomNo,
+        assignedPerson: room.assignedPerson || "",
+        assignedPersonNumber: room.assignedPersonNumber || "",
+        maintenanceCost: room.maintenanceCost ?? null,
+        correctives: room.correctives || "",
+        workBegins: room.workBegins || "",
+        workEnds: room.workEnds || "",
+      },
+      status: "Reserved",
+    };
+
+    try {
+      const res = await axiosInstance.post("/reservations", reservationData);
+
+      if (res.data.insertedId) {
+        Swal.fire({
+          title: "Success!",
+          text: `Room ${room.roomNo} reserved for ${guestName}.`,
+          icon: "success",
+          confirmButtonColor: "#BF1E2E",
+        });
+        refetch();
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to create reservation",
+        icon: "error",
+        confirmButtonColor: "#BF1E2E",
+      });
+    }
+  };
 
   return (
     <div className="p-6">
@@ -58,12 +147,51 @@ const Reservations = () => {
       </div>
 
       <p className="text-gray-500 mb-6">
-        Select arriving & departure dates to see available rooms by variant.
+        Enter guest details and dates to find available rooms.
       </p>
 
-      {/* Date inputs */}
-      <div className="bg-white shadow rounded-xl p-5 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Form */}
+      <form
+        onSubmit={handleSubmit(onFindRooms)}
+        className="bg-white shadow rounded-xl p-5 mb-6"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Guest Name</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Enter guest name"
+              {...register("guestName", { required: "Name is required" })}
+              className="input input-bordered w-full bg-white"
+            />
+            {errors.guestName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.guestName.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Contact Number</span>
+            </label>
+            <input
+              type="tel"
+              placeholder="Enter contact number"
+              {...register("contactNumber", {
+                required: "Contact number is required",
+              })}
+              className="input input-bordered w-full bg-white"
+            />
+            {errors.contactNumber && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.contactNumber.message}
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="label">
               <span className="label-text font-medium">Month</span>
@@ -81,9 +209,16 @@ const Reservations = () => {
             </label>
             <input
               type="date"
-              {...register("arrivingDate")}
+              {...register("arrivingDate", {
+                required: "Arriving date is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.arrivingDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.arrivingDate.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -92,12 +227,28 @@ const Reservations = () => {
             </label>
             <input
               type="date"
-              {...register("departureDate")}
+              {...register("departureDate", {
+                required: "Departure date is required",
+              })}
               className="input input-bordered w-full bg-white"
             />
+            {errors.departureDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.departureDate.message}
+              </p>
+            )}
           </div>
         </div>
-      </div>
+
+        <div className="flex justify-end mt-5">
+          <button
+            type="submit"
+            className="btn bg-[#BF1E2E] text-white hover:bg-red-800 border-none px-8"
+          >
+            Find Available Rooms
+          </button>
+        </div>
+      </form>
 
       {/* Legend */}
       <div className="flex gap-6 mb-4 text-sm">
@@ -111,7 +262,7 @@ const Reservations = () => {
         </div>
       </div>
 
-      {/* Day boxes for the month */}
+      {/* Day boxes */}
       <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-10 gap-3 mb-10">
         {Array.from({ length: daysInMonth }, (_, i) => {
           const day = i + 1;
@@ -132,14 +283,14 @@ const Reservations = () => {
         })}
       </div>
 
-      {/* Available rooms by variant */}
+      {/* Available rooms */}
       <h2 className="text-base font-semibold text-rose-700 mb-4">
         Available Rooms
       </h2>
 
-      {!arrivingDate || !departureDate ? (
+      {!availability && !isLoading && !isFetching ? (
         <p className="text-gray-500">
-          Please select arriving and departure dates.
+          Fill the form and click &quot;Find Available Rooms&quot;.
         </p>
       ) : isLoading || isFetching ? (
         <p className="text-gray-500">Checking availability...</p>
@@ -153,6 +304,12 @@ const Reservations = () => {
             {availability.totalAvailable} room(s) available from{" "}
             <span className="font-medium">{arrivingDate}</span> to{" "}
             <span className="font-medium">{departureDate}</span>
+            {guestName ? (
+              <>
+                {" "}
+                for <span className="font-medium">{guestName}</span>
+              </>
+            ) : null}
           </p>
 
           {availability.variants.map((variant) => (
@@ -180,14 +337,23 @@ const Reservations = () => {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {variant.rooms.map((room) => (
-                  <span
+                  <div
                     key={room._id}
-                    className="px-4 py-2 rounded-xl bg-green-100 text-green-800 font-semibold border border-green-200"
+                    className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2"
                   >
-                    Room {room.roomNo}
-                  </span>
+                    <span className="font-semibold text-green-800">
+                      Room {room.roomNo}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleReserve(room, variant)}
+                      className="btn btn-sm bg-[#BF1E2E] text-white hover:bg-red-800 border-none"
+                    >
+                      Reserve Room
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

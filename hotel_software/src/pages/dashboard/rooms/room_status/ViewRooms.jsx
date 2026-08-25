@@ -9,6 +9,8 @@ const ViewRooms = () => {
   const { id } = useParams();
   const axiosInstance = useAxios();
 
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
   const {
     data: rooms = [],
     isLoading,
@@ -23,6 +25,59 @@ const ViewRooms = () => {
     },
     enabled: !!id,
   });
+
+  // All check-ins (for date-based Occupied)
+  const { data: checkIns = [] } = useQuery({
+    queryKey: ["check-ins"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/check-in");
+      return res.data;
+    },
+  });
+
+  // All reservations (for date-based Reserved)
+  const { data: reservations = [] } = useQuery({
+    queryKey: ["reservations"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/reservations");
+      return res.data;
+    },
+  });
+
+  // Status for today based on dates
+  const getDisplayStatus = (room) => {
+    // Manual offline statuses win
+    if (
+      room.roomStatus === "Maintenance" ||
+      room.roomStatus === "In Progress"
+    ) {
+      return room.roomStatus;
+    }
+
+    const roomNo = String(room.roomNo);
+
+    // Occupied today (check-in)
+    const occupied = checkIns.some(
+      (c) =>
+        String(c.roomNumber) === roomNo &&
+        c.checkInDate <= today &&
+        c.checkOutDate > today,
+    );
+    if (occupied) return "Occupied";
+
+    // Reserved today (reservation)
+    const reserved = reservations.some(
+      (r) =>
+        String(r.room?.roomNo || r.roomNo) === roomNo &&
+        r.status === "Reserved" &&
+        r.arrivingDate <= today &&
+        r.departureDate > today,
+    );
+    if (reserved) return "Reserved";
+
+    // Otherwise use stored status (usually Available)
+    return room.roomStatus || "Available";
+  };
 
   if (isLoading) {
     return (
@@ -54,7 +109,6 @@ const ViewRooms = () => {
         icon: "success",
         confirmButtonColor: "#BF1E2E",
       });
-
       refetch();
     } else {
       Swal.fire({
@@ -64,6 +118,19 @@ const ViewRooms = () => {
         confirmButtonColor: "#BF1E2E",
       });
     }
+  };
+
+  const getStatusClass = (status) => {
+    if (status === "Available")
+      return "bg-green-400 text-white border-green-200";
+    if (status === "Maintenance") return "bg-red-700 text-white border-red-200";
+    if (status === "In Progress")
+      return "bg-violet-500 text-white border-yellow-200";
+    if (status === "Occupied")
+      return "bg-orange-900 text-white border-blue-200";
+    if (status === "Reserved")
+      return "bg-blue-900 text-white border-purple-200";
+    return "bg-gray-100 text-gray-700 border-gray-300";
   };
 
   return (
@@ -85,56 +152,40 @@ const ViewRooms = () => {
         </div>
 
         <p className="text-gray-500 mt-1">
-          Rooms belonging to this room variant
+          Rooms belonging to this room variant (status based on today&apos;s
+          dates)
         </p>
       </div>
 
-      {/* No Rooms */}
       {rooms.length === 0 ? (
         <div className="bg-white rounded-xl shadow-md p-10 text-center">
           <p className="text-gray-500">No rooms found for this variant.</p>
         </div>
       ) : (
-        /* Room Cards */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {rooms.map((room) => {
-            const status = room.roomStatus;
-
-            let statusClass = "bg-gray-100 text-gray-700 border-gray-300";
-
-            if (status === "Available") {
-              statusClass = "bg-green-400 text-white border-green-200";
-            } else if (status === "Maintenance") {
-              statusClass = "bg-red-700 text-white border-red-200";
-            } else if (status === "In Progress") {
-              statusClass = "bg-violet-500 text-white border-yellow-200";
-            } else if (status === "Occupied") {
-              statusClass = "bg-orange-900 text-white border-blue-200";
-            } else if (status === "Reserved") {
-              statusClass = "bg-blue-900 text-white border-purple-200";
-            }
+            const status = getDisplayStatus(room);
 
             return (
               <div
                 key={room._id}
                 className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition duration-300"
               >
-                {/* Content */}
                 <div className="p-5">
-                  {/* Room Number + Status */}
                   <div className="flex justify-between items-center gap-3 mb-5">
                     <h2 className="text-xl font-bold text-rose-800">
                       Room : {room.roomNo}
                     </h2>
 
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold border whitespace-nowrap ${statusClass}`}
+                      className={`px-3 py-1 rounded-full text-sm font-semibold border whitespace-nowrap ${getStatusClass(
+                        status,
+                      )}`}
                     >
                       {status}
                     </span>
                   </div>
 
-                  {/* Room Information */}
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Room Type</span>
@@ -165,7 +216,7 @@ const ViewRooms = () => {
                     </div>
                   </div>
 
-                  {/* Status Change - Styled */}
+                  {/* Manual status (Maintenance etc.) */}
                   <div className="flex justify-center mt-6">
                     <select
                       defaultValue={room.roomStatus}

@@ -53,6 +53,7 @@ async function run() {
     const transportServiceCollection = db.collection("Transport Services");
     const laundryServiceCollection = db.collection("Laundry Services");
     const restaurantOrderCollection = db.collection("Restaurant Orders");
+    const reservationCollection = db.collection("Reservations");
 
     // =========================================================
     // ROOT
@@ -192,59 +193,63 @@ async function run() {
         const { arriving, departure } = req.query;
 
         if (!arriving || !departure) {
-          return res.status(400).send({
-            message: "arriving and departure dates are required",
-          });
+          return res.status(400).send({ message: "Dates required" });
         }
 
-        // All check-ins that overlap the selected range
-        // Overlap: checkInDate < departure AND checkOutDate > arriving
-        const overlappingCheckIns = await checkInCollection
+        // Check-ins that overlap selected dates
+        const checkIns = await checkInCollection
           .find({
             checkInDate: { $lt: departure },
             checkOutDate: { $gt: arriving },
           })
           .toArray();
 
-        const occupiedRoomNos = [
-          ...new Set(overlappingCheckIns.map((c) => String(c.roomNumber))),
-        ];
-
-        // All rooms except occupied + exclude Maintenance
-        const availableRooms = await roomCollection
+        // Reservations that overlap selected dates
+        const reservations = await reservationCollection
           .find({
-            roomNo: { $nin: occupiedRoomNos },
-            roomStatus: { $nin: ["Maintenance", "In Progress"] },
+            arrivingDate: { $lt: departure },
+            departureDate: { $gt: arriving },
+            status: "Reserved",
           })
           .toArray();
 
-        // Group by variant
+        const blocked = [
+          ...new Set([
+            ...checkIns.map((c) => String(c.roomNumber)),
+            ...reservations.map((r) => String(r.room?.roomNo || r.roomNo)),
+          ]),
+        ];
+
+        const rooms = await roomCollection
+          .find({
+            roomNo: { $nin: blocked },
+            roomStatus: { $ne: "Maintenance" },
+          })
+          .toArray();
+
         const grouped = {};
-        for (const room of availableRooms) {
-          const key = room.variantName || "Other";
-          if (!grouped[key]) {
-            grouped[key] = {
+        rooms.forEach((room) => {
+          const name = room.variantName || "Other";
+          if (!grouped[name]) {
+            grouped[name] = {
               variantName: room.variantName,
               baseRoomType: room.baseRoomType,
               price: room.price,
               maxOccupancy: room.maxOccupancy,
               bedType: room.bedType,
               amenities: room.amenities,
+              description: room.description,
               image: room.image,
               rooms: [],
             };
           }
-          grouped[key].rooms.push({
-            _id: room._id,
-            roomNo: room.roomNo,
-            roomStatus: room.roomStatus,
-          });
-        }
+          grouped[name].rooms.push(room);
+        });
 
         res.send({
           arriving,
           departure,
-          totalAvailable: availableRooms.length,
+          totalAvailable: rooms.length,
           variants: Object.values(grouped),
         });
       } catch (error) {
@@ -1151,6 +1156,38 @@ async function run() {
         );
       }
 
+      res.send(result);
+    });
+
+    // =========================================================
+    // RESERVATIONS
+    // =========================================================
+
+    app.post("/reservations", async (req, res) => {
+      try {
+        const reservationData = {
+          ...req.body,
+          status: "Reserved",
+          createdAt: new Date(),
+        };
+
+        const result = await reservationCollection.insertOne(reservationData);
+
+        // Do NOT change roomStatus — availability is date-based only
+
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Reservation error:", error);
+        res.status(500).send({ message: "Failed to create reservation" });
+      }
+    });
+
+    // Get all reservations
+    app.get("/reservations", async (req, res) => {
+      const result = await reservationCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
       res.send(result);
     });
 
