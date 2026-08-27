@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { LuBookImage } from "react-icons/lu";
+import { MdWorkHistory } from "react-icons/md";
+import { Link } from "react-router";
 import Swal from "sweetalert2";
 import useAxios from "../../../hooks/useAxios";
 
@@ -113,49 +115,54 @@ const Reservations = () => {
       status: "Reserved",
     };
 
-    try {
-      const res = await axiosInstance.post("/reservations", reservationData);
+    const res = await axiosInstance.post("/reservations", reservationData);
 
-      if (res.data.insertedId) {
-        Swal.fire({
-          title: "Success!",
-          text: `Room ${room.roomNo} reserved for ${guestName}.`,
-          icon: "success",
-          confirmButtonColor: "#BF1E2E",
-        });
-        refetch();
-      }
-    } catch (err) {
-      console.error(err);
+    if (res.data.insertedId) {
       Swal.fire({
-        title: "Error",
-        text: "Failed to create reservation",
-        icon: "error",
+        title: "Success!",
+        text: `Room ${room.roomNo} reserved for ${guestName}.`,
+        icon: "success",
         confirmButtonColor: "#BF1E2E",
       });
+      refetch();
     }
   };
 
   return (
-    <div className="p-6">
+    <div className="mx-auto p-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
-          <LuBookImage className="text-xl text-white" />
+      <div className="flex justify-between mb-5">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+              <LuBookImage className="text-xl text-white" />
+            </div>
+            <h1 className="text-lg font-bold text-rose-700">Reservations</h1>
+          </div>
+          <p className="text-gray-500 ml-12">
+            Enter guest details and dates to find available rooms.
+          </p>
         </div>
-        <h1 className="text-lg font-bold text-rose-700">Reservations</h1>
-      </div>
 
-      <p className="text-gray-500 mb-6">
-        Enter guest details and dates to find available rooms.
-      </p>
+        {/* History button */}
+        <div className="flex flex-row gap-3">
+          <Link to="/dashboard/reservations/reservation_history">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            >
+              <MdWorkHistory className="text-xl" />
+            </button>
+          </Link>
+        </div>
+      </div>
 
       {/* Form */}
       <form
         onSubmit={handleSubmit(onFindRooms)}
-        className="bg-white shadow rounded-xl p-5 mb-6"
+        className="bg-white shadow-lg rounded-2xl p-8 mb-8"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="label">
               <span className="label-text font-medium">Guest Name</span>
@@ -240,7 +247,13 @@ const Reservations = () => {
           </div>
         </div>
 
-        <div className="flex justify-end mt-5">
+        <div className="flex justify-end gap-4 mt-8">
+          <button
+            type="reset"
+            className="btn btn-outline border-[#BF1E2E] text-[#BF1E2E] hover:bg-[#BF1E2E] hover:text-white"
+          >
+            Reset
+          </button>
           <button
             type="submit"
             className="btn bg-[#BF1E2E] text-white hover:bg-red-800 border-none px-8"
@@ -341,9 +354,9 @@ const Reservations = () => {
                 {variant.rooms.map((room) => (
                   <div
                     key={room._id}
-                    className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-2"
+                    className="flex items-center gap-2 bg-rose-50 border border-rose-100 rounded-xl px-3 py-2"
                   >
-                    <span className="font-semibold text-green-800">
+                    <span className="font-semibold text-rose-800">
                       Room {room.roomNo}
                     </span>
                     <button
