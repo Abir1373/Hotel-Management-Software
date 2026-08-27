@@ -44,6 +44,7 @@ import TransportServiceHistory from "../pages/dashboard/services/transport_servi
 import EditRestaurantHistory from "../pages/dashboard/services/restaurant_orders/edit_restaurant_history/EditRestaurantHistory";
 import RestaurantInvoice from "../pages/dashboard/services/restaurant_orders/restaurant_invoice/RestaurantInvoice";
 import Dues from "../pages/dashboard/billing_and_payments/dues/Dues";
+import ReservationsHistory from "../pages/dashboard/reservations/ReservationsHistory";
 
 const Router = createBrowserRouter([
   {
@@ -155,6 +156,10 @@ const Router = createBrowserRouter([
       { path: "guests/black_listed_guests", Component: BlackListedGuests },
 
       { path: "reservations", Component: Reservations },
+      {
+        path: "reservations/reservation_history",
+        Component: ReservationsHistory,
+      },
       { path: "settings", Component: Settings },
     ],
   },
