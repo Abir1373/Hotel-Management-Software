@@ -3,14 +3,15 @@ import { MdWorkHistory, MdDelete } from "react-icons/md";
 import { Link } from "react-router";
 import useAxios from "../../../hooks/useAxios";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
+import Swal from "sweetalert2";
 
 const ReservationsHistory = () => {
   const axiosInstance = useAxios();
-
   const {
     data: reservations = [],
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ["reservations-history"],
     queryFn: async () => {
@@ -18,6 +19,40 @@ const ReservationsHistory = () => {
       return res.data;
     },
   });
+
+  const handleDelete = async (id, guestName) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: `Delete reservation of "${guestName}"? This cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#BF1E2E",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await axiosInstance.delete(`/reservations/${id}`);
+      refetch();
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Reservation has been deleted.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: "Could not delete reservation. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className="mx-auto p-6">
@@ -188,6 +223,9 @@ const ReservationsHistory = () => {
                           type="button"
                           className="btn btn-sm bg-[#BF1E2E] text-white hover:bg-red-800 border-none gap-1"
                           title="Delete Reservation"
+                          onClick={() =>
+                            handleDelete(reservation._id, reservation.guestName)
+                          }
                         >
                           <MdDelete />
                           Delete

@@ -1191,6 +1191,30 @@ async function run() {
       res.send(result);
     });
 
+    // Delete a reservation
+    app.delete("/reservations/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        const result = await reservationCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        if (result.deletedCount === 0) {
+          return res.status(404).send({ message: "Reservation not found" });
+        }
+
+        res.send({
+          success: true,
+          message: "Reservation deleted successfully",
+          deletedCount: result.deletedCount,
+        });
+      } catch (error) {
+        console.error("Delete reservation error:", error);
+        res.status(500).send({ message: "Failed to delete reservation" });
+      }
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================
