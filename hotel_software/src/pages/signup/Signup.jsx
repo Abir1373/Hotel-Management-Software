@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
@@ -6,6 +6,7 @@ import useAxios from "../../hooks/useAxios";
 
 const Signup = () => {
   const axiosInstance = useAxios();
+  const [logoPreview, setLogoPreview] = useState(null);
 
   const {
     register,
@@ -14,10 +15,36 @@ const Signup = () => {
     reset,
   } = useForm();
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogoPreview(URL.createObjectURL(file));
+    } else {
+      setLogoPreview(null);
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
-      // Change this endpoint according to your backend
-      const res = await axiosInstance.post("/signup", data);
+      const formData = new FormData();
+
+      formData.append("hotelName", data.hotelName);
+      formData.append("propertyType", data.propertyType);
+      formData.append("address", data.address);
+      formData.append("ownerName", data.ownerName);
+      formData.append("email", data.email);
+      formData.append("phone", data.phone);
+      formData.append("password", data.password);
+
+      if (data.logo?.[0]) {
+        formData.append("logo", data.logo[0]);
+      }
+
+      const res = await axiosInstance.post("/hotels", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (res.data.insertedId || res.status === 201 || res.status === 200) {
         Swal.fire({
@@ -27,6 +54,7 @@ const Signup = () => {
           confirmButtonColor: "#92400e",
         });
         reset();
+        setLogoPreview(null);
       }
     } catch (error) {
       console.error(error);
@@ -121,6 +149,37 @@ const Signup = () => {
                   <p className="text-error text-sm mt-1">
                     {errors.address.message}
                   </p>
+                )}
+              </div>
+
+              {/* Hotel Logo */}
+              <div className="md:col-span-2">
+                <label className="label">
+                  <span className="label-text font-medium">Hotel Logo</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  {...register("logo", {
+                    required: "Hotel logo is required",
+                  })}
+                  onChange={handleLogoChange}
+                  className="file-input file-input-bordered w-full bg-white focus:outline-none focus:ring-0"
+                />
+                {errors.logo && (
+                  <p className="text-error text-sm mt-1">
+                    {errors.logo.message}
+                  </p>
+                )}
+
+                {logoPreview && (
+                  <div className="mt-3">
+                    <img
+                      src={logoPreview}
+                      alt="Logo Preview"
+                      className="w-24 h-24 object-contain rounded-lg border"
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -234,7 +293,7 @@ const Signup = () => {
             {isSubmitting ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "SIGN UP"
+              "SEND SIGN UP REQUEST"
             )}
           </button>
         </form>

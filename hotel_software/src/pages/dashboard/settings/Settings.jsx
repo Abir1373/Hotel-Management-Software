@@ -21,7 +21,7 @@ const Settings = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
         {/* Hotel Information */}
         <Link
-          to="/dashboard/settings/hotel"
+          to="/dashboard/settings/hotels"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
@@ -37,16 +37,16 @@ const Settings = () => {
           </p>
         </Link>
 
-        {/* User Roles */}
+        {/*Hotels*/}
         <Link
-          to="/dashboard/settings/users"
+          to="/dashboard/settings/hotels"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
             <FaUserShield className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
 
-          <h2 className="text-lg font-bold text-rose-700 mb-3">User Roles</h2>
+          <h2 className="text-lg font-bold text-rose-700 mb-3">Hotels</h2>
 
           <p className="text-gray-600 text-sm">
             Manage staff accounts, permissions, and access levels.

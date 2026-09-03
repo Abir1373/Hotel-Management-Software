@@ -48,6 +48,7 @@ import ReservationsHistory from "../pages/dashboard/reservations/ReservationsHis
 import AssignNewSalaryStructure from "../pages/dashboard/employees/payroll/assign-new-salary-structure/AssignNewSalaryStructure";
 import PayrollHistory from "../pages/dashboard/employees/payroll/payroll-history/PayrollHistory";
 import MakeSalary from "../pages/dashboard/employees/payroll/make salary/MakeSalary";
+import Hotels from "../pages/dashboard/settings/hotels/Hotels";
 
 const Router = createBrowserRouter([
   {
@@ -176,6 +177,7 @@ const Router = createBrowserRouter([
         Component: ReservationsHistory,
       },
       { path: "settings", Component: Settings },
+      { path: "settings/hotels", Component: Hotels },
     ],
   },
 ]);

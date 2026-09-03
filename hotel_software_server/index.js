@@ -8,6 +8,7 @@ const dotenv = require("dotenv");
 const fileUpload = require("express-fileupload");
 const path = require("path");
 const fs = require("fs");
+const bcrypt = require("bcrypt");
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ async function run() {
     const reservationCollection = db.collection("Reservations");
     const salaryStructureCollection = db.collection("Salary Structures");
     const payrollCollection = db.collection("Payrolls");
+    const hotelCollection = db.collection("Hotels");
 
     // =========================================================
     // ROOT
@@ -1409,6 +1411,138 @@ async function run() {
       }
     });
 
+    // =========================================================
+    // HOTELS (Signup / Register Hotel)
+    // =========================================================
+    app.post("/hotels", async (req, res) => {
+      try {
+        // Check if logo is uploaded
+        if (!req.files || !req.files.logo) {
+          return res.status(400).json({ message: "Hotel logo is required" });
+        }
+
+        const logo = req.files.logo;
+
+        // Validate file type
+        if (!logo.mimetype.startsWith("image/")) {
+          return res
+            .status(400)
+            .json({ message: "Only image files are allowed" });
+        }
+
+        // Create upload folder if not exists
+        const uploadDir = path.join(__dirname, "uploads", "hotels");
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // Generate unique filename
+        const uniqueName =
+          Date.now() +
+          "-" +
+          Math.round(Math.random() * 1e9) +
+          path.extname(logo.name);
+
+        const uploadPath = path.join(uploadDir, uniqueName);
+        await logo.mv(uploadPath);
+
+        // ========== Hash Password ==========
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+        // ===================================
+
+        // Prepare hotel data
+        const hotelData = {
+          hotelName: req.body.hotelName,
+          propertyType: req.body.propertyType,
+          address: req.body.address,
+          ownerName: req.body.ownerName,
+          email: req.body.email,
+          phone: req.body.phone,
+          password: hashedPassword, // ← hashed password
+          logo: `/uploads/hotels/${uniqueName}`,
+          status: "Pending",
+          createdAt: new Date(),
+        };
+
+        const result = await hotelCollection.insertOne(hotelData);
+
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Hotel signup error:", error);
+        res.status(500).send({ message: "Failed to create hotel account" });
+      }
+    });
+
+    // Get all hotels
+    // Get all hotels (exclude password)
+    app.get("/hotels", async (req, res) => {
+      try {
+        const result = await hotelCollection
+          .find({}, { projection: { password: 0 } }) // ← hide password
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to get hotels" });
+      }
+    });
+
+    // Approve / Update hotel status (safer version)
+    app.patch("/hotels/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid hotel ID" });
+        }
+
+        // Only allow specific status values
+        const allowedStatuses = ["Pending", "Approved", "Due", "Suspended"];
+        if (status && !allowedStatuses.includes(status)) {
+          return res.status(400).send({ message: "Invalid status value" });
+        }
+
+        const existing = await hotelCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        if (!existing) {
+          return res.status(404).send({ message: "Hotel not found" });
+        }
+
+        const result = await hotelCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: req.body },
+        );
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to update hotel" });
+      }
+    });
+
+    // Delete hotel
+    app.delete("/hotels/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid hotel ID" });
+        }
+
+        const result = await hotelCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to delete hotel" });
+      }
+    });
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================
