@@ -3,6 +3,7 @@ import useAxios from "../../../../hooks/useAxios";
 import { Link } from "react-router";
 import { FaUsers } from "react-icons/fa";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
+import { MdEdit } from "react-icons/md";
 
 const CurrentEmployees = () => {
   const axiosInstance = useAxios();
@@ -56,7 +57,7 @@ const CurrentEmployees = () => {
           <button
             type="button"
             className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-            title="Back to Payroll"
+            title="Back to Employees"
           >
             <IoArrowBackCircleSharp className="text-xl" />
           </button>
@@ -89,6 +90,7 @@ const CurrentEmployees = () => {
                   <th className="font-semibold">Image</th>
                   <th className="font-semibold">Name</th>
                   <th className="font-semibold">Role</th>
+                  <th className="font-semibold">Phone</th>
                   <th className="font-semibold text-right">Basic</th>
                   <th className="font-semibold text-right">HRA</th>
                   <th className="font-semibold text-right">Medical</th>
@@ -111,7 +113,6 @@ const CurrentEmployees = () => {
                       className="hover:bg-rose-50/50 border-b border-gray-100"
                     >
                       {/* Image */}
-                      {/* Image */}
                       <td>
                         <div className="avatar">
                           <div className="mask mask-squircle w-12 h-12 bg-gray-200">
@@ -129,6 +130,9 @@ const CurrentEmployees = () => {
                       <td className="text-sm text-gray-600">
                         {employee.Designation || "—"}
                       </td>
+
+                      {/* Phone */}
+                      <td className="text-sm">{employee.Phone || "—"}</td>
 
                       <td className="text-right">
                         ৳{(salary?.basicSalary || 0).toLocaleString()}
@@ -168,20 +172,36 @@ const CurrentEmployees = () => {
                       </td>
 
                       {/* Action */}
-                      <td className="text-center">
-                        {salary ? (
+                      <td>
+                        <div className="flex items-center justify-center gap-2">
+                          {/* Edit Button */}
                           <Link
-                            to={`/dashboard/payroll/make-salary/${employee._id}`}
+                            to={`/dashboard/employees/edit/${employee._id}`}
                           >
-                            <button className="btn btn-sm bg-rose-700 text-white hover:bg-rose-800 border-none p-5">
-                              Make Salary
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white gap-1"
+                            >
+                              <MdEdit />
+                              Edit
                             </button>
                           </Link>
-                        ) : (
-                          <span className="text-red-500 text-sm font-medium">
-                            No Setup
-                          </span>
-                        )}
+
+                          {/* Make Salary / No Setup */}
+                          {salary ? (
+                            <Link
+                              to={`/dashboard/payroll/make-salary/${employee._id}`}
+                            >
+                              <button className="p-5   btn btn-sm bg-rose-700 text-white hover:bg-rose-800 border-none">
+                                Make Salary
+                              </button>
+                            </Link>
+                          ) : (
+                            <span className="text-red-500 text-sm font-medium">
+                              No Setup
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
