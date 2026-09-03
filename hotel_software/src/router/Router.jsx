@@ -45,6 +45,9 @@ import EditRestaurantHistory from "../pages/dashboard/services/restaurant_orders
 import RestaurantInvoice from "../pages/dashboard/services/restaurant_orders/restaurant_invoice/RestaurantInvoice";
 import Dues from "../pages/dashboard/billing_and_payments/dues/Dues";
 import ReservationsHistory from "../pages/dashboard/reservations/ReservationsHistory";
+import AssignNewSalaryStructure from "../pages/dashboard/employees/payroll/assign-new-salary-structure/AssignNewSalaryStructure";
+import PayrollHistory from "../pages/dashboard/employees/payroll/payroll-history/PayrollHistory";
+import MakeSalary from "../pages/dashboard/employees/payroll/make salary/MakeSalary";
 
 const Router = createBrowserRouter([
   {
@@ -148,6 +151,18 @@ const Router = createBrowserRouter([
       },
       { path: "employees/past_employees", Component: PastEmployees },
       { path: "employees/payroll", Component: Payroll },
+      {
+        path: "employees/payroll/assign-new-salary-structure",
+        Component: AssignNewSalaryStructure,
+      },
+      {
+        path: "employees/payroll/payroll-history",
+        Component: PayrollHistory,
+      },
+      {
+        path: "payroll/make-salary/:employeeId",
+        Component: MakeSalary,
+      },
       { path: "employees/edit/:id", Component: EditEmployee },
 
       { path: "guests", Component: Guests },

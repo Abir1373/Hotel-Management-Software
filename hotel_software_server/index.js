@@ -54,6 +54,8 @@ async function run() {
     const laundryServiceCollection = db.collection("Laundry Services");
     const restaurantOrderCollection = db.collection("Restaurant Orders");
     const reservationCollection = db.collection("Reservations");
+    const salaryStructureCollection = db.collection("Salary Structures");
+    const payrollCollection = db.collection("Payrolls");
 
     // =========================================================
     // ROOT
@@ -67,11 +69,61 @@ async function run() {
     // EMPLOYEES
     // =========================================================
 
-    // Add employee
+    // Add employee (with image upload)
     app.post("/employees", async (req, res) => {
-      const employee = req.body;
-      const result = await employeeCollection.insertOne(employee);
-      res.status(201).send(result);
+      try {
+        if (!req.files || !req.files.image) {
+          return res.status(400).json({ message: "Profile photo is required" });
+        }
+
+        const image = req.files.image;
+
+        // Validate image type
+        if (!image.mimetype.startsWith("image/")) {
+          return res
+            .status(400)
+            .json({ message: "Only image files are allowed" });
+        }
+
+        // Create upload folder if not exists
+        const uploadDir = path.join(__dirname, "uploads", "employees");
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // Unique filename
+        const uniqueName =
+          Date.now() +
+          "-" +
+          Math.round(Math.random() * 1e9) +
+          path.extname(image.name);
+
+        const uploadPath = path.join(uploadDir, uniqueName);
+        await image.mv(uploadPath);
+
+        // Employee data
+        const employee = {
+          FullName: req.body.FullName,
+          EmployeeID: req.body.EmployeeID,
+          Email: req.body.Email,
+          Phone: req.body.Phone,
+          NID: req.body.NID,
+          Gender: req.body.Gender,
+          Department: req.body.Department,
+          Designation: req.body.Designation,
+          JoiningDate: req.body.JoiningDate,
+          EmploymentStatus: req.body.EmploymentStatus,
+          Address: req.body.Address,
+          Image: `/uploads/employees/${uniqueName}`,
+          createdAt: new Date(),
+        };
+
+        const result = await employeeCollection.insertOne(employee);
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Add employee error:", error);
+        res.status(500).send({ message: "Failed to add employee" });
+      }
     });
 
     // Active employees
@@ -1212,6 +1264,148 @@ async function run() {
       } catch (error) {
         console.error("Delete reservation error:", error);
         res.status(500).send({ message: "Failed to delete reservation" });
+      }
+    });
+
+    // =========================================================
+    // SALARY STRUCTURES
+    // =========================================================
+
+    // Create / Assign new salary structure
+    app.post("/salary-structures", async (req, res) => {
+      try {
+        const salaryData = {
+          ...req.body,
+          createdAt: new Date(),
+        };
+
+        const result = await salaryStructureCollection.insertOne(salaryData);
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Salary structure error:", error);
+        res.status(500).send({ message: "Failed to save salary structure" });
+      }
+    });
+
+    // Get all salary structures
+    app.get("/salary-structures", async (req, res) => {
+      try {
+        const result = await salaryStructureCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to get salary structures" });
+      }
+    });
+
+    // Get salary structures by employee ID
+    app.get("/salary-structures/employee/:employeeId", async (req, res) => {
+      try {
+        const { employeeId } = req.params;
+
+        const result = await salaryStructureCollection
+          .find({ employeeId })
+          .sort({ createdAt: -1 })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res
+          .status(500)
+          .send({ message: "Failed to get employee salary structures" });
+      }
+    });
+
+    // Get single salary structure by ID
+    app.get("/salary-structures/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid ID" });
+        }
+
+        const result = await salaryStructureCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to get salary structure" });
+      }
+    });
+
+    // Update salary structure
+    app.patch("/salary-structures/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { _id, ...updateData } = req.body;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid ID" });
+        }
+
+        const result = await salaryStructureCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateData },
+        );
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to update salary structure" });
+      }
+    });
+
+    // Delete salary structure
+    app.delete("/salary-structures/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid ID" });
+        }
+
+        const result = await salaryStructureCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to delete salary structure" });
+      }
+    });
+
+    app.post("/payrolls", async (req, res) => {
+      try {
+        const result = await payrollCollection.insertOne({
+          ...req.body,
+          createdAt: new Date(),
+        });
+        res.status(201).send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to generate payroll" });
+      }
+    });
+
+    // Get all payroll history
+    app.get("/payrolls", async (req, res) => {
+      try {
+        const result = await payrollCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to get payroll history" });
       }
     });
 

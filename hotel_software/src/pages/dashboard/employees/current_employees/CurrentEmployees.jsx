@@ -1,17 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
 import { Link } from "react-router";
-import { RiHome3Line } from "react-icons/ri";
+import { FaUsers } from "react-icons/fa";
+import { IoArrowBackCircleSharp } from "react-icons/io5";
 
 const CurrentEmployees = () => {
   const axiosInstance = useAxios();
 
-  const {
-    data: employees = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  // Active employees
+  const { data: employees = [], isLoading: employeesLoading } = useQuery({
     queryKey: ["activeEmployees"],
     queryFn: async () => {
       const res = await axiosInstance.get("/employees/active");
@@ -19,114 +16,180 @@ const CurrentEmployees = () => {
     },
   });
 
-  if (isLoading) {
-    return <span className="loading loading-spinner text-secondary"></span>;
-  }
+  // Salary structures
+  const { data: salaryStructures = [], isLoading: salaryLoading } = useQuery({
+    queryKey: ["salary-structures"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/salary-structures");
+      return res.data;
+    },
+  });
 
-  if (isError) {
-    return (
-      <div className="p-6 text-red-600">
-        Failed to load employees: {error?.message}
-      </div>
-    );
-  }
+  const isLoading = employeesLoading || salaryLoading;
+
+  // Find salary structure for an employee
+  const getSalary = (employeeId) => {
+    return salaryStructures.find((s) => s.employeeId === employeeId);
+  };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <div className="flex flex-row justify-between">
-          <h2 className="text-lg font-bold text-rose-800">Current Employees</h2>
-          <Link to="/dashboard/employees">
-            <button className="btn btn-outline btn-secondary">
-              <RiHome3Line className="text-2xl" />
-            </button>
-          </Link>
+    <div className="mx-auto p-6">
+      {/* Header */}
+      <div className="flex justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-full bg-rose-700 flex items-center justify-center shadow-md">
+              <FaUsers className="text-xl text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-rose-700">
+                Current Employees
+              </h1>
+              <p className="text-sm text-gray-500">
+                View and manage salary structures
+              </p>
+            </div>
+          </div>
         </div>
-        <p className="text-gray-500">List of all currently active employees</p>
+
+        <Link to="/dashboard/employees">
+          <button
+            type="button"
+            className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            title="Back to Payroll"
+          >
+            <IoArrowBackCircleSharp className="text-xl" />
+          </button>
+        </Link>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="table table-zebra">
-          {/* Head */}
-          <thead className="text-black text-center">
-            <tr>
-              <th>#</th>
-              <th>Image</th>
-              <th>Name</th>
-              <th>Employee ID</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Employment Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+      {/* Table Card */}
+      <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
+        {/* Card Header */}
+        <div className="bg-rose-700 text-white px-6 py-4">
+          <h2 className="text-lg font-bold">Current Employees</h2>
+          <p className="text-sm text-rose-100">
+            View and manage salary structures
+          </p>
+        </div>
 
-          {/* Body */}
-          <tbody>
-            {employees.length === 0 ? (
-              <tr>
-                <td colSpan="8" className="text-center py-10">
-                  No active employees found.
-                </td>
-              </tr>
-            ) : (
-              employees.map((employee, index) => (
-                <tr key={employee._id} className="bg-white text-center">
-                  <th>{index + 1}</th>
-
-                  {/* Image */}
-                  <td>
-                    <div className="avatar">
-                      <div className="mask mask-squircle w-12 h-12">
-                        <img
-                          src={
-                            employee.Image ||
-                            "https://i.ibb.co/MBtjqXQ/no-avatar.gif"
-                          }
-                          alt={employee.FullName}
-                        />
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="font-medium">{employee.FullName}</td>
-
-                  <td>{employee.EmployeeID}</td>
-
-                  <td>{employee.Email}</td>
-
-                  <td>{employee.Phone}</td>
-
-                  {/* Employment Status */}
-                  <td>
-                    <span
-                      className={` badge ${
-                        employee.EmploymentStatus === "Active"
-                          ? "badge-success text-white p-5"
-                          : employee.EmploymentStatus === "On Leave"
-                            ? "badge-error text-white p-5"
-                            : "badge-error"
-                      }`}
-                    >
-                      {employee.EmploymentStatus}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="flex gap-2">
-                      <Link
-                        to={`/dashboard/employees/edit/${employee._id}`}
-                        className="btn btn-sm btn-secondary text-white"
-                      >
-                        View / Edit
-                      </Link>
-                    </div>
-                  </td>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <span className="loading loading-spinner loading-lg text-rose-700"></span>
+          </div>
+        ) : employees.length === 0 ? (
+          <div className="text-center py-20 text-gray-500">
+            No active employees found.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="table w-full">
+              <thead>
+                <tr className="bg-rose-50 text-rose-800 text-sm">
+                  <th className="font-semibold">Image</th>
+                  <th className="font-semibold">Name</th>
+                  <th className="font-semibold">Role</th>
+                  <th className="font-semibold text-right">Basic</th>
+                  <th className="font-semibold text-right">HRA</th>
+                  <th className="font-semibold text-right">Medical</th>
+                  <th className="font-semibold text-right">Academic</th>
+                  <th className="font-semibold text-right">Transport</th>
+                  <th className="font-semibold text-right">Bonus</th>
+                  <th className="font-semibold text-right">Gross</th>
+                  <th className="font-semibold text-center">Status</th>
+                  <th className="font-semibold text-center">Action</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+
+              <tbody>
+                {employees.map((employee) => {
+                  const salary = getSalary(employee._id);
+
+                  return (
+                    <tr
+                      key={employee._id}
+                      className="hover:bg-rose-50/50 border-b border-gray-100"
+                    >
+                      {/* Image */}
+                      {/* Image */}
+                      <td>
+                        <div className="avatar">
+                          <div className="mask mask-squircle w-12 h-12 bg-gray-200">
+                            {employee.Image ? (
+                              <img
+                                src={`http://localhost:3000${employee.Image}`}
+                                alt={employee.FullName}
+                              />
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="font-medium">{employee.FullName}</td>
+                      <td className="text-sm text-gray-600">
+                        {employee.Designation || "—"}
+                      </td>
+
+                      <td className="text-right">
+                        ৳{(salary?.basicSalary || 0).toLocaleString()}
+                      </td>
+                      <td className="text-right">
+                        ৳{(salary?.hra || 0).toLocaleString()}
+                      </td>
+                      <td className="text-right">
+                        ৳{(salary?.medicalAllowance || 0).toLocaleString()}
+                      </td>
+                      <td className="text-right">
+                        ৳{(salary?.academicAllowance || 0).toLocaleString()}
+                      </td>
+                      <td className="text-right">
+                        ৳{(salary?.transportAllowance || 0).toLocaleString()}
+                      </td>
+                      <td className="text-right">
+                        ৳{(salary?.festivalBonus || 0).toLocaleString()}
+                      </td>
+                      <td className="text-right font-bold text-rose-700">
+                        ৳{(salary?.grossMonthlyPay || 0).toLocaleString()}
+                      </td>
+
+                      {/* Status */}
+                      <td className="text-center">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                            employee.EmploymentStatus === "Active"
+                              ? "bg-green-100 text-green-700 border border-green-200"
+                              : employee.EmploymentStatus === "On Leave"
+                                ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                : "bg-red-100 text-red-700 border border-red-200"
+                          }`}
+                        >
+                          {employee.EmploymentStatus}
+                        </span>
+                      </td>
+
+                      {/* Action */}
+                      <td className="text-center">
+                        {salary ? (
+                          <Link
+                            to={`/dashboard/payroll/make-salary/${employee._id}`}
+                          >
+                            <button className="btn btn-sm bg-rose-700 text-white hover:bg-rose-800 border-none p-5">
+                              Make Salary
+                            </button>
+                          </Link>
+                        ) : (
+                          <span className="text-red-500 text-sm font-medium">
+                            No Setup
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
