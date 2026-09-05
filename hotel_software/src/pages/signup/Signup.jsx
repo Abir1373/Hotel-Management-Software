@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import useAxios from "../../hooks/useAxios";
+import useAuth from "../../hooks/useAuth";
 
 const Signup = () => {
   const axiosInstance = useAxios();
   const [logoPreview, setLogoPreview] = useState(null);
+  const { createUser, updateUserProfile } = useAuth();
 
   const {
     register,
@@ -25,50 +27,44 @@ const Signup = () => {
   };
 
   const onSubmit = async (data) => {
-    try {
-      const formData = new FormData();
+    createUser(data.email, data.password).then(async (result) => {
+      console.log(result.user);
 
-      formData.append("hotelName", data.hotelName);
-      formData.append("propertyType", data.propertyType);
-      formData.append("address", data.address);
-      formData.append("ownerName", data.ownerName);
-      formData.append("email", data.email);
-      formData.append("phone", data.phone);
-      formData.append("password", data.password);
+      // const update user info
+      const userProfile = {
+        displayName: data.ownerName,
+        photoURL: data.logo[0],
+      };
+    });
 
-      if (data.logo?.[0]) {
-        formData.append("logo", data.logo[0]);
-      }
+    const formData = new FormData();
+    formData.append("hotelName", data.hotelName);
+    formData.append("propertyType", data.propertyType);
+    formData.append("address", data.address);
+    formData.append("ownerName", data.ownerName);
+    formData.append("email", data.email);
+    formData.append("phone", data.phone);
+    formData.append("password", data.password);
 
-      const res = await axiosInstance.post("/hotels", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    if (data.logo?.[0]) {
+      formData.append("logo", data.logo[0]);
+    }
 
-      if (res.data.insertedId || res.status === 201 || res.status === 200) {
-        Swal.fire({
-          title: "Account Created!",
-          text: "Your hotel account has been successfully created.",
-          icon: "success",
-          confirmButtonColor: "#92400e",
-        });
-        reset();
-        setLogoPreview(null);
-      }
-    } catch (error) {
-      console.error(error);
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Failed to create account. Please try again.";
+    const res = await axiosInstance.post("/hotels", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
+    if (res.data.insertedId || res.status === 201 || res.status === 200) {
       Swal.fire({
-        title: "Error!",
-        text: message,
-        icon: "error",
+        title: "Account Created!",
+        text: "Your hotel account has been successfully created.",
+        icon: "success",
         confirmButtonColor: "#92400e",
       });
+      reset();
+      setLogoPreview(null);
     }
   };
 

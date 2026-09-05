@@ -1,17 +1,71 @@
-import { Link } from "react-router";
-import { FaHotel, FaUserShield, FaLock, FaCog } from "react-icons/fa";
+import { Link, useNavigate } from "react-router";
+import {
+  FaHotel,
+  FaUserShield,
+  FaLock,
+  FaCog,
+  FaSignOutAlt,
+} from "react-icons/fa";
 import { RiSettings5Line } from "react-icons/ri";
+import Swal from "sweetalert2";
+import useAuth from "../../../hooks/useAuth";
 
 const Settings = () => {
+  const { logOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#be123c",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Logout",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await logOut();
+      navigate("/"); // or "/signup" depending on your route
+      Swal.fire({
+        title: "Logged out!",
+        text: "You have been logged out successfully.",
+        icon: "success",
+        confirmButtonColor: "#be123c",
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to logout",
+        icon: "error",
+        confirmButtonColor: "#be123c",
+      });
+    }
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
-          <RiSettings5Line className="text-xl text-white" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <RiSettings5Line className="text-xl text-white" />
+          </div>
+          <h1 className="text-lg font-bold text-rose-700">Settings</h1>
         </div>
 
-        <h1 className="text-lg font-bold text-rose-700">Settings</h1>
+        {/* Logout Button - Top Right */}
+        <button
+          onClick={handleLogout}
+          className="btn btn-sm bg-rose-700 hover:bg-rose-800 text-white border-none gap-2"
+        >
+          <FaSignOutAlt />
+          Logout
+        </button>
       </div>
 
       <p className="text-gray-500 mb-10">
@@ -37,7 +91,7 @@ const Settings = () => {
           </p>
         </Link>
 
-        {/*Hotels*/}
+        {/* Hotels */}
         <Link
           to="/dashboard/settings/hotels"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"

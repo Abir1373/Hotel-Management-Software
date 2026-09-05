@@ -1461,7 +1461,7 @@ async function run() {
           phone: req.body.phone,
           password: hashedPassword, // ← hashed password
           logo: `/uploads/hotels/${uniqueName}`,
-          status: "Pending",
+          status: "pending",
           createdAt: new Date(),
         };
 

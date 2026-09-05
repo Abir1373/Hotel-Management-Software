@@ -21,7 +21,6 @@ const Hotels = () => {
 
   // ====================== APPROVE HOTEL ======================
   const handleApprove = async (hotel) => {
-    console.log(hotel);
     const result = await Swal.fire({
       title: "Approve this hotel?",
       text: `Do you want to approve "${hotel.hotelName}"?`,
@@ -140,10 +139,6 @@ const Hotels = () => {
     }
   };
 
-  const handl = (hotel) => {
-    console.log(hotel);
-  };
-
   return (
     <div className="mx-auto p-6">
       {/* Header */}
@@ -249,16 +244,11 @@ const Hotels = () => {
                               );
                             }
                           }}
-                          className={`select select-bordered select-sm font-semibold m-6 ${
-                            hotel.status === "Approved"
-                              ? "bg-green-100 text-green-700 border-green-300"
-                              : hotel.status === "Pending"
-                                ? "bg-amber-100 text-amber-700 border-amber-300"
-                                : "bg-red-100 text-red-700 border-red-300"
-                          }`}
+                          className="select select-bordered select-sm font-semibold bg-white m-6"
                         >
                           <option value="Pending">Pending</option>
                           <option value="Due">Due</option>
+                          <option value="Approved">Approved</option>
                         </select>
                       </td>
 
