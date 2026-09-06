@@ -4,7 +4,7 @@ import Logo from "../components/Logo";
 import { MdDashboard, MdOutlineDesignServices } from "react-icons/md";
 import { FaBuildingCircleCheck, FaPersonCircleCheck } from "react-icons/fa6";
 import { BsPersonWorkspace } from "react-icons/bs";
-import { TbReservedLine } from "react-icons/tb";
+import { TbReport, TbReservedLine } from "react-icons/tb";
 import { IoSettingsSharp } from "react-icons/io5";
 
 const DashboardLayout = () => {
@@ -90,6 +90,12 @@ const DashboardLayout = () => {
               <NavLink to="/dashboard/reservations">
                 <TbReservedLine />
                 Reservations
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/dashboard/reports">
+                <TbReport />
+                Reports
               </NavLink>
             </li>
             <li>

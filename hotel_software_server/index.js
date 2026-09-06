@@ -1543,6 +1543,188 @@ async function run() {
         res.status(500).send({ message: "Failed to delete hotel" });
       }
     });
+
+    // =========================================================
+    // TRANSPORTATION SALES REPORT (Dedicated)
+    // =========================================================
+
+    app.get("/transportation-sales", async (req, res) => {
+      try {
+        const { fromDate, toDate, checkinId } = req.query;
+
+        if (!fromDate || !toDate) {
+          return res.status(400).send({
+            message: "Both fromDate and toDate are required",
+          });
+        }
+
+        const query = {
+          pickupDate: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        };
+
+        // Optional checkinId filter
+        if (checkinId) {
+          query.checkinId = checkinId;
+        }
+
+        const result = await transportServiceCollection
+          .find(query)
+          .sort({ pickupDate: 1, pickupTime: 1 })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("Transportation sales report error:", error);
+        res.status(500).send({
+          message: "Failed to fetch transportation sales report",
+        });
+      }
+    });
+
+    // =========================================================
+    // RESTAURANT SALES REPORT (Dedicated)
+    // =========================================================
+
+    app.get("/restaurant-sales", async (req, res) => {
+      try {
+        const { fromDate, toDate, checkinId } = req.query;
+
+        if (!fromDate || !toDate) {
+          return res.status(400).send({
+            message: "Both fromDate and toDate are required",
+          });
+        }
+
+        const query = {
+          orderDate: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        };
+
+        // Optional checkinId filter
+        if (checkinId) {
+          query["checkInInfo._id"] = checkinId;
+        }
+
+        const result = await restaurantOrderCollection
+          .find(query)
+          .sort({ orderDate: 1, orderTime: 1 })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("Restaurant sales report error:", error);
+        res.status(500).send({
+          message: "Failed to fetch restaurant sales report",
+        });
+      }
+    });
+
+    // =========================================================
+    // LAUNDRY SALES REPORT (Dedicated)
+    // =========================================================
+
+    app.get("/laundry-sales", async (req, res) => {
+      try {
+        const { fromDate, toDate, checkinId } = req.query;
+
+        if (!fromDate || !toDate) {
+          return res.status(400).send({
+            message: "Both fromDate and toDate are required",
+          });
+        }
+
+        const query = {
+          pickupDate: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        };
+
+        // Optional checkinId filter
+        if (checkinId) {
+          query.checkinId = checkinId;
+        }
+
+        const result = await laundryServiceCollection
+          .find(query)
+          .sort({ pickupDate: 1 })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("Laundry sales report error:", error);
+        res.status(500).send({
+          message: "Failed to fetch laundry sales report",
+        });
+      }
+    });
+
+    // =========================================================
+    // SALARY REPORT (Dedicated) - with Employee ID filter
+    // =========================================================
+
+    app.get("/salary-report", async (req, res) => {
+      try {
+        const { fromDate, toDate, employeeId } = req.query;
+
+        if (!fromDate || !toDate) {
+          return res.status(400).send({
+            message: "Both fromDate and toDate are required",
+          });
+        }
+
+        // Base query
+        const query = {
+          paidAt: {
+            $gte: fromDate,
+            $lte: toDate + "T23:59:59.999Z",
+          },
+        };
+
+        // Add Employee ID filter if provided
+        if (employeeId) {
+          query.employeeID = employeeId; // using employeeID field (string)
+          // If you want to filter by MongoDB _id instead, use:
+          // query.employeeId = employeeId;
+        }
+
+        const payrolls = await payrollCollection
+          .find(query)
+          .sort({ paidAt: -1 })
+          .toArray();
+
+        // Fetch employee details
+        const result = await Promise.all(
+          payrolls.map(async (payroll) => {
+            let employee = null;
+
+            if (payroll.employeeId) {
+              employee = await employeeCollection.findOne({
+                _id: new ObjectId(payroll.employeeId),
+              });
+            }
+
+            return {
+              ...payroll,
+              employeeDetails: employee || null,
+            };
+          }),
+        );
+
+        res.send(result);
+      } catch (error) {
+        console.error("Salary report error:", error);
+        res.status(500).send({
+          message: "Failed to fetch salary report",
+        });
+      }
+    });
+
     // =========================================================
     // MONGODB CONNECTION CHECK
     // =========================================================
