@@ -58,6 +58,7 @@ async function run() {
     const salaryStructureCollection = db.collection("Salary Structures");
     const payrollCollection = db.collection("Payrolls");
     const hotelCollection = db.collection("Hotels");
+    const expenseCategoryCollection = db.collection("Expense Categories");
 
     // =========================================================
     // ROOT
@@ -1722,6 +1723,54 @@ async function run() {
         res.status(500).send({
           message: "Failed to fetch salary report",
         });
+      }
+    });
+
+    // =========================================================
+    // EXPENSE CATEGORY
+    // =========================================================
+
+    // Add new expense category
+    app.post("/expense-categories", async (req, res) => {
+      try {
+        const { categoryName } = req.body;
+
+        if (!categoryName || categoryName.trim() === "") {
+          return res.status(400).send({ message: "Category name is required" });
+        }
+
+        // Check if category already exists
+        const exists = await expenseCategoryCollection.findOne({
+          categoryName: categoryName.trim(),
+        });
+
+        if (exists) {
+          return res.status(400).send({ message: "Category already exists" });
+        }
+
+        const result = await expenseCategoryCollection.insertOne({
+          categoryName: categoryName.trim(),
+          createdAt: new Date(),
+        });
+
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Add expense category error:", error);
+        res.status(500).send({ message: "Failed to add category" });
+      }
+    });
+
+    // Get all expense categories
+    app.get("/expense-categories", async (req, res) => {
+      try {
+        const result = await expenseCategoryCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to get categories" });
       }
     });
 
