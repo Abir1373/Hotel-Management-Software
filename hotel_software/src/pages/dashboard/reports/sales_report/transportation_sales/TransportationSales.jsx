@@ -18,13 +18,13 @@ const TransportationSales = () => {
   } = useQuery({
     queryKey: ["transportation-sales"],
     queryFn: async () => {
-      const { fromDate, toDate, checkinId } = getValues();
+      const { fromDate, toDate, contactNumber } = getValues();
 
       const res = await axiosInstance.get("/transportation-sales", {
         params: {
           fromDate,
           toDate,
-          checkinId: checkinId || undefined,
+          contactNumber: contactNumber || undefined,
         },
       });
 
@@ -70,16 +70,16 @@ const TransportationSales = () => {
         className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          {/* Check-in ID */}
+          {/* Contact Number */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Check-in ID</span>
+              <span className="label-text font-medium">Contact Number</span>
             </label>
             <input
               type="text"
               placeholder="Optional"
               className="input input-bordered w-full bg-white"
-              {...register("checkinId")}
+              {...register("contactNumber")}
             />
           </div>
 

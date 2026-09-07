@@ -1548,10 +1548,9 @@ async function run() {
     // =========================================================
     // TRANSPORTATION SALES REPORT (Dedicated)
     // =========================================================
-
     app.get("/transportation-sales", async (req, res) => {
       try {
-        const { fromDate, toDate, checkinId } = req.query;
+        const { fromDate, toDate, contactNumber } = req.query;
 
         if (!fromDate || !toDate) {
           return res.status(400).send({
@@ -1566,9 +1565,9 @@ async function run() {
           },
         };
 
-        // Optional checkinId filter
-        if (checkinId) {
-          query.checkinId = checkinId;
+        // Optional contact number filter
+        if (contactNumber) {
+          query.contactNumber = contactNumber;
         }
 
         const result = await transportServiceCollection
@@ -1591,7 +1590,7 @@ async function run() {
 
     app.get("/restaurant-sales", async (req, res) => {
       try {
-        const { fromDate, toDate, checkinId } = req.query;
+        const { fromDate, toDate, contactNumber } = req.query;
 
         if (!fromDate || !toDate) {
           return res.status(400).send({
@@ -1606,9 +1605,9 @@ async function run() {
           },
         };
 
-        // Optional checkinId filter
-        if (checkinId) {
-          query["checkInInfo._id"] = checkinId;
+        // Optional contact number filter
+        if (contactNumber) {
+          query["checkInInfo.contactNumber"] = contactNumber;
         }
 
         const result = await restaurantOrderCollection
@@ -1631,7 +1630,7 @@ async function run() {
 
     app.get("/laundry-sales", async (req, res) => {
       try {
-        const { fromDate, toDate, checkinId } = req.query;
+        const { fromDate, toDate, contactNumber } = req.query;
 
         if (!fromDate || !toDate) {
           return res.status(400).send({
@@ -1646,9 +1645,9 @@ async function run() {
           },
         };
 
-        // Optional checkinId filter
-        if (checkinId) {
-          query.checkinId = checkinId;
+        // Optional contact number filter
+        if (contactNumber) {
+          query.contactNumber = contactNumber;
         }
 
         const result = await laundryServiceCollection

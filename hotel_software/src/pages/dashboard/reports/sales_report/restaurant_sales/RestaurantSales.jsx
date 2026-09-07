@@ -18,13 +18,13 @@ const RestaurantSales = () => {
   } = useQuery({
     queryKey: ["restaurant-sales"],
     queryFn: async () => {
-      const { fromDate, toDate, checkinId } = getValues();
+      const { fromDate, toDate, contactNumber } = getValues();
 
       const res = await axiosInstance.get("/restaurant-sales", {
         params: {
           fromDate,
           toDate,
-          checkinId: checkinId || undefined,
+          contactNumber: contactNumber || undefined,
         },
       });
 
@@ -70,16 +70,16 @@ const RestaurantSales = () => {
         className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          {/* Check-in ID */}
+          {/* Contact Number */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Check-in ID</span>
+              <span className="label-text font-medium">Contact Number</span>
             </label>
             <input
               type="text"
               placeholder="Optional"
               className="input input-bordered w-full bg-white"
-              {...register("checkinId")}
+              {...register("contactNumber")}
             />
           </div>
 
@@ -153,7 +153,6 @@ const RestaurantSales = () => {
                         <th>Waiter</th>
                         <th>Payment</th>
                         <th>Amount</th>
-                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -180,17 +179,6 @@ const RestaurantSales = () => {
                           <td>{item.paymentMethod}</td>
                           <td className="font-semibold text-rose-700">
                             ৳{item.totalAmount}
-                          </td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                item.paymentStatus === "Paid"
-                                  ? "badge-success"
-                                  : "badge-warning"
-                              }`}
-                            >
-                              {item.paymentStatus}
-                            </span>
                           </td>
                         </tr>
                       ))}

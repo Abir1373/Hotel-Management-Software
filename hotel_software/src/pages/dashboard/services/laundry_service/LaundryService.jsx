@@ -73,6 +73,7 @@ const LaundryService = () => {
       ...data,
       checkinId: selectedCheckIn._id,
       guestName: selectedCheckIn.guestName || "",
+      contactNumber: selectedCheckIn.contactNumber || "",
       clothItems,
       totalCost,
     };
@@ -180,6 +181,19 @@ const LaundryService = () => {
             <input
               type="text"
               value={selectedCheckIn?.guestName || ""}
+              readOnly
+              className="input input-bordered w-full bg-gray-100"
+            />
+          </div>
+
+          {/* Contact Number */}
+          <div>
+            <label className="label">
+              <span className="label-text font-medium">Contact Number</span>
+            </label>
+            <input
+              type="text"
+              value={selectedCheckIn?.contactNumber || ""}
               readOnly
               className="input input-bordered w-full bg-gray-100"
             />

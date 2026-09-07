@@ -18,13 +18,13 @@ const LaundrySales = () => {
   } = useQuery({
     queryKey: ["laundry-sales"],
     queryFn: async () => {
-      const { fromDate, toDate, checkinId } = getValues();
+      const { fromDate, toDate, contactNumber } = getValues();
 
       const res = await axiosInstance.get("/laundry-sales", {
         params: {
           fromDate,
           toDate,
-          checkinId: checkinId || undefined,
+          contactNumber: contactNumber || undefined,
         },
       });
 
@@ -70,16 +70,16 @@ const LaundrySales = () => {
         className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          {/* Check-in ID */}
+          {/* Contact Number */}
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Check-in ID</span>
+              <span className="label-text font-medium">Contact Number</span>
             </label>
             <input
               type="text"
               placeholder="Optional"
               className="input input-bordered w-full bg-white"
-              {...register("checkinId")}
+              {...register("contactNumber")}
             />
           </div>
 
@@ -160,7 +160,12 @@ const LaundrySales = () => {
                       {salesData.map((item, index) => (
                         <tr key={item._id}>
                           <td>{index + 1}</td>
-                          <td className="font-medium">{item.guestName}</td>
+                          <td>
+                            <div className="font-medium">{item.guestName}</div>
+                            <div className="text-xs text-gray-500">
+                              {item.contactNumber}
+                            </div>
+                          </td>
                           <td>{item.roomNumber}</td>
                           <td>
                             {item.clothItems?.map((cloth, i) => (
