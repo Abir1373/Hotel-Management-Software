@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
 import { MdOutlinePlaylistAddCheckCircle } from "react-icons/md";
-import { RiHome3Line } from "react-icons/ri";
 import { Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
+import { IoArrowBackCircleSharp } from "react-icons/io5";
 
 const CheckIn = () => {
   const axiosInstance = useAxios();
@@ -158,9 +158,10 @@ const CheckIn = () => {
           <Link to="/dashboard/check_in_out">
             <button
               type="button"
-              className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              title="Back to Dashboard"
             >
-              <RiHome3Line className="text-xl" />
+              <IoArrowBackCircleSharp className="text-3xl" />
             </button>
           </Link>
         </div>

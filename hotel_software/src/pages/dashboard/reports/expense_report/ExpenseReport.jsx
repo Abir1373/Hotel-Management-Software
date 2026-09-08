@@ -89,16 +89,16 @@ const ExpenseReport = () => {
           </p>
         </Link>
 
-        {/* Total Expense */}
+        {/* Expense Overview */}
         <Link
-          to="/dashboard/reports/expenses/total-expense"
+          to="/dashboard/reports/expenses/expense_overview"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
             <FaChartPie className="text-xl text-[#BF1E2E] transition-all duration-300 group-hover:text-white group-hover:scale-110" />
           </div>
           <h2 className="text-lg font-bold text-rose-700 mb-3">
-            Total Expense
+            Expense Overview
           </h2>
           <p className="text-gray-600 text-sm">
             See total expenses summary by category and date range.

@@ -57,6 +57,9 @@ import RestaurantSales from "../pages/dashboard/reports/sales_report/restaurant_
 import LaundrySales from "../pages/dashboard/reports/sales_report/laundry_sales/LaundrySales";
 import SalaryReport from "../pages/dashboard/reports/salary_report/SalaryReport";
 import ExpenseReport from "../pages/dashboard/reports/expense_report/ExpenseReport";
+import EntryReport from "../pages/dashboard/reports/expense_report/entry_report/EntryReport";
+import ExpenseOverview from "../pages/dashboard/reports/expense_report/expense_overview/ExpenseOverview";
+import MainCheckout from "../pages/dashboard/check_in_out/check_out/main_checkout/MainCheckout";
 
 const Router = createBrowserRouter([
   {
@@ -151,6 +154,8 @@ const Router = createBrowserRouter([
       { path: "check_in_out", Component: Check_in_Out },
       { path: "check_in_out/check_in", Component: CheckIn },
       { path: "check_in_out/check_out", Component: CheckOut },
+      { path: "check_in_out/check_out/:id", Component: MainCheckout },
+      { path: "check_in_out", Component: CheckOut },
 
       { path: "employees", Component: Employees },
       { path: "employees/add_employee", Component: AddEmployee },
@@ -198,6 +203,8 @@ const Router = createBrowserRouter([
       { path: "reports/room_report", Component: RoomReport },
       { path: "reports/salary_report", Component: SalaryReport },
       { path: "reports/expense_report", Component: ExpenseReport },
+      { path: "reports/expenses/entry-report", Component: EntryReport },
+      { path: "reports/expenses/expense_overview", Component: ExpenseOverview },
       { path: "settings", Component: Settings },
       { path: "settings/hotels", Component: Hotels },
     ],

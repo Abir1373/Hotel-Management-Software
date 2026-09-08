@@ -59,6 +59,7 @@ async function run() {
     const payrollCollection = db.collection("Payrolls");
     const hotelCollection = db.collection("Hotels");
     const expenseCategoryCollection = db.collection("Expense Categories");
+    const expenseEntryCollection = db.collection("Expense Entries");
 
     // =========================================================
     // ROOT
@@ -697,26 +698,118 @@ async function run() {
     });
 
     // Check-Ins
+    // =========================================================
+    // CHECK-IN (with NID + Person image upload)
+    // =========================================================
     app.post("/check-in", async (req, res) => {
-      const checkInData = {
-        ...req.body,
-        createdAt: new Date(),
-      };
+      try {
+        // ========== Validate images ==========
+        if (!req.files || !req.files.nidImage || !req.files.personImage) {
+          return res.status(400).json({
+            message: "Both NID image and Person image are required",
+          });
+        }
 
-      const result = await checkInCollection.insertOne(checkInData);
+        const nidImage = req.files.nidImage;
+        const personImage = req.files.personImage;
 
-      // Update room status to Occupied
-      await roomCollection.updateOne(
-        {
-          roomNo: req.body.roomNumber,
-          variantId: req.body.roomVariantId,
-        },
-        {
-          $set: { roomStatus: "Occupied" },
-        },
-      );
+        // Validate file types
+        if (
+          !nidImage.mimetype.startsWith("image/") ||
+          !personImage.mimetype.startsWith("image/")
+        ) {
+          return res.status(400).json({
+            message: "Only image files are allowed",
+          });
+        }
 
-      res.status(201).send(result);
+        // ========== Create upload folder ==========
+        const uploadDir = path.join(__dirname, "uploads", "check-in");
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // ========== Generate unique filenames ==========
+        const nidUniqueName =
+          Date.now() +
+          "-nid-" +
+          Math.round(Math.random() * 1e9) +
+          path.extname(nidImage.name);
+
+        const personUniqueName =
+          Date.now() +
+          "-person-" +
+          Math.round(Math.random() * 1e9) +
+          path.extname(personImage.name);
+
+        // ========== Move files ==========
+        await nidImage.mv(path.join(uploadDir, nidUniqueName));
+        await personImage.mv(path.join(uploadDir, personUniqueName));
+
+        // ========== Prepare check-in data ==========
+        const checkInData = {
+          // Guest Info
+          guestName: req.body.guestName,
+          guestAddress: req.body.guestAddress,
+          contactNumber: req.body.contactNumber,
+          designation: req.body.designation,
+          nidNumber: req.body.nidNumber || "",
+
+          // Images
+          nidImage: `/uploads/check-in/${nidUniqueName}`,
+          personImage: `/uploads/check-in/${personUniqueName}`,
+
+          // Room Info
+          roomVariantId: req.body.roomVariantId,
+          roomVariantName: req.body.roomVariantName,
+          roomNumber: req.body.roomNumber,
+          pricePerNight: Number(req.body.pricePerNight) || 0,
+
+          // Stay Info
+          checkInDate: req.body.checkInDate,
+          checkInTime: req.body.checkInTime,
+          checkOutDate: req.body.checkOutDate,
+          numberOfNights: Number(req.body.numberOfNights) || 0,
+          numberOfGuests: Number(req.body.numberOfGuests) || 0,
+
+          // Payment Info
+          totalAmount: Number(req.body.totalAmount) || 0,
+          advancePayment: Number(req.body.advancePayment) || 0,
+          dueAmount: Number(req.body.dueAmount) || 0,
+
+          specialRequests: req.body.specialRequests || "",
+          status: req.body.status || "Normal",
+
+          // Initialize service arrays
+          restaurantOrders: [],
+          restaurantTotalAmount: 0,
+          laundryOrders: [],
+          laundryTotalAmount: 0,
+          transportOrders: [],
+          transportTotalAmount: 0,
+
+          createdAt: new Date(),
+        };
+
+        // ========== Insert into database ==========
+        const result = await checkInCollection.insertOne(checkInData);
+
+        // ========== Update room status to Occupied ==========
+        await roomCollection.updateOne(
+          {
+            roomNo: req.body.roomNumber,
+            variantId: req.body.roomVariantId,
+          },
+          {
+            $set: { roomStatus: "Occupied" },
+          },
+        );
+
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Check-in error:", error);
+        res.status(500).send({ message: "Failed to check in guest" });
+      }
     });
 
     app.get("/check-in", async (req, res) => {
@@ -1104,6 +1197,7 @@ async function run() {
           quantity: Number(item.quantity) || 0,
           unitPrice: Number(item.price) || 0,
           totalPrice: (Number(item.quantity) || 0) * (Number(item.price) || 0),
+          paymentStatus: orderData.paymentStatus,
           orderedAt: new Date(),
         }));
 
@@ -1770,6 +1864,60 @@ async function run() {
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Failed to get categories" });
+      }
+    });
+
+    // ====================== Expense Entries ======================
+    // POST new expense entry
+    app.post("/expense-entries", async (req, res) => {
+      try {
+        const expense = req.body;
+
+        // Optional: add createdAt timestamp
+        expense.createdAt = new Date();
+
+        const result = await expenseEntryCollection.insertOne(expense);
+        res.send(result);
+      } catch (error) {
+        console.error("Add expense entry error:", error);
+        res.status(500).send({ message: "Failed to add expense entry" });
+      }
+    });
+
+    // Expense Overview Report
+    app.get("/expense-overview", async (req, res) => {
+      try {
+        const { fromDate, toDate, categoryName } = req.query;
+
+        if (!fromDate || !toDate) {
+          return res.status(400).send({
+            message: "Both fromDate and toDate are required",
+          });
+        }
+
+        const query = {
+          expenseDate: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        };
+
+        // Optional category filter
+        if (categoryName) {
+          query.categoryName = categoryName;
+        }
+
+        const result = await expenseEntryCollection
+          .find(query)
+          .sort({ expenseDate: 1 })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("Expense overview report error:", error);
+        res.status(500).send({
+          message: "Failed to fetch expense overview report",
+        });
       }
     });
 
