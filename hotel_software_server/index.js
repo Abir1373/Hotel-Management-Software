@@ -48,6 +48,7 @@ async function run() {
     const maintenanceHistoryCollection = db.collection("Maintenance History");
     const roomVariantCollection = db.collection("Room Variants");
     const checkInCollection = db.collection("CheckInList");
+    const checkOutCollection = db.collection("Checkout List");
     const bannedGuestCollection = db.collection("Banned Guests");
     const foodMenuCollection = db.collection("Food Menu");
     const roomServiceCollection = db.collection("Room Services");
@@ -67,6 +68,170 @@ async function run() {
 
     app.get("/", (req, res) => {
       res.send("Hotel Software Server is Running 🚀");
+    });
+
+    // =========================================================
+    // DASHBOARD STATS
+    // =========================================================
+    app.get("/dashboard/stats", async (req, res) => {
+      try {
+        // Current Guests (still in CheckInList)
+        const currentGuests = await checkInCollection.countDocuments({
+          status: { $ne: "Checked Out" },
+        });
+
+        // Current Employees (Active + On Leave)
+        const currentEmployees = await employeeCollection.countDocuments({
+          EmploymentStatus: { $in: ["Active", "On Leave"] },
+        });
+
+        // Rooms
+        const totalAvailableRooms = await roomCollection.countDocuments({
+          roomStatus: "Available",
+        });
+        const totalOccupiedRooms = await roomCollection.countDocuments({
+          roomStatus: "Occupied",
+        });
+
+        // Current Month Earning (from Checkout List)
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+        );
+
+        const thisMonthCheckouts = await checkOutCollection
+          .find({
+            checkedOutAt: {
+              $gte: startOfMonth,
+              $lte: endOfMonth,
+            },
+          })
+          .toArray();
+
+        const currentMonthEarning = thisMonthCheckouts.reduce((sum, item) => {
+          return sum + (Number(item.totalCharges) || 0);
+        }, 0);
+
+        res.send({
+          currentGuests,
+          currentEmployees,
+          totalAvailableRooms,
+          totalOccupiedRooms,
+          currentMonthEarning,
+        });
+      } catch (error) {
+        console.error("Dashboard stats error:", error);
+        res.status(500).send({ message: "Failed to get dashboard stats" });
+      }
+    });
+
+    // =========================================================
+    // CUSTOMERS PER MONTH (Bar Chart)
+    // =========================================================
+    app.get("/dashboard/customers-per-month", async (req, res) => {
+      try {
+        const checkouts = await checkOutCollection.find().toArray();
+
+        // Group by Year-Month
+        const monthlyCount = {};
+
+        checkouts.forEach((item) => {
+          const date = new Date(item.checkedOutAt || item.createdAt);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+          monthlyCount[key] = (monthlyCount[key] || 0) + 1;
+        });
+
+        // Sort by month
+        const sortedKeys = Object.keys(monthlyCount).sort();
+
+        const categories = sortedKeys.map((key) => {
+          const [year, month] = key.split("-");
+          const monthNames = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ];
+          return `${monthNames[parseInt(month) - 1]} ${year}`;
+        });
+
+        const seriesData = sortedKeys.map((key) => monthlyCount[key]);
+
+        res.send({
+          categories,
+          series: [
+            {
+              name: "Customers",
+              data: seriesData,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Customers per month error:", error);
+        res.status(500).send({ message: "Failed to get customers data" });
+      }
+    });
+
+    // =========================================================
+    // REVENUE BY SERVICE (Pie Chart)
+    // =========================================================
+    app.get("/dashboard/revenue-by-service", async (req, res) => {
+      try {
+        // From Checkout List (more accurate after checkout)
+        const checkouts = await checkOutCollection.find().toArray();
+
+        let restaurantRevenue = 0;
+        let laundryRevenue = 0;
+        let transportRevenue = 0;
+        let roomRevenue = 0;
+
+        checkouts.forEach((item) => {
+          // Room
+          roomRevenue += Number(item.actualRoomCharge || item.totalAmount || 0);
+
+          // Restaurant
+          (item.restaurantOrders || []).forEach((order) => {
+            restaurantRevenue += Number(order.totalAmount || 0);
+          });
+
+          // Laundry
+          (item.laundryOrders || []).forEach((order) => {
+            laundryRevenue += Number(order.totalCost || 0);
+          });
+
+          // Transport
+          (item.transportOrders || []).forEach((order) => {
+            transportRevenue += Number(order.fare || 0);
+          });
+        });
+
+        res.send({
+          labels: ["Room", "Restaurant", "Laundry", "Transport"],
+          series: [
+            roomRevenue,
+            restaurantRevenue,
+            laundryRevenue,
+            transportRevenue,
+          ],
+        });
+      } catch (error) {
+        console.error("Revenue by service error:", error);
+        res.status(500).send({ message: "Failed to get revenue data" });
+      }
     });
 
     // =========================================================
@@ -1917,6 +2082,157 @@ async function run() {
         console.error("Expense overview report error:", error);
         res.status(500).send({
           message: "Failed to fetch expense overview report",
+        });
+      }
+    });
+
+    // =========================================================
+    // CHECKOUT (Move data to Checkout List + mark all as Paid)
+    // =========================================================
+    app.post("/check-out/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ message: "Invalid check-in ID" });
+        }
+
+        // 1. Get the full check-in document
+        const checkIn = await checkInCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        if (!checkIn) {
+          return res.status(404).send({ message: "Check-in record not found" });
+        }
+
+        if (checkIn.status === "Checked Out") {
+          return res.status(400).send({ message: "Guest already checked out" });
+        }
+
+        const {
+          actualCheckoutDate,
+          actualNights,
+          actualRoomCharge,
+          restaurantDue,
+          laundryDue,
+          transportDue,
+          totalCharges,
+          advancePayment,
+          finalAmount,
+          isRefund,
+        } = req.body;
+
+        // ====================== 2. Prepare Checkout Data ======================
+        const checkoutData = {
+          ...checkIn, // copy everything from check-in
+          _id: undefined, // remove old _id so MongoDB creates a new one
+          originalCheckInId: checkIn._id, // keep reference
+
+          // Override with actual checkout values
+          status: "Checked Out",
+          actualCheckoutDate:
+            actualCheckoutDate || new Date().toISOString().split("T")[0],
+          actualNights: Number(actualNights) || checkIn.numberOfNights,
+          actualRoomCharge: Number(actualRoomCharge) || checkIn.totalAmount,
+          restaurantDue: Number(restaurantDue) || 0,
+          laundryDue: Number(laundryDue) || 0,
+          transportDue: Number(transportDue) || 0,
+          totalCharges: Number(totalCharges) || 0,
+          advancePayment: Number(advancePayment) || checkIn.advancePayment,
+          finalAmount: Number(finalAmount) || 0,
+          isRefund: Boolean(isRefund),
+          checkedOutAt: new Date(),
+
+          // Mark all nested orders as Paid
+          restaurantOrders: (checkIn.restaurantOrders || []).map((order) => ({
+            ...order,
+            paymentStatus: "Paid",
+            foodItems: (order.foodItems || []).map((item) => ({
+              ...item,
+              paymentStatus: "Paid",
+            })),
+          })),
+          laundryOrders: (checkIn.laundryOrders || []).map((order) => ({
+            ...order,
+            paymentStatus: "Paid",
+          })),
+          transportOrders: (checkIn.transportOrders || []).map((order) => ({
+            ...order,
+            paymentStatus: "Paid",
+          })),
+        };
+
+        delete checkoutData._id; // safety
+
+        // ====================== 3. Insert into Checkout List ======================
+        const insertResult = await checkOutCollection.insertOne(checkoutData);
+
+        // ====================== 4. Mark all related orders as Paid ======================
+
+        // Restaurant Orders
+        if (checkIn.restaurantOrders?.length > 0) {
+          const restaurantOrderIds = checkIn.restaurantOrders
+            .map((o) => o.orderId)
+            .filter(Boolean);
+
+          if (restaurantOrderIds.length > 0) {
+            await restaurantOrderCollection.updateMany(
+              {
+                _id: { $in: restaurantOrderIds.map((id) => new ObjectId(id)) },
+              },
+              { $set: { paymentStatus: "Paid" } },
+            );
+          }
+        }
+
+        // Laundry Orders
+        if (checkIn.laundryOrders?.length > 0) {
+          const laundryOrderIds = checkIn.laundryOrders
+            .map((o) => o.orderId)
+            .filter(Boolean);
+
+          if (laundryOrderIds.length > 0) {
+            await laundryServiceCollection.updateMany(
+              { _id: { $in: laundryOrderIds.map((id) => new ObjectId(id)) } },
+              { $set: { paymentStatus: "Paid" } },
+            );
+          }
+        }
+
+        // Transport Orders
+        if (checkIn.transportOrders?.length > 0) {
+          const transportOrderIds = checkIn.transportOrders
+            .map((o) => o.orderId)
+            .filter(Boolean);
+
+          if (transportOrderIds.length > 0) {
+            await transportServiceCollection.updateMany(
+              { _id: { $in: transportOrderIds.map((id) => new ObjectId(id)) } },
+              { $set: { paymentStatus: "Paid" } },
+            );
+          }
+        }
+
+        // ====================== 5. Free the room ======================
+        await roomCollection.updateOne(
+          { roomNo: checkIn.roomNumber },
+          { $set: { roomStatus: "Available" } },
+        );
+
+        // ====================== 6. Delete from Check-In collection ======================
+        await checkInCollection.deleteOne({ _id: new ObjectId(id) });
+
+        res.send({
+          success: true,
+          message: "Checkout completed successfully",
+          checkoutId: insertResult.insertedId,
+        });
+      } catch (error) {
+        console.error("Checkout error:", error);
+        res.status(500).send({
+          message: "Failed to complete checkout",
+          error: error.message,
         });
       }
     });

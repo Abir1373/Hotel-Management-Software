@@ -46,7 +46,7 @@ const CheckOut = () => {
             className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
             title="Back to Dashboard"
           >
-            <IoArrowBackCircleSharp className="text-3xl" />
+            <IoArrowBackCircleSharp className="text-2xl" />
           </button>
         </Link>
       </div>

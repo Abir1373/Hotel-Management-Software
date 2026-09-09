@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate, Link } from "react-router";
-
+import { useForm } from "react-hook-form";
 import {
-  FaUser,
   FaBed,
   FaUtensils,
   FaTshirt,
@@ -36,19 +35,38 @@ const MainCheckout = () => {
     enabled: !!id,
   });
 
+  // ====================== FORM FOR ACTUAL CHECKOUT DATE ======================
+  const { register, watch } = useForm({
+    defaultValues: {
+      actualCheckoutDate: "",
+    },
+  });
+
+  const actualCheckoutDate = watch("actualCheckoutDate");
+
   // ====================== HELPER: Get order payment status ======================
   const getOrderStatus = (order) => {
     if (order.paymentStatus) return order.paymentStatus;
-
     if (order.foodItems?.some((item) => item.paymentStatus === "Paid")) {
       return "Paid";
     }
-
     return "Due";
   };
 
-  // ====================== CALCULATIONS (Only Due) ======================
-  const roomDue = Number(guest?.dueAmount) || 0;
+  // ====================== CALCULATIONS ======================
+  let actualNights = Number(guest?.numberOfNights) || 0;
+  let actualRoomCharge = Number(guest?.totalAmount) || 0;
+
+  if (guest && actualCheckoutDate && guest.checkInDate) {
+    const inDate = new Date(guest.checkInDate);
+    const outDate = new Date(actualCheckoutDate);
+    const diffTime = outDate - inDate;
+    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    actualNights = nights > 0 ? nights : 1;
+    actualRoomCharge = actualNights * Number(guest.pricePerNight || 0);
+  }
+
+  const advance = Number(guest?.advancePayment) || 0;
 
   const restaurantDue = (guest?.restaurantOrders || [])
     .filter((order) => getOrderStatus(order) !== "Paid")
@@ -62,22 +80,41 @@ const MainCheckout = () => {
     .filter((order) => getOrderStatus(order) !== "Paid")
     .reduce((sum, order) => sum + (Number(order.fare) || 0), 0);
 
-  const totalDue = roomDue + restaurantDue + laundryDue + transportDue;
-  const advance = Number(guest?.advancePayment) || 0;
+  // Total charges (room + unpaid services)
+  const totalCharges =
+    actualRoomCharge + restaurantDue + laundryDue + transportDue;
+
+  // Final amount
+  const balance = totalCharges - advance; // positive = Due, negative = Refund
+
+  const isRefund = balance < 0;
+  const finalAmount = Math.abs(balance);
+
+  const originalRoomTotal = Number(guest?.totalAmount) || 0;
+  const roomDifference = originalRoomTotal - actualRoomCharge;
+  const isEarlyCheckout = actualNights < Number(guest?.numberOfNights || 0);
 
   // ====================== CHECKOUT HANDLER ======================
   const handleCheckout = async () => {
     const result = await Swal.fire({
       title: "Confirm Checkout?",
       html: `
-        <div class="text-left space-y-1">
-          <p>Room Due: <b>৳${roomDue.toLocaleString()}</b></p>
+      <div class="text-left space-y-1 text-sm">
+          <p>Actual Nights: <b>${actualNights}</b></p>
+          <p>Room Charge: <b>৳${actualRoomCharge.toLocaleString()}</b></p>
           <p>Restaurant Due: <b>৳${restaurantDue.toLocaleString()}</b></p>
           <p>Laundry Due: <b>৳${laundryDue.toLocaleString()}</b></p>
           <p>Transport Due: <b>৳${transportDue.toLocaleString()}</b></p>
+          <p>Total Charges: <b>৳${totalCharges.toLocaleString()}</b></p>
+          <p>Advance Paid: <b>৳${advance.toLocaleString()}</b></p>
           <hr class="my-2"/>
-          <p class="text-lg">Total Remaining Due: <b class="text-rose-700">৳${totalDue.toLocaleString()}</b></p>
-        </div>
+          <p class="text-lg">
+          ${isRefund ? "Refund Amount" : "Total Due"}: 
+          <b class="${isRefund ? "text-green-600" : "text-rose-700"}">
+              ৳${finalAmount.toLocaleString()}
+          </b>
+          </p>
+      </div>
       `,
       icon: "question",
       showCancelButton: true,
@@ -89,27 +126,49 @@ const MainCheckout = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await axiosInstance.patch(`/check-in/${id}`, {
-        status: "Checked-Out",
-        checkedOutAt: new Date(),
-        finalDueAmount: totalDue,
-      });
-
+      // Show loading
       Swal.fire({
-        icon: "success",
-        title: "Checked Out!",
-        text: "Guest has been successfully checked out.",
-        confirmButtonColor: "#be123c",
+        title: "Processing Checkout...",
+        text: "Please wait",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
       });
 
-      navigate("/dashboard/check_in_out/check_out");
+      const payload = {
+        actualCheckoutDate: actualCheckoutDate || guest.checkOutDate,
+        actualNights,
+        actualRoomCharge,
+        restaurantDue,
+        laundryDue,
+        transportDue,
+        totalCharges,
+        advancePayment: advance,
+        finalAmount,
+        isRefund,
+      };
+
+      const res = await axiosInstance.post(`/check-out/${id}`, payload);
+
+      if (res.data.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Checkout Successful!",
+          text: "Guest has been checked out and moved to Checkout List.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        // Redirect to checkout list page
+        navigate("/dashboard/check_in_out/check_out");
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Checkout error:", error);
       Swal.fire({
         icon: "error",
-        title: "Error!",
-        text: "Failed to complete checkout",
-        confirmButtonColor: "#be123c",
+        title: "Checkout Failed",
+        text: error.response?.data?.message || "Something went wrong",
       });
     }
   };
@@ -164,7 +223,11 @@ const MainCheckout = () => {
           </button>
 
           <Link to="/dashboard/check_in_out/check_out">
-            <button className="btn btn-outline border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white">
+            <button
+              type="button"
+              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              title="Back to Dashboard"
+            >
               <IoArrowBackCircleSharp className="text-2xl" />
             </button>
           </Link>
@@ -178,11 +241,12 @@ const MainCheckout = () => {
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
             <div className="bg-gradient-to-r from-rose-700 to-rose-600 p-6 text-white">
               <div className="flex items-center gap-5">
-                {/* Person Image */}
                 <div className="w-20 h-20 rounded-full border-4 border-white/30 overflow-hidden bg-white/20 flex-shrink-0">
                   {guest.personImage ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}${guest.personImage}`}
+                      src={`${
+                        import.meta.env.VITE_API_URL || "http://localhost:3000"
+                      }${guest.personImage}`}
                       alt={guest.guestName}
                       className="w-full h-full object-cover"
                     />
@@ -211,8 +275,99 @@ const MainCheckout = () => {
             </div>
 
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              {/* ... rest of the info remains the same ... */}
+              <div className="flex items-start gap-3">
+                <FaMapMarkerAlt className="text-rose-600 mt-1" />
+                <div>
+                  <p className="text-gray-500">Address</p>
+                  <p className="font-medium">{guest.guestAddress || "—"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <FaBed className="text-rose-600 mt-1" />
+                <div>
+                  <p className="text-gray-500">Room</p>
+                  <p className="font-medium">
+                    {guest.roomVariantName} (Room {guest.roomNumber})
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <FaCalendarAlt className="text-rose-600 mt-1" />
+                <div>
+                  <p className="text-gray-500">Check-In</p>
+                  <p className="font-medium">
+                    {guest.checkInDate} at {guest.checkInTime}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <FaCalendarAlt className="text-rose-600 mt-1" />
+                <div>
+                  <p className="text-gray-500">Planned Check-Out</p>
+                  <p className="font-medium">{guest.checkOutDate}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-gray-500">Planned Nights</p>
+                <p className="font-medium">{guest.numberOfNights} nights</p>
+              </div>
+
+              <div>
+                <p className="text-gray-500">Price per Night</p>
+                <p className="font-medium">
+                  ৳{Number(guest.pricePerNight).toLocaleString()}
+                </p>
+              </div>
             </div>
+          </div>
+
+          {/* ---------- EARLY CHECKOUT SECTION ---------- */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-amber-800 mb-4">
+              Actual Checkout Date
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div>
+                <label className="label">
+                  <span className="label-text font-medium">Checkout Date</span>
+                </label>
+                <input
+                  type="date"
+                  className="input input-bordered w-full bg-white"
+                  min={guest.checkInDate}
+                  defaultValue={guest.checkOutDate}
+                  {...register("actualCheckoutDate")}
+                />
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Actual Nights</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {actualNights}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Room Charge</p>
+                <p className="text-2xl font-bold text-rose-700">
+                  ৳{actualRoomCharge.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {isEarlyCheckout && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+                Early checkout detected. Original: ৳
+                {originalRoomTotal.toLocaleString()} → New: ৳
+                {actualRoomCharge.toLocaleString()}
+                (Saved ৳{roomDifference.toLocaleString()})
+              </div>
+            )}
           </div>
 
           {/* ---------- Restaurant Orders ---------- */}
@@ -464,6 +619,7 @@ const MainCheckout = () => {
         </div>
 
         {/* ====================== RIGHT SIDE - BILL SUMMARY ====================== */}
+        {/* ====================== RIGHT SIDE - BILL SUMMARY ====================== */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 sticky top-6 overflow-hidden">
             <div className="bg-rose-700 text-white px-6 py-4">
@@ -472,9 +628,20 @@ const MainCheckout = () => {
 
             <div className="p-6 space-y-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Room Due</span>
-                <span className="font-medium">৳{roomDue.toLocaleString()}</span>
+                <span className="text-gray-600">
+                  Room Charge ({actualNights} nights)
+                </span>
+                <span className="font-medium">
+                  ৳{actualRoomCharge.toLocaleString()}
+                </span>
               </div>
+
+              {isEarlyCheckout && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Early Checkout Discount</span>
+                  <span>- ৳{roomDifference.toLocaleString()}</span>
+                </div>
+              )}
 
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Restaurant Due</span>
@@ -499,6 +666,13 @@ const MainCheckout = () => {
 
               <div className="border-t border-dashed border-gray-200 my-2"></div>
 
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Total Charges</span>
+                <span className="font-medium">
+                  ৳{totalCharges.toLocaleString()}
+                </span>
+              </div>
+
               <div className="flex justify-between text-sm text-green-600">
                 <span>Advance Paid</span>
                 <span className="font-medium">৳{advance.toLocaleString()}</span>
@@ -506,11 +680,26 @@ const MainCheckout = () => {
 
               <div className="border-t border-dashed border-gray-200 my-2"></div>
 
-              <div className="bg-rose-50 rounded-xl p-4">
+              {/* Final Amount */}
+              <div
+                className={`rounded-xl p-4 ${
+                  isRefund ? "bg-green-50" : "bg-rose-50"
+                }`}
+              >
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-rose-800">Total Due</span>
-                  <span className="text-2xl font-bold text-rose-700">
-                    ৳{totalDue.toLocaleString()}
+                  <span
+                    className={`font-bold ${
+                      isRefund ? "text-green-800" : "text-rose-800"
+                    }`}
+                  >
+                    {isRefund ? "Refund Amount" : "Total Due"}
+                  </span>
+                  <span
+                    className={`text-2xl font-bold ${
+                      isRefund ? "text-green-700" : "text-rose-700"
+                    }`}
+                  >
+                    ৳{finalAmount.toLocaleString()}
                   </span>
                 </div>
               </div>
