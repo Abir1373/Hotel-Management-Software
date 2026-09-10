@@ -66,6 +66,8 @@ import GuestHistory from "../pages/dashboard/guests/guest_history/GuestHistory";
 import Refunds from "../pages/dashboard/billing_and_payments/refunds/Refunds";
 import HotelInformation from "../pages/dashboard/settings/hotel_information/HotelInformation";
 import Security from "../pages/dashboard/settings/security/Security";
+import UnderPreview from "../pages/error_pages/UnderPreview";
+import UnderDue from "../pages/error_pages/UnderDue";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -224,6 +226,8 @@ const Router = createBrowserRouter([
       { path: "settings/hotels", Component: Hotels },
       { path: "settings/hotel_information", Component: HotelInformation },
       { path: "settings/security", Component: Security },
+      { path: "under_preview", Component: UnderPreview },
+      { path: "under_due", Component: UnderDue },
     ],
   },
 ]);
