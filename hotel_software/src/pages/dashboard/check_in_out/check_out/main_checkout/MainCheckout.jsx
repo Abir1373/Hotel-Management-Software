@@ -11,6 +11,7 @@ import {
   FaIdCard,
   FaMapMarkerAlt,
   FaCalendarAlt,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { MdCheckCircleOutline } from "react-icons/md";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
@@ -189,9 +190,10 @@ const MainCheckout = () => {
         </p>
         <Link
           to="/dashboard/check_in_out/check_out"
-          className="btn btn-sm mt-4 bg-rose-700 text-white"
+          className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
+          title="Back"
         >
-          Go Back
+          <FaArrowLeft />
         </Link>
       </div>
     );
@@ -618,7 +620,6 @@ const MainCheckout = () => {
           </div>
         </div>
 
-        {/* ====================== RIGHT SIDE - BILL SUMMARY ====================== */}
         {/* ====================== RIGHT SIDE - BILL SUMMARY ====================== */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 sticky top-6 overflow-hidden">

@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
 import { RiHome3Line } from "react-icons/ri";
 import { MdBlock } from "react-icons/md";
+import { FaArrowLeft } from "react-icons/fa";
 
 const BlackListedGuests = () => {
   const axiosInstance = useAxios();
@@ -57,13 +58,13 @@ const BlackListedGuests = () => {
           </p>
         </div>
 
-        <Link to="/dashboard/guests">
-          <button
-            type="button"
-            className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-          >
-            <RiHome3Line className="text-xl" />
-          </button>
+        {/* Back Button */}
+        <Link
+          to="/dashboard/guests"
+          className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
+          title="Back"
+        >
+          <FaArrowLeft />
         </Link>
       </div>
 

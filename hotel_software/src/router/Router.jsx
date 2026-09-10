@@ -60,7 +60,12 @@ import ExpenseReport from "../pages/dashboard/reports/expense_report/ExpenseRepo
 import EntryReport from "../pages/dashboard/reports/expense_report/entry_report/EntryReport";
 import ExpenseOverview from "../pages/dashboard/reports/expense_report/expense_overview/ExpenseOverview";
 import MainCheckout from "../pages/dashboard/check_in_out/check_out/main_checkout/MainCheckout";
-
+import PaymentHistory from "../pages/dashboard/billing_and_payments/payment_history/PaymentHistory";
+import CheckoutDetails from "../pages/dashboard/billing_and_payments/payment_history/CheckoutDetails";
+import GuestHistory from "../pages/dashboard/guests/guest_history/GuestHistory";
+import Refunds from "../pages/dashboard/billing_and_payments/refunds/Refunds";
+import HotelInformation from "../pages/dashboard/settings/hotel_information/HotelInformation";
+import Security from "../pages/dashboard/settings/security/Security";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -88,6 +93,15 @@ const Router = createBrowserRouter([
 
       { path: "billing_and_payments", Component: Billing_and_Payments },
       { path: "billing_and_payments/dues", Component: Dues },
+      { path: "billing_and_payments/refunds", Component: Refunds },
+      {
+        path: "billing_and_payments/payment_history",
+        Component: PaymentHistory,
+      },
+      {
+        path: "billing_and_payments/checkout_details/:id",
+        Component: CheckoutDetails,
+      },
 
       { path: "rooms", Component: Rooms },
       { path: "rooms/add_room_variant", Component: AddRoomVariant },
@@ -181,6 +195,7 @@ const Router = createBrowserRouter([
 
       { path: "guests", Component: Guests },
       { path: "guests/present_guest_list", Component: PresentGuestList },
+      { path: "guests/guest_history", Component: GuestHistory },
       { path: "guests/edit_guest_info/:id", Component: EditGuestInfo },
       { path: "guests/black_listed_guests", Component: BlackListedGuests },
 
@@ -207,6 +222,8 @@ const Router = createBrowserRouter([
       { path: "reports/expenses/expense_overview", Component: ExpenseOverview },
       { path: "settings", Component: Settings },
       { path: "settings/hotels", Component: Hotels },
+      { path: "settings/hotel_information", Component: HotelInformation },
+      { path: "settings/security", Component: Security },
     ],
   },
 ]);

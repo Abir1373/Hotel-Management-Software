@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
-import { FaHotel } from "react-icons/fa";
+import { FaHotel, FaArrowLeft } from "react-icons/fa";
 import { MdDelete, MdCheckCircle } from "react-icons/md";
 import Swal from "sweetalert2";
 
@@ -142,7 +143,7 @@ const Hotels = () => {
   return (
     <div className="mx-auto p-6">
       {/* Header */}
-      <div className="flex justify-between mb-6">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div className="w-10 h-10 rounded-full bg-rose-700 flex items-center justify-center shadow-md">
@@ -156,6 +157,14 @@ const Hotels = () => {
             </div>
           </div>
         </div>
+
+        {/* Back Button */}
+        <Link
+          to="/dashboard/settings"
+          className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
+        >
+          <FaArrowLeft />
+        </Link>
       </div>
 
       {/* Table Card */}

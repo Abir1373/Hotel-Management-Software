@@ -3,9 +3,12 @@ import { AuthContext } from "./AuthContext";
 import { auth } from "../firebase/firebase.init";
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updateEmail,
+  updatePassword,
   updateProfile,
 } from "firebase/auth";
 
@@ -27,13 +30,31 @@ const AuthProvider = ({ children }) => {
 
   // Update user profile (name, photo, etc.)
   const updateUserProfile = (profileInfo) => {
+    setLoading(true);
     return updateProfile(auth.currentUser, profileInfo);
+  };
+
+  // update user passwrod
+  const updateUserPassword = (newPassword) => {
+    setLoading(true);
+    return updatePassword(auth.currentUser, newPassword);
+  };
+
+  // inside AuthProvider
+  const updateUserEmail = (newEmail) => {
+    setLoading(true);
+    return updateEmail(auth.currentUser, newEmail);
   };
 
   // Logout
   const logOut = () => {
     setLoading(true);
     return signOut(auth);
+  };
+
+  const deleteUserInfo = () => {
+    setLoading(true);
+    return deleteUser(auth.currentUser);
   };
 
   // Observe auth state
@@ -55,7 +76,10 @@ const AuthProvider = ({ children }) => {
     createUser,
     signIn,
     logOut,
+    updateUserPassword,
+    updateUserEmail,
     updateUserProfile,
+    deleteUserInfo,
   };
 
   return <AuthContext value={authInfo}>{children}</AuthContext>;

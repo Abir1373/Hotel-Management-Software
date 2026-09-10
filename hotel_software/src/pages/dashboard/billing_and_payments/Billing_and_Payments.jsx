@@ -1,10 +1,5 @@
 import { Link } from "react-router";
-import {
-  FaFileInvoiceDollar,
-  FaMoneyCheckAlt,
-  FaUndoAlt,
-  FaHistory,
-} from "react-icons/fa";
+import { FaMoneyCheckAlt, FaUndoAlt, FaHistory } from "react-icons/fa";
 import { RiCoinsFill } from "react-icons/ri";
 
 const Billing_and_Payments = () => {
@@ -44,7 +39,7 @@ const Billing_and_Payments = () => {
 
         {/* Refunds */}
         <Link
-          to="/dashboard/billing/refunds"
+          to="/dashboard/billing_and_payments/refunds"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
@@ -60,7 +55,7 @@ const Billing_and_Payments = () => {
 
         {/* Payment History */}
         <Link
-          to="/dashboard/billing/history"
+          to="/dashboard/billing_and_payments/payment_history"
           className="group bg-white rounded-2xl shadow-md border border-gray-100 p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#BF1E2E]"
         >
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-[#BF1E2E]">
