@@ -42,3 +42,4 @@ If you are developing a production application, we recommend using TypeScript wi
 18. npm i framer-motion => use this : import { motion } from "motion/react"
 19. npm install react-icons --save
 20. npm install @mui/material @emotion/react @emotion/styled
+21. npm i @tanstack/react-query
