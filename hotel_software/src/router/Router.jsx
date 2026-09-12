@@ -68,6 +68,8 @@ import HotelInformation from "../pages/dashboard/settings/hotel_information/Hote
 import Security from "../pages/dashboard/settings/security/Security";
 import UnderPreview from "../pages/error_pages/UnderPreview";
 import UnderDue from "../pages/error_pages/UnderDue";
+import PrivateRoute from "../routes/PrivateRoute";
+import AdminRoute from "../routes/AdminRoute";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -81,6 +83,8 @@ const Router = createBrowserRouter([
         path: "signup",
         Component: Signup,
       },
+      { path: "under_preview", Component: UnderPreview },
+      { path: "under_due", Component: UnderDue },
     ],
   },
 
@@ -88,146 +92,527 @@ const Router = createBrowserRouter([
     path: "/dashboard",
     Component: DashboardLayout,
     children: [
+      // Protected routes
       {
         index: true,
-        Component: Root,
+        element: (
+          <PrivateRoute>
+            <Root />
+          </PrivateRoute>
+        ),
       },
-
-      { path: "billing_and_payments", Component: Billing_and_Payments },
-      { path: "billing_and_payments/dues", Component: Dues },
-      { path: "billing_and_payments/refunds", Component: Refunds },
+      {
+        path: "billing_and_payments",
+        element: (
+          <PrivateRoute>
+            <Billing_and_Payments />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "billing_and_payments/dues",
+        element: (
+          <PrivateRoute>
+            <Dues />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "billing_and_payments/refunds",
+        element: (
+          <PrivateRoute>
+            <Refunds />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "billing_and_payments/payment_history",
-        Component: PaymentHistory,
+        element: (
+          <PrivateRoute>
+            <PaymentHistory />
+          </PrivateRoute>
+        ),
       },
       {
         path: "billing_and_payments/checkout_details/:id",
-        Component: CheckoutDetails,
+        element: (
+          <PrivateRoute>
+            <CheckoutDetails />
+          </PrivateRoute>
+        ),
       },
 
-      { path: "rooms", Component: Rooms },
-      { path: "rooms/add_room_variant", Component: AddRoomVariant },
-      { path: "rooms/room_status", Component: RoomStatus },
-      { path: "rooms/room_overview", Component: RoomOverview },
-      { path: "rooms/edit_room_variant/:id", Component: EditRoomVariant },
-
-      { path: "rooms/add_room/:id", Component: AddRoom },
-      { path: "rooms/maintenance", Component: Maintenance },
-      { path: "rooms/edit_maintenance/:id", Component: EditMaintenance },
+      // Rooms
+      {
+        path: "rooms",
+        element: (
+          <PrivateRoute>
+            <Rooms />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/add_room_variant",
+        element: (
+          <PrivateRoute>
+            <AddRoomVariant />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/room_status",
+        element: (
+          <PrivateRoute>
+            <RoomStatus />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/room_overview",
+        element: (
+          <PrivateRoute>
+            <RoomOverview />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/edit_room_variant/:id",
+        element: (
+          <PrivateRoute>
+            <EditRoomVariant />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/add_room/:id",
+        element: (
+          <PrivateRoute>
+            <AddRoom />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/maintenance",
+        element: (
+          <PrivateRoute>
+            <Maintenance />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/edit_maintenance/:id",
+        element: (
+          <PrivateRoute>
+            <EditMaintenance />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "rooms/maintenance_history",
-        Component: MaintenanceHistory,
+        element: (
+          <PrivateRoute>
+            <MaintenanceHistory />
+          </PrivateRoute>
+        ),
       },
       {
         path: "rooms/view_rooms/:id",
-        Component: ViewRooms,
+        element: (
+          <PrivateRoute>
+            <ViewRooms />
+          </PrivateRoute>
+        ),
       },
       {
         path: "rooms/edit_maintenance_history/:id",
-        Component: EditMaintenanceHistory,
+        element: (
+          <PrivateRoute>
+            <EditMaintenanceHistory />
+          </PrivateRoute>
+        ),
       },
 
-      { path: "services", Component: Services },
-      { path: "services/room_service", Component: RoomService },
+      // Services
+      {
+        path: "services",
+        element: (
+          <PrivateRoute>
+            <Services />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "services/room_service",
+        element: (
+          <PrivateRoute>
+            <RoomService />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "services/room_service/room_service_history",
-        Component: RoomServiceHistory,
+        element: (
+          <PrivateRoute>
+            <RoomServiceHistory />
+          </PrivateRoute>
+        ),
       },
       {
         path: "services/restaurant_orders",
-        Component: RestaurantOrders,
+        element: (
+          <PrivateRoute>
+            <RestaurantOrders />
+          </PrivateRoute>
+        ),
       },
       {
         path: "services/restaurant_orders/restaurant_orders_history",
-        Component: RestaurantOrdersHistory,
+        element: (
+          <PrivateRoute>
+            <RestaurantOrdersHistory />
+          </PrivateRoute>
+        ),
       },
       {
         path: "services/restaurant_orders/edit_restaurant_history/:id",
-        Component: EditRestaurantHistory,
+        element: (
+          <PrivateRoute>
+            <EditRestaurantHistory />
+          </PrivateRoute>
+        ),
       },
       {
         path: "services/restaurant_orders/invoice/:id",
-        Component: RestaurantInvoice,
+        element: (
+          <PrivateRoute>
+            <RestaurantInvoice />
+          </PrivateRoute>
+        ),
       },
       {
         path: "services/restaurant_orders/food_menu",
-        Component: FoodMenu,
+        element: (
+          <PrivateRoute>
+            <FoodMenu />
+          </PrivateRoute>
+        ),
       },
-      { path: "services/laundry_service", Component: LaundryService },
+      {
+        path: "services/laundry_service",
+        element: (
+          <PrivateRoute>
+            <LaundryService />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "services/laundry_service/laundry_service_history",
-        Component: LaundryServiceHistory,
+        element: (
+          <PrivateRoute>
+            <LaundryServiceHistory />
+          </PrivateRoute>
+        ),
       },
       {
         path: "services/transport_service",
-        Component: TransportService,
+        element: (
+          <PrivateRoute>
+            <TransportService />
+          </PrivateRoute>
+        ),
       },
       {
         path: "services/transport_service/transport_service_history",
-        Component: TransportServiceHistory,
+        element: (
+          <PrivateRoute>
+            <TransportServiceHistory />
+          </PrivateRoute>
+        ),
       },
 
-      { path: "check_in_out", Component: Check_in_Out },
-      { path: "check_in_out/check_in", Component: CheckIn },
-      { path: "check_in_out/check_out", Component: CheckOut },
-      { path: "check_in_out/check_out/:id", Component: MainCheckout },
-      { path: "check_in_out", Component: CheckOut },
+      // Check In / Out
+      {
+        path: "check_in_out",
+        element: (
+          <PrivateRoute>
+            <Check_in_Out />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "check_in_out/check_in",
+        element: (
+          <PrivateRoute>
+            <CheckIn />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "check_in_out/check_out",
+        element: (
+          <PrivateRoute>
+            <CheckOut />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "check_in_out/check_out/:id",
+        element: (
+          <PrivateRoute>
+            <MainCheckout />
+          </PrivateRoute>
+        ),
+      },
 
-      { path: "employees", Component: Employees },
-      { path: "employees/add_employee", Component: AddEmployee },
+      // Employees
+      {
+        path: "employees",
+        element: (
+          <PrivateRoute>
+            <Employees />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "employees/add_employee",
+        element: (
+          <PrivateRoute>
+            <AddEmployee />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "employees/current_employees",
-        Component: CurrentEmployees,
+        element: (
+          <PrivateRoute>
+            <CurrentEmployees />
+          </PrivateRoute>
+        ),
       },
-      { path: "employees/past_employees", Component: PastEmployees },
-      { path: "employees/payroll", Component: Payroll },
+      {
+        path: "employees/past_employees",
+        element: (
+          <PrivateRoute>
+            <PastEmployees />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "employees/payroll",
+        element: (
+          <PrivateRoute>
+            <Payroll />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "employees/payroll/assign-new-salary-structure",
-        Component: AssignNewSalaryStructure,
+        element: (
+          <PrivateRoute>
+            <AssignNewSalaryStructure />
+          </PrivateRoute>
+        ),
       },
       {
         path: "employees/payroll/payroll-history",
-        Component: PayrollHistory,
+        element: (
+          <PrivateRoute>
+            <PayrollHistory />
+          </PrivateRoute>
+        ),
       },
       {
         path: "payroll/make-salary/:employeeId",
-        Component: MakeSalary,
+        element: (
+          <PrivateRoute>
+            <MakeSalary />
+          </PrivateRoute>
+        ),
       },
-      { path: "employees/edit/:id", Component: EditEmployee },
+      {
+        path: "employees/edit/:id",
+        element: (
+          <PrivateRoute>
+            <EditEmployee />
+          </PrivateRoute>
+        ),
+      },
 
-      { path: "guests", Component: Guests },
-      { path: "guests/present_guest_list", Component: PresentGuestList },
-      { path: "guests/guest_history", Component: GuestHistory },
-      { path: "guests/edit_guest_info/:id", Component: EditGuestInfo },
-      { path: "guests/black_listed_guests", Component: BlackListedGuests },
+      // Guests
+      {
+        path: "guests",
+        element: (
+          <PrivateRoute>
+            <Guests />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "guests/present_guest_list",
+        element: (
+          <PrivateRoute>
+            <PresentGuestList />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "guests/guest_history",
+        element: (
+          <PrivateRoute>
+            <GuestHistory />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "guests/edit_guest_info/:id",
+        element: (
+          <PrivateRoute>
+            <EditGuestInfo />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "guests/black_listed_guests",
+        element: (
+          <PrivateRoute>
+            <BlackListedGuests />
+          </PrivateRoute>
+        ),
+      },
 
-      { path: "reservations", Component: Reservations },
+      // Reservations
+      {
+        path: "reservations",
+        element: (
+          <PrivateRoute>
+            <Reservations />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "reservations/reservation_history",
-        Component: ReservationsHistory,
+        element: (
+          <PrivateRoute>
+            <ReservationsHistory />
+          </PrivateRoute>
+        ),
       },
-      { path: "reports", Component: Reports },
-      { path: "reports/sales_report", Component: SalesReport },
+
+      // Reports
+      {
+        path: "reports",
+        element: (
+          <PrivateRoute>
+            <Reports />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "reports/sales_report",
+        element: (
+          <PrivateRoute>
+            <SalesReport />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "reports/sales_report/transportation_sales",
-        Component: TransportationSales,
+        element: (
+          <PrivateRoute>
+            <TransportationSales />
+          </PrivateRoute>
+        ),
       },
       {
         path: "reports/sales_report/restaurant_sales",
-        Component: RestaurantSales,
+        element: (
+          <PrivateRoute>
+            <RestaurantSales />
+          </PrivateRoute>
+        ),
       },
-      { path: "reports/sales_report/laundry_sales", Component: LaundrySales },
-      { path: "reports/room_report", Component: RoomReport },
-      { path: "reports/salary_report", Component: SalaryReport },
-      { path: "reports/expense_report", Component: ExpenseReport },
-      { path: "reports/expenses/entry-report", Component: EntryReport },
-      { path: "reports/expenses/expense_overview", Component: ExpenseOverview },
-      { path: "settings", Component: Settings },
-      { path: "settings/hotels", Component: Hotels },
-      { path: "settings/hotel_information", Component: HotelInformation },
-      { path: "settings/security", Component: Security },
-      { path: "under_preview", Component: UnderPreview },
-      { path: "under_due", Component: UnderDue },
+      {
+        path: "reports/sales_report/laundry_sales",
+        element: (
+          <PrivateRoute>
+            <LaundrySales />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "reports/room_report",
+        element: (
+          <PrivateRoute>
+            <RoomReport />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "reports/salary_report",
+        element: (
+          <PrivateRoute>
+            <SalaryReport />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "reports/expense_report",
+        element: (
+          <PrivateRoute>
+            <ExpenseReport />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "reports/expenses/entry-report",
+        element: (
+          <PrivateRoute>
+            <EntryReport />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "reports/expenses/expense_overview",
+        element: (
+          <PrivateRoute>
+            <ExpenseOverview />
+          </PrivateRoute>
+        ),
+      },
+
+      // Settings
+      {
+        path: "settings",
+        element: (
+          <PrivateRoute>
+            <Settings />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "settings/hotels",
+        element: (
+          <PrivateRoute>
+            <Hotels />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "settings/hotel_information",
+        element: (
+          <AdminRoute>
+            <HotelInformation />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "settings/security",
+        element: (
+          <PrivateRoute>
+            <Security />
+          </PrivateRoute>
+        ),
+      },
     ],
   },
 ]);

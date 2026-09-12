@@ -1985,7 +1985,31 @@ async function run() {
         res.status(500).send({ message: "Failed to get refunded checkouts" });
       }
     });
+    // =========================================================
+    // USER STATUS (for PrivateRoute)
+    // =========================================================
+    app.get("/users/:email/status", async (req, res) => {
+      try {
+        const email = req.params.email;
+        console.log("Looking for status of:", email); // debug
 
+        const hotel = await hotelCollection.findOne(
+          { email: email },
+          { projection: { status: 1 } },
+        );
+
+        if (!hotel) {
+          console.log("Hotel not found for:", email);
+          return res.status(404).send({ status: "Pending" });
+        }
+
+        console.log("Found status:", hotel.status);
+        res.send({ status: hotel.status });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to get status" });
+      }
+    });
     // =========================================================
     // START SERVER
     // =========================================================

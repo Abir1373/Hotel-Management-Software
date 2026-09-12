@@ -2,14 +2,14 @@ import { Navigate } from "react-router";
 import useAuth from "../hooks/useAuth";
 import useUserStatus from "../hooks/useUserStatus";
 
-const PrivateRoute = ({ children }) => {
+const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const { status, statusLoading } = useUserStatus();
 
   if (loading || statusLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg text-rose-700"></span>
+        <span className="loading loading-spinner loading-lg"></span>
       </div>
     );
   }
@@ -17,21 +17,11 @@ const PrivateRoute = ({ children }) => {
   if (!user) {
     return <Navigate to="/" replace />;
   }
-
-  if (status === "Pending") {
-    return <Navigate to="/under_preview" replace />;
-  }
-
-  if (status === "Due") {
-    return <Navigate to="/under_due" replace />;
-  }
-
-  // Allow both Approved and Admin
-  if (status !== "Approved" && status !== "Admin") {
+  if (status !== "Admin") {
     return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
-export default PrivateRoute;
+export default AdminRoute;

@@ -10,9 +10,25 @@ import {
 } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import useAxios from "../../../hooks/useAxios";
+import useUserStatus from "../../../hooks/useUserStatus";
+import { Navigate } from "react-router";
 
 const Root = () => {
   const axiosInstance = useAxios();
+  const { status, statusLoading } = useUserStatus();
+
+  if (statusLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <span className="loading loading-spinner loading-lg text-rose-700"></span>
+      </div>
+    );
+  }
+
+  // When Admin → redirect to Settings
+  if (status === "Admin") {
+    return <Navigate to="/dashboard/settings" replace />;
+  }
 
   // ====================== STATS ======================
   const { data: stats, isLoading: statsLoading } = useQuery({
