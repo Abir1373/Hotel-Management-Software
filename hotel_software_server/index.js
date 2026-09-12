@@ -36,8 +36,8 @@ app.use(fileUpload());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection URI
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dmnxhxd.mongodb.net/?appName=Cluster0`;
-
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dmnxhxd.mongodb.net/?appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vacfvah.mongodb.net/?appName=Cluster0`;
 // MongoDB Client
 const client = new MongoClient(uri, {
   serverApi: {
@@ -1362,7 +1362,7 @@ async function run() {
           phone: req.body.phone,
           password: hashedPassword,
           logo: `/uploads/hotels/${uniqueName}`,
-          status: "pending",
+          status: "Pending",
           createdAt: new Date(),
         };
 
