@@ -1,15 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
-import { RiHome3Line } from "react-icons/ri";
 import { MdOutlinePlaylistAddCheckCircle } from "react-icons/md";
 import { FaArrowLeft, FaUserEdit } from "react-icons/fa";
-import { IoMdTrash } from "react-icons/io";
 import Swal from "sweetalert2";
+import useAuth from "../../../../hooks/useAuth";
+import { RiHome3Line } from "react-icons/ri";
 
 const PresentGuestList = () => {
   const axiosInstance = useAxios();
-
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
   const {
     data: checkIns = [],
     isLoading,
@@ -19,7 +22,11 @@ const PresentGuestList = () => {
   } = useQuery({
     queryKey: ["check-ins"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/check-in");
+      const res = await axiosInstance.get("/check-in", {
+        params: {
+          hotelEmail: user?.email,
+        },
+      });
       return res.data;
     },
   });
@@ -39,6 +46,7 @@ const PresentGuestList = () => {
       refetch();
     } else {
       const bannedGuest = {
+        hotelEmail: checkIn.hotelEmail,
         checkinId: checkIn._id,
         designation: checkIn.designation,
         guestName: checkIn.guestName,
@@ -81,7 +89,7 @@ const PresentGuestList = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-96">
-        <span className="loading loading-spinner loading-lg text-rose-700"></span>
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
       </div>
     );
   }
@@ -101,10 +109,10 @@ const PresentGuestList = () => {
       <div className="flex flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-rose-900 flex items-center justify-center">
               <MdOutlinePlaylistAddCheckCircle className="text-xl text-white" />
             </div>
-            <h1 className="text-lg font-bold text-rose-700">
+            <h1 className="text-lg font-bold text-rose-900">
               Present Guest/s List
             </h1>
           </div>
@@ -114,19 +122,20 @@ const PresentGuestList = () => {
         </div>
 
         {/* Back Button */}
-        <Link
-          to="/dashboard/guests"
-          className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
-          title="Back"
-        >
-          <FaArrowLeft />
+        <Link to="/dashboard/guests">
+          <button
+            type="button"
+            className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
+          >
+            <RiHome3Line className="text-xl" />
+          </button>
         </Link>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="table table-zebra w-full">
-          <thead className="bg-rose-700 text-white">
+          <thead className="bg-rose-900 text-white">
             <tr className="text-center">
               <th>Guest Name</th>
               <th>Guest Id</th>

@@ -7,10 +7,16 @@ import { Link } from "react-router";
 import Swal from "sweetalert2";
 import useAxios from "../../../../../hooks/useAxios";
 import { IoCaretBackOutline } from "react-icons/io5";
+import useAuth from "../../../../../hooks/useAuth";
 
 const FoodMenu = () => {
   const axiosInstance = useAxios();
   const queryClient = useQueryClient();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   const {
     register,
@@ -24,7 +30,11 @@ const FoodMenu = () => {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["food-menu"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/food-menu");
+      const res = await axiosInstance.get("/food-menu", {
+        params: {
+          hotelEmail: user.email,
+        },
+      });
       return res.data;
     },
   });
@@ -34,6 +44,7 @@ const FoodMenu = () => {
       itemName: data.itemName,
       itemDescription: data.itemDescription || "",
       price: Number(data.price),
+      hotelEmail: user.email,
     };
 
     if (data.editId) {
@@ -99,10 +110,10 @@ const FoodMenu = () => {
       <div className="flex justify-between mb-5">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-rose-900 flex items-center justify-center">
               <MdRestaurantMenu className="text-xl text-white" />
             </div>
-            <h1 className="text-lg font-bold text-rose-700">Food Menu</h1>
+            <h1 className="text-lg font-bold text-rose-900">Food Menu</h1>
           </div>
           <p className="text-gray-500 ml-12">
             Add and manage restaurant food items.
@@ -112,7 +123,7 @@ const FoodMenu = () => {
         <Link to="/dashboard/services/restaurant_orders">
           <button
             type="button"
-            className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
           >
             <IoCaretBackOutline className="text-xl" />
           </button>
@@ -121,7 +132,7 @@ const FoodMenu = () => {
 
       {/* Items List */}
       <div className="bg-white shadow-lg rounded-2xl p-6 mb-6">
-        <h2 className="text-base font-semibold text-rose-700 mb-4">
+        <h2 className="text-base font-semibold text-rose-900 mb-4">
           All Food Items
         </h2>
 
@@ -151,7 +162,7 @@ const FoodMenu = () => {
                 <div className="col-span-5 text-gray-600 text-sm">
                   {item.itemDescription || "—"}
                 </div>
-                <div className="col-span-2 font-semibold text-rose-700">
+                <div className="col-span-2 font-semibold text-rose-900">
                   ৳{item.price}
                 </div>
                 <div className="col-span-2 flex justify-center gap-3">
@@ -182,7 +193,7 @@ const FoodMenu = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white shadow-lg rounded-2xl p-8"
       >
-        <h2 className="text-base font-semibold text-rose-700 mb-5">
+        <h2 className="text-base font-semibold text-rose-900 mb-5">
           Add / Edit Food Item
         </h2>
 

@@ -37,7 +37,14 @@ const Hotels = () => {
     try {
       setLoadingId(hotel._id);
 
+      // 1. Update Hotels collection
       await axiosInstance.patch(`/hotels/${hotel._id}`, {
+        status: "Approved",
+      });
+
+      // 2. Update Users collection
+      await axiosInstance.patch(`/users-status-change`, {
+        email: hotel.email,
         status: "Approved",
       });
 
@@ -63,7 +70,7 @@ const Hotels = () => {
   };
 
   // ====================== CHANGE STATUS ======================
-  const handleStatusChange = async (id, newStatus, hotelName) => {
+  const handleStatusChange = async (id, newStatus, hotelName, hotelEmail) => {
     const result = await Swal.fire({
       title: "Change Status?",
       text: `Do you want to change the status of "${hotelName}" to "${newStatus}"?`,
@@ -79,7 +86,15 @@ const Hotels = () => {
     try {
       setLoadingId(id);
 
+      // 1. Update Hotels collection
       await axiosInstance.patch(`/hotels/${id}`, { status: newStatus });
+
+      // 2. Update Users collection
+      await axiosInstance.patch(`/users-status-change`, {
+        email: hotelEmail,
+        status: newStatus,
+      });
+
       await queryClient.invalidateQueries({ queryKey: ["hotels"] });
 
       Swal.fire({
@@ -146,11 +161,11 @@ const Hotels = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-full bg-rose-700 flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-full bg-rose-900 flex items-center justify-center shadow-md">
               <FaHotel className="text-xl text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-rose-700">Hotels</h1>
+              <h1 className="text-lg font-bold text-rose-900">Hotels</h1>
               <p className="text-sm text-gray-500">
                 Manage registered hotels & properties
               </p>
@@ -158,10 +173,9 @@ const Hotels = () => {
           </div>
         </div>
 
-        {/* Back Button */}
         <Link
           to="/dashboard/settings"
-          className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
+          className="btn btn-circle bg-rose-900 hover:bg-[#BF1E2E] text-white border-none"
         >
           <FaArrowLeft />
         </Link>
@@ -169,7 +183,7 @@ const Hotels = () => {
 
       {/* Table Card */}
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
-        <div className="bg-rose-700 text-white px-6 py-4">
+        <div className="bg-rose-900 text-white px-6 py-4">
           <h2 className="text-lg font-bold">All Hotels</h2>
           <p className="text-sm text-rose-100">
             View, approve, change status or delete hotels
@@ -178,7 +192,7 @@ const Hotels = () => {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <span className="loading loading-spinner loading-lg text-rose-700"></span>
+            <span className="loading loading-spinner loading-lg text-rose-900"></span>
           </div>
         ) : hotels.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
@@ -188,7 +202,7 @@ const Hotels = () => {
           <div className="overflow-x-auto">
             <table className="table w-full">
               <thead>
-                <tr className="bg-rose-50 text-rose-800 text-sm">
+                <tr className="bg-rose-50 text-rose-900 text-sm">
                   <th className="font-semibold">Logo</th>
                   <th className="font-semibold">Hotel Name</th>
                   <th className="font-semibold">Type</th>
@@ -203,6 +217,7 @@ const Hotels = () => {
               <tbody>
                 {hotels.map((hotel) => {
                   const isProcessing = loadingId === hotel._id;
+                  const isAdmin = hotel.status === "Admin";
 
                   return (
                     <tr
@@ -240,58 +255,68 @@ const Hotels = () => {
                       <td className="text-sm">{hotel.phone || "—"}</td>
 
                       {/* Status Dropdown */}
-                      <td className="text-center">
-                        <select
-                          value={hotel.status || "Pending"}
-                          disabled={isProcessing}
-                          onChange={(e) => {
-                            if (e.target.value !== hotel.status) {
-                              handleStatusChange(
-                                hotel._id,
-                                e.target.value,
-                                hotel.hotelName,
-                              );
-                            }
-                          }}
-                          className="select select-bordered select-sm font-semibold bg-white m-6"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Due">Due</option>
-                          <option value="Approved">Approved</option>
-                        </select>
-                      </td>
+                      {isAdmin ? (
+                        <>-</>
+                      ) : (
+                        <td className="text-center">
+                          <select
+                            value={hotel.status || "Pending"}
+                            disabled={isProcessing}
+                            onChange={(e) => {
+                              if (e.target.value !== hotel.status) {
+                                handleStatusChange(
+                                  hotel._id,
+                                  e.target.value,
+                                  hotel.hotelName,
+                                  hotel.email,
+                                );
+                              }
+                            }}
+                            className="select select-bordered select-sm font-semibold bg-white m-6"
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Due">Due</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Admin">Admin</option>
+                          </select>
+                        </td>
+                      )}
 
-                      {/* Action Buttons */}
+                      {/* Action Buttons - Hidden only when status is Admin */}
                       <td>
-                        <div className="flex items-center justify-center gap-2">
-                          {hotel.status !== "Approved" && (
+                        {isAdmin ? (
+                          <span className="text-xs text-gray-400">—</span>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2">
+                            {hotel.status !== "Approved" && (
+                              <button
+                                onClick={() => handleApprove(hotel)}
+                                disabled={isProcessing}
+                                className="btn btn-sm bg-green-600 text-white hover:bg-green-700 border-none gap-1"
+                              >
+                                {isProcessing ? (
+                                  <span className="loading loading-spinner loading-xs"></span>
+                                ) : (
+                                  <MdCheckCircle />
+                                )}
+                                Approve
+                              </button>
+                            )}
+
                             <button
-                              onClick={() => handleApprove(hotel)}
+                              onClick={() => handleDelete(hotel)}
                               disabled={isProcessing}
-                              className="btn btn-sm bg-green-600 text-white hover:bg-green-700 border-none gap-1"
+                              className="btn btn-sm btn-outline border-red-600 text-red-600 hover:bg-red-600 hover:text-white gap-1"
                             >
                               {isProcessing ? (
                                 <span className="loading loading-spinner loading-xs"></span>
                               ) : (
-                                <MdCheckCircle />
+                                <MdDelete />
                               )}
-                              Approve
+                              Delete
                             </button>
-                          )}
-
-                          <button
-                            onClick={() => handleDelete(hotel)}
-                            disabled={isProcessing}
-                            className="btn btn-sm btn-outline border-red-600 text-red-600 hover:bg-red-600 hover:text-white gap-1"
-                          >
-                            {isProcessing ? (
-                              <span className="loading loading-spinner loading-xs"></span>
-                            ) : (
-                              <MdDelete />
-                            )}
-                            Delete
-                          </button>
-                        </div>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

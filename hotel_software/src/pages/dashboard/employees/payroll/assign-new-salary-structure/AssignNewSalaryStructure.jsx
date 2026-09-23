@@ -5,10 +5,15 @@ import { Link, useNavigate } from "react-router";
 import Swal from "sweetalert2";
 import useAxios from "../../../../../hooks/useAxios";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
+import useAuth from "../../../../../hooks/useAuth";
 
 const AssignNewSalaryStructure = () => {
   const axiosInstance = useAxios();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   const {
     register,
@@ -48,7 +53,9 @@ const AssignNewSalaryStructure = () => {
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["employees-active"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/employees/active");
+      const res = await axiosInstance.get("/employees/active", {
+        params: { hotelEmail: user.email },
+      });
       return res.data;
     },
   });
@@ -73,6 +80,7 @@ const AssignNewSalaryStructure = () => {
       transportAllowance: Number(data.transportAllowance),
       festivalBonus: Number(data.festivalBonus),
       grossMonthlyPay: grossPay,
+      hotelEmail: user.email,
     };
 
     try {
@@ -103,10 +111,10 @@ const AssignNewSalaryStructure = () => {
       <div className="flex justify-between mb-5">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-rose-900 flex items-center justify-center">
               <FaMoneyCheckAlt className="text-xl text-white" />
             </div>
-            <h1 className="text-lg font-bold text-rose-700">
+            <h1 className="text-lg font-bold text-rose-900">
               Assign New Salary Structure
             </h1>
           </div>
@@ -118,7 +126,7 @@ const AssignNewSalaryStructure = () => {
         <Link to="/dashboard/employees/payroll">
           <button
             type="button"
-            className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+            className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
           >
             <IoArrowBackCircleSharp className="text-xl" />
           </button>
@@ -197,7 +205,7 @@ const AssignNewSalaryStructure = () => {
         </div>
 
         {/* Salary Components */}
-        <h3 className="text-base font-semibold text-rose-700 mb-4">
+        <h3 className="text-base font-semibold text-rose-900 mb-4">
           Salary Components (Enter Round Amounts)
         </h3>
 
@@ -296,7 +304,7 @@ const AssignNewSalaryStructure = () => {
         {/* Estimated Gross Pay */}
         <div className="mt-8 p-5 bg-rose-50 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <p className="font-semibold text-rose-800">
+            <p className="font-semibold text-rose-900">
               Estimated Gross Monthly Pay:
             </p>
             <p className="text-sm text-gray-500 mt-1">

@@ -70,6 +70,10 @@ import UnderPreview from "../pages/error_pages/UnderPreview";
 import UnderDue from "../pages/error_pages/UnderDue";
 import PrivateRoute from "../routes/PrivateRoute";
 import AdminRoute from "../routes/AdminRoute";
+import AllRooms from "../pages/dashboard/rooms/all-rooms/AllRooms";
+import MainReserve from "../pages/dashboard/reservations/MainReserve";
+import ChangeRoom from "../pages/dashboard/rooms/change-room/ChangeRoom";
+import SubUser from "../pages/dashboard/settings/sub-user/SubUser";
 const Router = createBrowserRouter([
   {
     path: "/",
@@ -160,6 +164,14 @@ const Router = createBrowserRouter([
         ),
       },
       {
+        path: "rooms/change-room",
+        element: (
+          <PrivateRoute>
+            <ChangeRoom />
+          </PrivateRoute>
+        ),
+      },
+      {
         path: "rooms/room_status",
         element: (
           <PrivateRoute>
@@ -196,6 +208,14 @@ const Router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <Maintenance />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "rooms/all-rooms",
+        element: (
+          <PrivateRoute>
+            <AllRooms />
           </PrivateRoute>
         ),
       },
@@ -497,6 +517,14 @@ const Router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
+      {
+        path: "reservations/main-reserve",
+        element: (
+          <PrivateRoute>
+            <MainReserve />
+          </PrivateRoute>
+        ),
+      },
 
       // Reports
       {
@@ -610,6 +638,14 @@ const Router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <Security />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "settings/sub-user",
+        element: (
+          <PrivateRoute>
+            <SubUser />
           </PrivateRoute>
         ),
       },

@@ -1,15 +1,19 @@
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { MdAttachMoney, MdWorkHistory } from "react-icons/md";
-import { Link, useNavigate } from "react-router";
+import { MdAttachMoney } from "react-icons/md";
+import { Link } from "react-router";
 import Swal from "sweetalert2";
 import useAxios from "../../../../../hooks/useAxios";
 import { FaArrowLeft } from "react-icons/fa";
+import useAuth from "../../../../../hooks/useAuth";
 
 const EntryReport = () => {
   const axiosInstance = useAxios();
-  const navigate = useNavigate();
 
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
   const {
     register,
     handleSubmit,
@@ -21,7 +25,9 @@ const EntryReport = () => {
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ["expense-categories"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/expense-categories");
+      const res = await axiosInstance.get("/expense-categories", {
+        params: { hotelEmail: user.email },
+      });
       return res.data;
     },
   });
@@ -30,6 +36,7 @@ const EntryReport = () => {
     try {
       const expenseData = {
         ...data,
+        hotelEmail: user.email,
         amount: Number(data.amount),
       };
 
@@ -61,10 +68,10 @@ const EntryReport = () => {
       <div className="flex justify-between mb-5">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-rose-900 flex items-center justify-center">
               <MdAttachMoney className="text-xl text-white" />
             </div>
-            <h1 className="text-lg font-bold text-rose-700">Add Expense</h1>
+            <h1 className="text-lg font-bold text-rose-900">Add Expense</h1>
           </div>
           <p className="text-gray-500 ml-12">Create a new expense entry.</p>
         </div>
@@ -73,7 +80,7 @@ const EntryReport = () => {
           {/* Back Button */}
           <Link
             to="/dashboard/reports/expense_report"
-            className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
+            className="btn btn-circle bg-rose-900 hover:bg-[#BF1E2E] text-white border-none"
           >
             <FaArrowLeft />
           </Link>

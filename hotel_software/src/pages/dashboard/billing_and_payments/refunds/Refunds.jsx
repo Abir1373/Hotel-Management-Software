@@ -11,9 +11,15 @@ import {
 } from "react-icons/fa";
 import { MdMoneyOff } from "react-icons/md";
 import useAxios from "../../../../hooks/useAxios";
+import useAuth from "../../../../hooks/useAuth";
+import { RiHome3Line } from "react-icons/ri";
 
 const Refunds = () => {
   const axiosInstance = useAxios();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   const { register, handleSubmit, getValues } = useForm();
 
@@ -32,6 +38,7 @@ const Refunds = () => {
           fromDate,
           toDate,
           contactNumber: contactNumber || undefined,
+          hotelEmail: user.email,
         },
       });
 
@@ -55,22 +62,24 @@ const Refunds = () => {
       {/* ====================== HEADER ====================== */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-full bg-rose-900 flex items-center justify-center">
             <MdMoneyOff className="text-xl text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-rose-700">
+            <h1 className="text-lg font-bold text-rose-900">
               Refunded Checkouts
             </h1>
             <p className="text-sm text-gray-500">Guests who received refund</p>
           </div>
         </div>
 
-        <Link
-          to="/dashboard/billing_and_payments"
-          className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
-        >
-          <FaArrowLeft />
+        <Link to="/dashboard/billing_and_payments">
+          <button
+            type="button"
+            className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
+          >
+            <RiHome3Line className="text-xl" />
+          </button>
         </Link>
       </div>
 
@@ -120,7 +129,7 @@ const Refunds = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="btn bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
+            className="btn bg-rose-900 hover:bg-[#BF1E2E] text-white border-none"
           >
             <FaSearch />
             Generate Report
@@ -140,7 +149,7 @@ const Refunds = () => {
         {/* Loading */}
         {isFetching && (
           <div className="py-16 text-center">
-            <span className="loading loading-spinner loading-lg text-rose-700"></span>
+            <span className="loading loading-spinner loading-lg text-rose-900"></span>
           </div>
         )}
 
@@ -168,7 +177,7 @@ const Refunds = () => {
 
                 <div className="overflow-x-auto">
                   <table className="table w-full">
-                    <thead className="bg-rose-700 text-white">
+                    <thead className="bg-rose-900 text-white">
                       <tr>
                         <th>#</th>
                         <th>Guest</th>
@@ -203,7 +212,7 @@ const Refunds = () => {
                                       className="object-cover"
                                     />
                                   ) : (
-                                    <div className="w-full h-full bg-rose-100 flex items-center justify-center text-rose-700 font-bold">
+                                    <div className="w-full h-full bg-rose-100 flex items-center justify-center text-rose-900 font-bold">
                                       {item.guestName?.charAt(0)?.toUpperCase()}
                                     </div>
                                   )}

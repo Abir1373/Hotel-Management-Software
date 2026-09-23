@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, Link } from "react-router";
 import { useForm } from "react-hook-form";
 import {
   FaBed,
@@ -12,16 +13,25 @@ import {
   FaMapMarkerAlt,
   FaCalendarAlt,
   FaArrowLeft,
+  FaPrint,
 } from "react-icons/fa";
 import { MdCheckCircleOutline } from "react-icons/md";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 import Swal from "sweetalert2";
 import useAxios from "../../../../../hooks/useAxios";
+import useAuth from "../../../../../hooks/useAuth";
+import CheckoutInvoice from "../../../../../components/CheckoutInvoice";
 
 const MainCheckout = () => {
   const { id } = useParams();
   const axiosInstance = useAxios();
-  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const [isCheckedOut, setIsCheckedOut] = useState(false);
+  const [checkoutData, setCheckoutData] = useState(null);
+
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   const {
     data: guest,
@@ -30,10 +40,24 @@ const MainCheckout = () => {
   } = useQuery({
     queryKey: ["check-in-details", id],
     queryFn: async () => {
-      const res = await axiosInstance.get(`/check-in/${id}`);
+      const res = await axiosInstance.get(`/check-in/${id}`, {
+        params: { hotelEmail: user?.email },
+      });
       return res.data;
     },
-    enabled: !!id,
+    enabled: !!id && !!user?.email,
+  });
+
+  // Get Hotel Info
+  const { data: hotelInfo } = useQuery({
+    queryKey: ["hotel-info", user?.email],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/hotels/by-email", {
+        params: { email: user?.email },
+      });
+      return res.data;
+    },
+    enabled: !!user?.email,
   });
 
   // ====================== FORM FOR ACTUAL CHECKOUT DATE ======================
@@ -55,18 +79,32 @@ const MainCheckout = () => {
   };
 
   // ====================== CALCULATIONS ======================
+  const previousRoomsCharge = (guest?.roomChangeHistory || []).reduce(
+    (sum, item) => sum + (Number(item.charge) || 0),
+    0,
+  );
+
+  const alreadyChargedNights = (guest?.roomChangeHistory || []).reduce(
+    (sum, item) => sum + (Number(item.daysStayed) || 0),
+    0,
+  );
+
   let actualNights = Number(guest?.numberOfNights) || 0;
-  let actualRoomCharge = Number(guest?.totalAmount) || 0;
+  let currentRoomNights = actualNights;
+  let currentRoomCharge = Number(guest?.totalAmount) || 0;
 
   if (guest && actualCheckoutDate && guest.checkInDate) {
     const inDate = new Date(guest.checkInDate);
     const outDate = new Date(actualCheckoutDate);
     const diffTime = outDate - inDate;
-    const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    actualNights = nights > 0 ? nights : 1;
-    actualRoomCharge = actualNights * Number(guest.pricePerNight || 0);
+    const totalNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    actualNights = totalNights > 0 ? totalNights : 1;
+
+    currentRoomNights = Math.max(actualNights - alreadyChargedNights, 0);
+    currentRoomCharge = currentRoomNights * Number(guest.pricePerNight || 0);
   }
 
+  const actualRoomCharge = previousRoomsCharge + currentRoomCharge;
   const advance = Number(guest?.advancePayment) || 0;
 
   const restaurantDue = (guest?.restaurantOrders || [])
@@ -81,18 +119,14 @@ const MainCheckout = () => {
     .filter((order) => getOrderStatus(order) !== "Paid")
     .reduce((sum, order) => sum + (Number(order.fare) || 0), 0);
 
-  // Total charges (room + unpaid services)
   const totalCharges =
     actualRoomCharge + restaurantDue + laundryDue + transportDue;
 
-  // Final amount
-  const balance = totalCharges - advance; // positive = Due, negative = Refund
-
+  const balance = totalCharges - advance;
+  const hotelEmail = user?.email;
   const isRefund = balance < 0;
   const finalAmount = Math.abs(balance);
 
-  const originalRoomTotal = Number(guest?.totalAmount) || 0;
-  const roomDifference = originalRoomTotal - actualRoomCharge;
   const isEarlyCheckout = actualNights < Number(guest?.numberOfNights || 0);
 
   // ====================== CHECKOUT HANDLER ======================
@@ -102,7 +136,9 @@ const MainCheckout = () => {
       html: `
       <div class="text-left space-y-1 text-sm">
           <p>Actual Nights: <b>${actualNights}</b></p>
-          <p>Room Charge: <b>৳${actualRoomCharge.toLocaleString()}</b></p>
+          <p>Previous Rooms Charge: <b>৳${previousRoomsCharge.toLocaleString()}</b></p>
+          <p>Current Room Charge: <b>৳${currentRoomCharge.toLocaleString()}</b></p>
+          <p>Total Room Charge: <b>৳${actualRoomCharge.toLocaleString()}</b></p>
           <p>Restaurant Due: <b>৳${restaurantDue.toLocaleString()}</b></p>
           <p>Laundry Due: <b>৳${laundryDue.toLocaleString()}</b></p>
           <p>Transport Due: <b>৳${transportDue.toLocaleString()}</b></p>
@@ -111,7 +147,7 @@ const MainCheckout = () => {
           <hr class="my-2"/>
           <p class="text-lg">
           ${isRefund ? "Refund Amount" : "Total Due"}: 
-          <b class="${isRefund ? "text-green-600" : "text-rose-700"}">
+          <b class="${isRefund ? "text-green-600" : "text-rose-900"}">
               ৳${finalAmount.toLocaleString()}
           </b>
           </p>
@@ -127,7 +163,6 @@ const MainCheckout = () => {
     if (!result.isConfirmed) return;
 
     try {
-      // Show loading
       Swal.fire({
         title: "Processing Checkout...",
         text: "Please wait",
@@ -148,21 +183,28 @@ const MainCheckout = () => {
         advancePayment: advance,
         finalAmount,
         isRefund,
+        hotelEmail,
       };
 
       const res = await axiosInstance.post(`/check-out/${id}`, payload);
 
       if (res.data.success) {
+        // Prepare full data for invoice
+        setCheckoutData({
+          ...guest,
+          ...payload,
+          _id: res.data.checkoutId || guest._id,
+          checkedOutAt: new Date(),
+        });
+
+        setIsCheckedOut(true);
+
         await Swal.fire({
           icon: "success",
           title: "Checkout Successful!",
-          text: "Guest has been checked out and moved to Checkout List.",
-          timer: 2000,
-          showConfirmButton: false,
+          text: "Guest has been checked out. You can now print the invoices.",
+          confirmButtonColor: "#be123c",
         });
-
-        // Redirect to checkout list page
-        navigate("/dashboard/check_in_out/check_out");
       }
     } catch (error) {
       console.error("Checkout error:", error);
@@ -177,7 +219,7 @@ const MainCheckout = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <span className="loading loading-spinner loading-lg text-rose-700"></span>
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
       </div>
     );
   }
@@ -190,11 +232,55 @@ const MainCheckout = () => {
         </p>
         <Link
           to="/dashboard/check_in_out/check_out"
-          className="btn btn-circle bg-rose-700 hover:bg-[#BF1E2E] text-white border-none"
+          className="btn btn-circle bg-rose-900 hover:bg-[#BF1E2E] text-white border-none mt-4"
           title="Back"
         >
           <FaArrowLeft />
         </Link>
+      </div>
+    );
+  }
+
+  // ========== SHOW INVOICE AFTER CHECKOUT ==========
+  // Inside MainCheckout.jsx – the isCheckedOut block
+
+  if (isCheckedOut && checkoutData) {
+    return (
+      <div className="mx-auto p-4 sm:p-6 max-w-7xl">
+        {/* Header - hidden when printing */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 print:hidden">
+          <h1 className="text-xl font-bold text-rose-900">Checkout Invoices</h1>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => window.print()}
+              className="btn bg-rose-900 hover:bg-rose-800 text-white border-none gap-2"
+            >
+              <FaPrint /> Print Both Invoices
+            </button>
+
+            <Link to="/dashboard/check_in_out/check_out">
+              <button className="btn btn-outline border-rose-900 text-rose-900 gap-2">
+                <FaArrowLeft /> Back to Checkout List
+              </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* ===== PRINTABLE AREA ===== */}
+        <div className="print-area">
+          <CheckoutInvoice
+            checkoutData={checkoutData}
+            hotelInfo={hotelInfo}
+            variant="guest"
+          />
+
+          <CheckoutInvoice
+            checkoutData={checkoutData}
+            hotelInfo={hotelInfo}
+            variant="hotel"
+          />
+        </div>
       </div>
     );
   }
@@ -204,11 +290,11 @@ const MainCheckout = () => {
       {/* ====================== HEADER ====================== */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-rose-700 flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 rounded-full bg-rose-900 flex items-center justify-center shadow-lg">
             <MdCheckCircleOutline className="text-2xl text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-rose-700">Guest Checkout</h1>
+            <h1 className="text-xl font-bold text-rose-900">Guest Checkout</h1>
             <p className="text-sm text-gray-500">
               Review full bill & complete checkout
             </p>
@@ -216,19 +302,21 @@ const MainCheckout = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleCheckout}
-            className="btn bg-rose-700 hover:bg-rose-800 text-white border-none gap-2 shadow-md"
-          >
-            <FaMoneyBillWave />
-            Complete Checkout
-          </button>
+          {!isCheckedOut && (
+            <button
+              onClick={handleCheckout}
+              className="btn bg-rose-900 hover:bg-rose-900 text-white border-none gap-2 shadow-md"
+            >
+              <FaMoneyBillWave />
+              Complete Checkout
+            </button>
+          )}
 
           <Link to="/dashboard/check_in_out/check_out">
             <button
               type="button"
-              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-              title="Back to Dashboard"
+              className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
+              title="Back"
             >
               <IoArrowBackCircleSharp className="text-2xl" />
             </button>
@@ -241,7 +329,7 @@ const MainCheckout = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* ---------- Guest Profile Card ---------- */}
           <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-rose-700 to-rose-600 p-6 text-white">
+            <div className="bg-gradient-to-r from-rose-900 to-rose-600 p-6 text-white">
               <div className="flex items-center gap-5">
                 <div className="w-20 h-20 rounded-full border-4 border-white/30 overflow-hidden bg-white/20 flex-shrink-0">
                   {guest.personImage ? (
@@ -288,7 +376,7 @@ const MainCheckout = () => {
               <div className="flex items-start gap-3">
                 <FaBed className="text-rose-600 mt-1" />
                 <div>
-                  <p className="text-gray-500">Room</p>
+                  <p className="text-gray-500">Current Room</p>
                   <p className="font-medium">
                     {guest.roomVariantName} (Room {guest.roomNumber})
                   </p>
@@ -319,7 +407,7 @@ const MainCheckout = () => {
               </div>
 
               <div>
-                <p className="text-gray-500">Price per Night</p>
+                <p className="text-gray-500">Price per Night (Current)</p>
                 <p className="font-medium">
                   ৳{Number(guest.pricePerNight).toLocaleString()}
                 </p>
@@ -343,20 +431,23 @@ const MainCheckout = () => {
                   className="input input-bordered w-full bg-white"
                   min={guest.checkInDate}
                   defaultValue={guest.checkOutDate}
+                  disabled={isCheckedOut}
                   {...register("actualCheckoutDate")}
                 />
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 mb-1">Actual Nights</p>
+                <p className="text-sm text-gray-500 mb-1">
+                  Total Actual Nights
+                </p>
                 <p className="text-2xl font-bold text-gray-800">
                   {actualNights}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 mb-1">Room Charge</p>
-                <p className="text-2xl font-bold text-rose-700">
+                <p className="text-sm text-gray-500 mb-1">Total Room Charge</p>
+                <p className="text-2xl font-bold text-rose-900">
                   ৳{actualRoomCharge.toLocaleString()}
                 </p>
               </div>
@@ -364,10 +455,7 @@ const MainCheckout = () => {
 
             {isEarlyCheckout && (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-                Early checkout detected. Original: ৳
-                {originalRoomTotal.toLocaleString()} → New: ৳
-                {actualRoomCharge.toLocaleString()}
-                (Saved ৳{roomDifference.toLocaleString()})
+                Early checkout detected.
               </div>
             )}
           </div>
@@ -383,7 +471,7 @@ const MainCheckout = () => {
                   Restaurant Orders
                 </h3>
               </div>
-              <span className="text-lg font-bold text-rose-700">
+              <span className="text-lg font-bold text-rose-900">
                 Due: ৳{restaurantDue.toLocaleString()}
               </span>
             </div>
@@ -435,7 +523,7 @@ const MainCheckout = () => {
                           className={
                             status === "Paid"
                               ? "text-green-600"
-                              : "text-rose-700"
+                              : "text-rose-900"
                           }
                         >
                           ৳{order.totalAmount}
@@ -464,7 +552,7 @@ const MainCheckout = () => {
                   Laundry Orders
                 </h3>
               </div>
-              <span className="text-lg font-bold text-rose-700">
+              <span className="text-lg font-bold text-rose-900">
                 Due: ৳{laundryDue.toLocaleString()}
               </span>
             </div>
@@ -522,7 +610,7 @@ const MainCheckout = () => {
                           className={
                             status === "Paid"
                               ? "text-green-600"
-                              : "text-rose-700"
+                              : "text-rose-900"
                           }
                         >
                           ৳{order.totalCost}
@@ -551,7 +639,7 @@ const MainCheckout = () => {
                   Transport Orders
                 </h3>
               </div>
-              <span className="text-lg font-bold text-rose-700">
+              <span className="text-lg font-bold text-rose-900">
                 Due: ৳{transportDue.toLocaleString()}
               </span>
             </div>
@@ -601,7 +689,7 @@ const MainCheckout = () => {
                           className={
                             status === "Paid"
                               ? "text-green-600"
-                              : "text-rose-700"
+                              : "text-rose-900"
                           }
                         >
                           ৳{order.fare}
@@ -623,26 +711,46 @@ const MainCheckout = () => {
         {/* ====================== RIGHT SIDE - BILL SUMMARY ====================== */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 sticky top-6 overflow-hidden">
-            <div className="bg-rose-700 text-white px-6 py-4">
+            <div className="bg-rose-900 text-white px-6 py-4">
               <h3 className="text-lg font-bold">Bill Summary</h3>
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">
-                  Room Charge ({actualNights} nights)
-                </span>
-                <span className="font-medium">
-                  ৳{actualRoomCharge.toLocaleString()}
-                </span>
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">
+                  Room Charge Breakdown
+                </p>
+
+                {(guest?.roomChangeHistory || []).map((history, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between text-sm text-gray-600 mb-1.5"
+                  >
+                    <span>
+                      Room {history.fromRoom} ({history.fromVariant}) ×{" "}
+                      {history.daysStayed}n
+                    </span>
+                    <span>৳{Number(history.charge).toLocaleString()}</span>
+                  </div>
+                ))}
+
+                <div className="flex justify-between text-sm text-gray-600 mb-1.5">
+                  <span>
+                    Room {guest.roomNumber} ({guest.roomVariantName}) ×{" "}
+                    {currentRoomNights}n
+                  </span>
+                  <span>৳{currentRoomCharge.toLocaleString()}</span>
+                </div>
+
+                <div className="flex justify-between text-sm font-semibold mt-3 pt-2 border-t border-dashed border-gray-200">
+                  <span>Total Room Charge</span>
+                  <span className="text-rose-900">
+                    ৳{actualRoomCharge.toLocaleString()}
+                  </span>
+                </div>
               </div>
 
-              {isEarlyCheckout && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Early Checkout Discount</span>
-                  <span>- ৳{roomDifference.toLocaleString()}</span>
-                </div>
-              )}
+              <div className="border-t border-dashed border-gray-200 my-2"></div>
 
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Restaurant Due</span>
@@ -681,7 +789,6 @@ const MainCheckout = () => {
 
               <div className="border-t border-dashed border-gray-200 my-2"></div>
 
-              {/* Final Amount */}
               <div
                 className={`rounded-xl p-4 ${
                   isRefund ? "bg-green-50" : "bg-rose-50"
@@ -690,14 +797,14 @@ const MainCheckout = () => {
                 <div className="flex justify-between items-center">
                   <span
                     className={`font-bold ${
-                      isRefund ? "text-green-800" : "text-rose-800"
+                      isRefund ? "text-green-800" : "text-rose-900"
                     }`}
                   >
                     {isRefund ? "Refund Amount" : "Total Due"}
                   </span>
                   <span
                     className={`text-2xl font-bold ${
-                      isRefund ? "text-green-700" : "text-rose-700"
+                      isRefund ? "text-green-700" : "text-rose-900"
                     }`}
                   >
                     ৳{finalAmount.toLocaleString()}
@@ -705,13 +812,17 @@ const MainCheckout = () => {
                 </div>
               </div>
 
-              <button
-                onClick={handleCheckout}
-                className="btn bg-rose-700 hover:bg-rose-800 text-white border-none w-full mt-4 gap-2"
-              >
-                <FaMoneyBillWave />
-                Complete Checkout
-              </button>
+              <div className="flex flex-col gap-2 mt-4">
+                {!isCheckedOut && (
+                  <button
+                    onClick={handleCheckout}
+                    className="btn bg-rose-900 hover:bg-rose-900 text-white border-none w-full gap-2"
+                  >
+                    <FaMoneyBillWave />
+                    Complete Checkout
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

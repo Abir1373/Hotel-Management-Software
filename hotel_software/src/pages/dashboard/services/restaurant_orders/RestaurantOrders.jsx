@@ -8,10 +8,15 @@ import { IoFastFoodSharp } from "react-icons/io5";
 import { Link, useNavigate } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
+import useAuth from "../../../../hooks/useAuth";
 
 const RestaurantOrders = () => {
   const axiosInstance = useAxios();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   const {
     register,
@@ -32,7 +37,12 @@ const RestaurantOrders = () => {
   const { data: checkIns = [], isLoading } = useQuery({
     queryKey: ["check-ins"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/check-in");
+      const res = await axiosInstance.get("/check-in", {
+        params: {
+          hotelEmail: user.email,
+        },
+      });
+
       return res.data;
     },
   });
@@ -41,7 +51,11 @@ const RestaurantOrders = () => {
   const { data: menuItems = [] } = useQuery({
     queryKey: ["food-menu"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/food-menu");
+      const res = await axiosInstance.get("/food-menu", {
+        params: {
+          hotelEmail: user.email,
+        },
+      });
       return res.data;
     },
   });
@@ -97,6 +111,7 @@ const RestaurantOrders = () => {
       foodItems,
       totalAmount,
       checkInInfo: selectedCheckIn || null,
+      hotelEmail: user.email,
     };
 
     const res = await axiosInstance.post("/restaurant-orders", orderData);
@@ -117,12 +132,12 @@ const RestaurantOrders = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-rose-700 flex items-center justify-center shadow-md">
+          <div className="w-10 h-10 rounded-full bg-rose-900 flex items-center justify-center shadow-md">
             <MdRestaurantMenu className="text-xl text-white" />
           </div>
 
           <div>
-            <h1 className="text-lg font-bold text-rose-700">
+            <h1 className="text-lg font-bold text-rose-900">
               Restaurant Order
             </h1>
             <p className="text-sm text-gray-500">
@@ -135,7 +150,7 @@ const RestaurantOrders = () => {
           <Link to="/dashboard/services/restaurant_orders/food_menu">
             <button
               type="button"
-              className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              className="flex items-center justify-center w-10 h-10 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
               title="Food Menu"
             >
               <IoFastFoodSharp className="text-xl" />
@@ -145,7 +160,7 @@ const RestaurantOrders = () => {
           <Link to="/dashboard/services/restaurant_orders/restaurant_orders_history">
             <button
               type="button"
-              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
             >
               <MdWorkHistory className="text-xl" />
             </button>
@@ -154,7 +169,7 @@ const RestaurantOrders = () => {
           <Link to="/dashboard/services">
             <button
               type="button"
-              className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              className="flex items-center justify-center w-10 h-10 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
               title="Back to Services"
             >
               <RiHome3Line className="text-xl" />
@@ -345,14 +360,14 @@ const RestaurantOrders = () => {
         {/* ========== Food Items Section ========== */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-rose-700">
+            <h3 className="text-base font-semibold text-rose-900">
               Food Items
             </h3>
 
             <button
               type="button"
               onClick={handleAddFoodItem}
-              className="btn btn-sm bg-rose-700 text-white hover:bg-rose-800 border-none gap-2"
+              className="btn btn-sm bg-rose-900 text-white hover:bg-rose-900 border-none gap-2"
             >
               <FaPlus /> Add Food Item
             </button>
@@ -435,7 +450,7 @@ const RestaurantOrders = () => {
           <span className="text-lg font-semibold text-gray-700">
             Total Amount
           </span>
-          <span className="text-2xl font-bold text-rose-700">
+          <span className="text-2xl font-bold text-rose-900">
             ৳{totalAmount.toLocaleString()}
           </span>
         </div>

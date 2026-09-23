@@ -5,9 +5,14 @@ import { RiHome3Line } from "react-icons/ri";
 import { AiFillEdit } from "react-icons/ai";
 import { FaHistory } from "react-icons/fa";
 import { LuNetwork } from "react-icons/lu";
+import useAuth from "../../../../hooks/useAuth";
 
 const Maintenance = () => {
   const axiosInstance = useAxios();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   const {
     data: rooms = [],
@@ -18,7 +23,11 @@ const Maintenance = () => {
   } = useQuery({
     queryKey: ["rooms-maintenance"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/rooms/maintenance");
+      const res = await axiosInstance.get("/rooms/maintenance", {
+        params: {
+          hotelEmail: user?.email, // logged-in hotel email
+        },
+      });
       return res.data;
     },
   });
@@ -26,7 +35,7 @@ const Maintenance = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-96">
-        <span className="loading loading-spinner loading-lg text-rose-700"></span>
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
       </div>
     );
   }
@@ -49,12 +58,12 @@ const Maintenance = () => {
       <div className="flex flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-rose-900 flex items-center justify-center">
               <LuNetwork className="text-xl text-white" />
             </div>
 
             <div className="flex flex-row">
-              <h1 className="text-lg font-bold text-rose-700">
+              <h1 className="text-lg font-bold text-rose-900">
                 Maintain Rooms
               </h1>
             </div>
@@ -65,12 +74,12 @@ const Maintenance = () => {
 
         <div className="flex flex-row gap-3">
           <Link to="/dashboard/rooms/maintenance_history">
-            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+            <button className="flex items-center justify-center w-11 h-11 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors">
               <FaHistory className="text-xl" />
             </button>
           </Link>
           <Link to="/dashboard/rooms">
-            <button className="flex items-center justify-center w-11 h-11 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors">
+            <button className="flex items-center justify-center w-11 h-11 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors">
               <RiHome3Line className="text-xl" />
             </button>
           </Link>
@@ -80,7 +89,7 @@ const Maintenance = () => {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="table table-zebra w-full">
-          <thead className="bg-rose-700 text-white">
+          <thead className="bg-rose-900 text-white">
             <tr className="text-center">
               <th>#</th>
               <th>Image</th>
@@ -146,7 +155,7 @@ const Maintenance = () => {
                   </td>
 
                   <td>
-                    <span className="badge bg-rose-800 text-white w-28 h-11">
+                    <span className="badge bg-rose-900 text-white w-28 h-11">
                       {room.roomStatus}
                     </span>
                   </td>
@@ -156,7 +165,7 @@ const Maintenance = () => {
                       <Link
                         to={`/dashboard/rooms/edit_maintenance/${room._id}`}
                       >
-                        <button className="btn btn-sm bg-rose-800 text-white border-none">
+                        <button className="btn btn-sm bg-rose-900 text-white border-none">
                           <AiFillEdit className="text-lg" />
                         </button>
                       </Link>

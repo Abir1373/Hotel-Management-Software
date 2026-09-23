@@ -7,10 +7,16 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
+import useAuth from "../../../../hooks/useAuth";
 
 const LaundryService = () => {
   const axiosInstance = useAxios();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   const {
     register,
@@ -29,7 +35,9 @@ const LaundryService = () => {
   const { data: checkIns = [], isLoading } = useQuery({
     queryKey: ["check-ins"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/check-in");
+      const res = await axiosInstance.get("/check-in", {
+        params: { hotelEmail: user.email },
+      });
       return res.data;
     },
   });
@@ -76,6 +84,7 @@ const LaundryService = () => {
       contactNumber: selectedCheckIn.contactNumber || "",
       clothItems,
       totalCost,
+      hotelEmail: user.email,
     };
 
     try {
@@ -106,11 +115,11 @@ const LaundryService = () => {
       <div className="flex justify-between mb-5">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-rose-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-rose-900 flex items-center justify-center">
               <MdLocalLaundryService className="text-xl text-white" />
             </div>
 
-            <h1 className="text-lg font-bold text-rose-700">Laundry Service</h1>
+            <h1 className="text-lg font-bold text-rose-900">Laundry Service</h1>
           </div>
 
           <p className="text-gray-500 ml-12">
@@ -122,7 +131,7 @@ const LaundryService = () => {
           <Link to="/dashboard/services/laundry_service/laundry_service_history">
             <button
               type="button"
-              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
             >
               <MdWorkHistory className="text-xl" />
             </button>
@@ -130,7 +139,7 @@ const LaundryService = () => {
           <Link to="/dashboard/services">
             <button
               type="button"
-              className="flex items-center justify-center w-9 h-9 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
+              className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
             >
               <RiHome3Line className="text-xl" />
             </button>
@@ -331,14 +340,14 @@ const LaundryService = () => {
         {/* ========== Cloth Items Section ========== */}
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-rose-700">
+            <h3 className="text-base font-semibold text-rose-900">
               Cloth Items
             </h3>
 
             <button
               type="button"
               onClick={handleAddItem}
-              className="btn btn-sm bg-rose-700 text-white hover:bg-rose-800 border-none gap-2"
+              className="btn btn-sm bg-rose-900 text-white hover:bg-rose-900 border-none gap-2"
             >
               <FaPlus /> Add Item
             </button>
@@ -435,7 +444,7 @@ const LaundryService = () => {
           <span className="text-lg font-semibold text-gray-700">
             Total Cost
           </span>
-          <span className="text-2xl font-bold text-rose-700">
+          <span className="text-2xl font-bold text-rose-900">
             ৳{totalCost.toLocaleString()}
           </span>
         </div>

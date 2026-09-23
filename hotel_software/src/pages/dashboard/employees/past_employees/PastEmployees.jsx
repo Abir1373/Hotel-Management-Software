@@ -4,10 +4,15 @@ import { Link } from "react-router";
 import { FaUserSlash } from "react-icons/fa";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 import { MdEdit } from "react-icons/md";
+import useAuth from "../../../../hooks/useAuth";
+import { RiHome3Line } from "react-icons/ri";
 
 const PastEmployees = () => {
   const axiosInstance = useAxios();
-
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
   const {
     data: employees = [],
     isLoading,
@@ -16,7 +21,9 @@ const PastEmployees = () => {
   } = useQuery({
     queryKey: ["inactiveEmployees"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/employees/inactive");
+      const res = await axiosInstance.get("/employees/inactive", {
+        params: { hotelEmail: user.email },
+      });
       return res.data;
     },
   });
@@ -27,11 +34,11 @@ const PastEmployees = () => {
       <div className="flex justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-full bg-rose-700 flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-full bg-rose-900 flex items-center justify-center shadow-md">
               <FaUserSlash className="text-xl text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-rose-700">
+              <h1 className="text-lg font-bold text-rose-900">
                 Past Employees
               </h1>
               <p className="text-sm text-gray-500">
@@ -44,10 +51,9 @@ const PastEmployees = () => {
         <Link to="/dashboard/employees">
           <button
             type="button"
-            className="flex items-center justify-center w-10 h-10 border border-rose-700 text-rose-700 hover:bg-rose-700 hover:text-white rounded-lg transition-colors"
-            title="Back to Employees"
+            className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
           >
-            <IoArrowBackCircleSharp className="text-xl" />
+            <RiHome3Line className="text-xl" />
           </button>
         </Link>
       </div>
@@ -55,7 +61,7 @@ const PastEmployees = () => {
       {/* Table Card */}
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
         {/* Card Header */}
-        <div className="bg-rose-700 text-white px-6 py-4">
+        <div className="bg-rose-900 text-white px-6 py-4">
           <h2 className="text-lg font-bold">Past Employees</h2>
           <p className="text-sm text-rose-100">
             Employees who have resigned or been terminated
@@ -64,7 +70,7 @@ const PastEmployees = () => {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <span className="loading loading-spinner loading-lg text-rose-700"></span>
+            <span className="loading loading-spinner loading-lg text-rose-900"></span>
           </div>
         ) : isError ? (
           <div className="text-center py-20 text-red-600">
@@ -78,7 +84,7 @@ const PastEmployees = () => {
           <div className="overflow-x-auto">
             <table className="table w-full">
               <thead>
-                <tr className="bg-rose-50 text-rose-800 text-sm">
+                <tr className="bg-rose-50 text-rose-900 text-sm">
                   <th className="font-semibold">#</th>
                   <th className="font-semibold">Image</th>
                   <th className="font-semibold">Name</th>
