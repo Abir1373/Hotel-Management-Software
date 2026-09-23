@@ -32,6 +32,7 @@ const Signup = () => {
     try {
       // 1. Create Firebase user
       const userCredential = await createUser(data.email, data.password);
+      console.log(userCredential.data);
 
       // 2. Update Firebase profile
       await updateUserProfile({
