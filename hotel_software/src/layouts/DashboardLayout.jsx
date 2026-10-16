@@ -11,14 +11,6 @@ import useUserStatus from "../hooks/useUserStatus";
 const DashboardLayout = () => {
   const { status, statusLoading, type } = useUserStatus();
 
-  if (statusLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg text-rose-900"></span>
-      </div>
-    );
-  }
-
   return (
     <div className="drawer lg:drawer-open min-h-screen bg-gray-100">
       <input id="dashboard-drawer" type="checkbox" className="drawer-toggle" />
@@ -39,18 +31,19 @@ const DashboardLayout = () => {
 
         {/* Page Content + Footer */}
         <div className="flex flex-col flex-1">
-          {/* Main content grows */}
           <div className="flex-1 p-6">
-            <Outlet />
+            {statusLoading ? (
+              <div className="flex justify-center items-center min-h-[60vh]">
+                <span className="loading loading-spinner loading-lg text-rose-900"></span>
+              </div>
+            ) : (
+              <Outlet />
+            )}
           </div>
 
-          {/* ===== FOOTER (Smith IT style) ===== */}
+          {/* Footer */}
           <footer className="px-6 py-5 mt-auto border-t border-gray-200 bg-white">
             <div className="flex flex-col items-center gap-3">
-              {/* Smith IT Logo */}
-              <div className="flex items-center gap-1.5"></div>
-
-              {/* Copyright text */}
               <p className="text-xs text-gray-500 text-center">
                 © All Rights Reserved. Obokash is a product of{" "}
                 <Link
@@ -77,11 +70,11 @@ const DashboardLayout = () => {
           </div>
 
           <ul className="menu gap-2">
-            {/* ===== Approved users ===== */}
+            {/* Approved users */}
             {status === "Approved" && (
               <>
                 <li>
-                  <NavLink className="text-lg" to="/dashboard">
+                  <NavLink className="text-lg" to="/dashboard" end>
                     <MdDashboard /> Dashboard
                   </NavLink>
                 </li>
@@ -108,6 +101,7 @@ const DashboardLayout = () => {
                     <FaBuildingCircleCheck /> Check In & Out
                   </NavLink>
                 </li>
+
                 {type !== "sub-user" && (
                   <>
                     <li>
@@ -122,6 +116,7 @@ const DashboardLayout = () => {
                     </li>
                   </>
                 )}
+
                 <li>
                   <NavLink className="text-lg" to="/dashboard/guests">
                     <FaPersonCircleCheck /> Guests
@@ -140,15 +135,13 @@ const DashboardLayout = () => {
               </>
             )}
 
-            {/* ===== Admin users ===== */}
+            {/* Admin users */}
             {status === "Admin" && (
-              <>
-                <li>
-                  <NavLink className="text-lg" to="/dashboard/settings">
-                    <IoSettingsSharp /> Settings
-                  </NavLink>
-                </li>
-              </>
+              <li>
+                <NavLink className="text-lg" to="/dashboard/settings">
+                  <IoSettingsSharp /> Settings
+                </NavLink>
+              </li>
             )}
           </ul>
         </aside>

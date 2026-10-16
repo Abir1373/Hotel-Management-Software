@@ -6,15 +6,12 @@ import { Link, useNavigate } from "react-router";
 import Swal from "sweetalert2";
 import useAxios from "../../../../hooks/useAxios";
 import { MdWorkHistory } from "react-icons/md";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const TransportService = () => {
   const axiosInstance = useAxios();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
 
   const {
     register,
@@ -25,20 +22,17 @@ const TransportService = () => {
 
   const selectedRoom = watch("roomNumber");
 
-  // Get current check-in guests
   const { data: checkIns = [], isLoading } = useQuery({
-    queryKey: ["check-ins"],
+    queryKey: ["check-ins", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/check-in", {
-        params: {
-          hotelEmail: user.email,
-        },
+        params: { hotelEmail },
       });
       return res.data;
     },
+    enabled: !!hotelEmail,
   });
 
-  // Find selected guest/room
   const selectedCheckIn = checkIns.find(
     (checkIn) => checkIn.roomNumber === selectedRoom,
   );
@@ -59,7 +53,7 @@ const TransportService = () => {
       checkinId: selectedCheckIn._id,
       guestName: selectedCheckIn.guestName || "",
       contactNumber: selectedCheckIn.contactNumber || "",
-      hotelEmail: user.email,
+      hotelEmail,
     };
 
     try {
@@ -81,8 +75,17 @@ const TransportService = () => {
         icon: "error",
         confirmButtonColor: "#BF1E2E",
       });
+      console.log(err);
     }
   };
+
+  if (statusLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto p-6">
@@ -296,10 +299,10 @@ const TransportService = () => {
             />
           </div>
 
-          {/* Fare ($) */}
+          {/* Fare */}
           <div>
             <label className="label">
-              <span className="label-text font-medium">Fare ($)</span>
+              <span className="label-text font-medium">Fare (৳)</span>
             </label>
             <input
               type="number"

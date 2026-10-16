@@ -341,6 +341,50 @@ async function run() {
       res.send(rooms);
     });
 
+    // PATCH - Update a room
+    app.patch("/rooms/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedData = req.body;
+
+        const filter = { _id: new ObjectId(id) };
+
+        const updateDoc = {
+          $set: {
+            variantName: updatedData.variantName,
+            baseRoomType: updatedData.baseRoomType,
+            price: updatedData.price,
+            maxOccupancy: updatedData.maxOccupancy,
+            bedType: updatedData.bedType,
+            amenities: updatedData.amenities,
+            description: updatedData.description,
+            roomStatus: updatedData.roomStatus,
+            roomNo: updatedData.roomNo,
+            assignedPerson: updatedData.assignedPerson,
+            assignedPersonNumber: updatedData.assignedPersonNumber,
+            maintenanceCost: updatedData.maintenanceCost,
+            correctives: updatedData.correctives,
+            workBegins: updatedData.workBegins,
+            workEnds: updatedData.workEnds,
+          },
+        };
+
+        const result = await roomCollection.updateOne(filter, updateDoc);
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Room not found" });
+        }
+
+        res.send({
+          message: "Room updated successfully",
+          modifiedCount: result.modifiedCount,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to update room" });
+      }
+    });
+
     app.get("/rooms/maintenance", async (req, res) => {
       const hotelEmail = req.query.hotelEmail;
 
@@ -1231,7 +1275,7 @@ async function run() {
       try {
         const email = req.params.email;
 
-        // 1. First check if this is a Hotel Owner
+        // 1. Check Hotel Owner first
         const hotel = await hotelCollection.findOne(
           { email },
           { projection: { status: 1, email: 1 } },
@@ -1245,10 +1289,19 @@ async function run() {
           });
         }
 
-        // 2. Check if this email is a Sub User (email1 or email2)
-        const subUser = await usersCollection.findOne({
-          $or: [{ email1: email }, { email2: email }],
-        });
+        // 2. Check Sub-user (only if not found in hotel)
+        const subUser = await usersCollection.findOne(
+          {
+            $or: [{ email1: email }, { email2: email }],
+          },
+          {
+            projection: {
+              status: 1,
+              hotelEmail: 1,
+              hotelName: 1,
+            },
+          },
+        );
 
         if (subUser) {
           return res.send({
@@ -1260,7 +1313,7 @@ async function run() {
         }
 
         // 3. Not found
-        return res.status(404).send({ status: "Pending" });
+        res.status(404).send({ status: "Pending" });
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Failed to get status" });

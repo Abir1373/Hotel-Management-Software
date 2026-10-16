@@ -1,18 +1,17 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
 import { Link } from "react-router";
 import { FaUserSlash } from "react-icons/fa";
-import { IoArrowBackCircleSharp } from "react-icons/io5";
-import { MdEdit } from "react-icons/md";
+import { MdSearch } from "react-icons/md";
 import useAuth from "../../../../hooks/useAuth";
 import { RiHome3Line } from "react-icons/ri";
 
 const PastEmployees = () => {
   const axiosInstance = useAxios();
   const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const [searchTerm, setSearchTerm] = useState("");
+
   const {
     data: employees = [],
     isLoading,
@@ -27,6 +26,28 @@ const PastEmployees = () => {
       return res.data;
     },
   });
+
+  // Simple filter by name, employee ID, email, or phone
+  const term = searchTerm.toLowerCase().trim();
+  const filteredEmployees = term
+    ? employees.filter((employee) => {
+        const name = (employee.FullName || "").toLowerCase();
+        const employeeId = String(employee.EmployeeID || "").toLowerCase();
+        const email = (employee.Email || "").toLowerCase();
+        const phone = String(employee.Phone || "").toLowerCase();
+
+        return (
+          name.includes(term) ||
+          employeeId.includes(term) ||
+          email.includes(term) ||
+          phone.includes(term)
+        );
+      })
+    : employees;
+
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
 
   return (
     <div className="mx-auto p-6">
@@ -58,6 +79,25 @@ const PastEmployees = () => {
         </Link>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+          <input
+            type="text"
+            placeholder="Search by name, ID, email or phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-900/30 focus:border-rose-900 text-sm"
+          />
+        </div>
+        {term && (
+          <p className="text-xs text-gray-500 mt-1.5">
+            Showing {filteredEmployees.length} of {employees.length} results
+          </p>
+        )}
+      </div>
+
       {/* Table Card */}
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
         {/* Card Header */}
@@ -76,9 +116,11 @@ const PastEmployees = () => {
           <div className="text-center py-20 text-red-600">
             Failed to load employees: {error?.message}
           </div>
-        ) : employees.length === 0 ? (
+        ) : filteredEmployees.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            No past employees found.
+            {term
+              ? "No matching past employees found."
+              : "No past employees found."}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -97,7 +139,7 @@ const PastEmployees = () => {
               </thead>
 
               <tbody>
-                {employees.map((employee, index) => (
+                {filteredEmployees.map((employee, index) => (
                   <tr
                     key={employee._id}
                     className="hover:bg-rose-50/50 border-b border-gray-100"
@@ -145,8 +187,6 @@ const PastEmployees = () => {
                         {employee.EmploymentStatus}
                       </span>
                     </td>
-
-                    {/* Action */}
                   </tr>
                 ))}
               </tbody>

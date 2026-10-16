@@ -3,23 +3,16 @@ import { useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import Swal from "sweetalert2";
-import {
-  FaArrowLeft,
-  FaLock,
-  FaEnvelope,
-  FaImage,
-  FaEye,
-  FaEyeSlash,
-} from "react-icons/fa";
+import { FaLock, FaImage, FaEye, FaEyeSlash } from "react-icons/fa";
 import { MdSecurity } from "react-icons/md";
+import { RiHome3Line } from "react-icons/ri";
 import useAuth from "../../../../hooks/useAuth";
 import useAxios from "../../../../hooks/useAxios";
-import useUserStatus from "../../../../hooks/useUserStatus"; // make sure this hook exists
-import { RiHome3Line } from "react-icons/ri";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const Security = () => {
-  const { user, updateUserPassword, updateUserEmail } = useAuth();
-  const { type, hotelEmail } = useUserStatus(); // "owner" | "admin" | "sub-user"
+  const { user, updateUserPassword } = useAuth();
+  const { type, hotelEmail } = useUserStatus();
   const axiosInstance = useAxios();
   const queryClient = useQueryClient();
 
@@ -59,17 +52,6 @@ const Security = () => {
     formState: { isSubmitting: isPasswordSubmitting, errors: passwordErrors },
   } = useForm();
 
-  // Email Form
-  const {
-    register: registerEmail,
-    handleSubmit: handleEmailSubmit,
-    formState: { isSubmitting: isEmailSubmitting },
-  } = useForm({
-    values: {
-      email: user?.email || "",
-    },
-  });
-
   // ====================== UPDATE PASSWORD ======================
   const onPasswordSubmit = async (data) => {
     if (data.newPassword !== data.confirmPassword) {
@@ -98,7 +80,6 @@ const Security = () => {
           passwordUpdatedAt: new Date(),
         });
       } else if (type === "sub-user") {
-        // Update password1 or password2
         const updateField =
           subUser.email1 === user.email
             ? { password1: data.newPassword }
@@ -123,70 +104,6 @@ const Security = () => {
       if (error.code === "auth/requires-recent-login") {
         message =
           "Please logout and login again, then try changing your password.";
-      }
-
-      Swal.fire({
-        icon: "error",
-        title: "Update Failed",
-        text: message,
-      });
-    }
-  };
-
-  // ====================== UPDATE EMAIL ======================
-  const onEmailSubmit = async (data) => {
-    if (data.email === user.email) {
-      return Swal.fire({
-        icon: "info",
-        title: "No Change",
-        text: "This is already your current email",
-      });
-    }
-
-    try {
-      // 1. Update email in Firebase
-      await updateUserEmail(data.email);
-
-      // 2. Update in MongoDB
-      if (type === "owner" || type === "admin") {
-        // Owner → update hotel email
-        await axiosInstance.patch(`/hotels/${hotel._id}`, {
-          email: data.email,
-        });
-      } else if (type === "sub-user") {
-        // Sub-user → update email1 or email2 only
-        const updateField =
-          subUser.email1 === user.email
-            ? { email1: data.email }
-            : { email2: data.email };
-
-        await axiosInstance.patch(`/users/${subUser._id}`, updateField);
-      }
-
-      await queryClient.invalidateQueries();
-
-      Swal.fire({
-        icon: "success",
-        title: "Email Updated",
-        text: "Your email has been updated successfully",
-        timer: 2000,
-        showConfirmButton: false,
-      }).then(() => {
-        // Force logout after email change is safer
-        window.location.href = "/";
-      });
-    } catch (error) {
-      console.error(error);
-
-      let message = "Failed to update email";
-
-      if (error.code === "auth/requires-recent-login") {
-        message =
-          "For security reasons, please logout and login again, then try updating your email.";
-      } else if (error.code === "auth/email-already-in-use") {
-        message = "This email is already used by another account.";
-      } else if (error.code === "auth/invalid-email") {
-        message = "Please enter a valid email address.";
       }
 
       Swal.fire({
@@ -273,7 +190,7 @@ const Security = () => {
           <div>
             <h1 className="text-lg font-bold text-rose-900">Security</h1>
             <p className="text-sm text-gray-500">
-              Update password, email{" "}
+              Update password{" "}
               {type === "owner" || type === "admin" ? "& logo" : ""}
             </p>
           </div>
@@ -360,56 +277,9 @@ const Security = () => {
           </form>
         </div>
 
-        {/* ====================== CHANGE EMAIL ====================== */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <FaEnvelope className="text-rose-900" />
-            <h2 className="text-lg font-bold text-rose-900">Change Email</h2>
-          </div>
-
-          <form
-            onSubmit={handleEmailSubmit(onEmailSubmit)}
-            className="space-y-4"
-            autoComplete="off"
-          >
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">Current Email</span>
-              </label>
-              <input
-                type="email"
-                className="input input-bordered w-full bg-gray-100"
-                value={user?.email || ""}
-                readOnly
-              />
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">New Email</span>
-              </label>
-              <input
-                type="email"
-                className="input input-bordered w-full bg-white"
-                placeholder="Enter new email"
-                autoComplete="off"
-                {...registerEmail("email", { required: true })}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isEmailSubmitting}
-              className="btn bg-rose-900 hover:bg-[#BF1E2E] text-white border-none w-full"
-            >
-              {isEmailSubmitting ? "Updating..." : "Update Email"}
-            </button>
-          </form>
-        </div>
-
         {/* ====================== CHANGE LOGO (Only Owner/Admin) ====================== */}
         {(type === "owner" || type === "admin") && (
-          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 lg:col-span-2">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
             <div className="flex items-center gap-2 mb-5">
               <FaImage className="text-rose-900" />
               <h2 className="text-lg font-bold text-rose-900">Update Logo</h2>

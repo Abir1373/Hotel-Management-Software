@@ -7,16 +7,12 @@ import { FaPlus, FaTrash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const LaundryService = () => {
   const axiosInstance = useAxios();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
 
   const {
     register,
@@ -33,13 +29,14 @@ const LaundryService = () => {
 
   // Get current check-in guests
   const { data: checkIns = [], isLoading } = useQuery({
-    queryKey: ["check-ins"],
+    queryKey: ["check-ins", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/check-in", {
-        params: { hotelEmail: user.email },
+        params: { hotelEmail },
       });
       return res.data;
     },
+    enabled: !!hotelEmail,
   });
 
   const selectedCheckIn = checkIns.find(
@@ -84,7 +81,7 @@ const LaundryService = () => {
       contactNumber: selectedCheckIn.contactNumber || "",
       clothItems,
       totalCost,
-      hotelEmail: user.email,
+      hotelEmail,
     };
 
     try {
@@ -99,15 +96,24 @@ const LaundryService = () => {
         });
         navigate("/dashboard/services");
       }
-    } catch (err) {
+    } catch (error) {
       Swal.fire({
         title: "Error",
         text: "Failed to submit laundry request",
         icon: "error",
         confirmButtonColor: "#BF1E2E",
       });
+      console.log(error.message);
     }
   };
+
+  if (statusLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto p-6">

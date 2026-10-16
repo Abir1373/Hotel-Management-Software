@@ -1,6 +1,9 @@
+import { useRef } from "react";
 import { FaPrint } from "react-icons/fa";
 
 const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
+  const invoiceRef = useRef(null);
+
   if (!checkoutData) return null;
 
   const {
@@ -31,7 +34,6 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
   const final = Number(finalAmount) || 0;
   const isHotelCopy = variant === "hotel";
 
-  // Number to words
   const numberToWords = (num) => {
     const ones = [
       "",
@@ -69,36 +71,61 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
     ];
 
     if (num === 0) return "Zero";
+    if (num < 0) return `Minus ${numberToWords(Math.abs(num))}`;
     if (num < 20) return ones[num];
-    if (num < 100)
+    if (num < 100) {
       return (
-        tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "")
+        tens[Math.floor(num / 10)] + (num % 10 ? ` ${ones[num % 10]}` : "")
       );
-    if (num < 1000)
+    }
+    if (num < 1000) {
       return (
         ones[Math.floor(num / 100)] +
         " Hundred" +
-        (num % 100 ? " " + numberToWords(num % 100) : "")
+        (num % 100 ? ` ${numberToWords(num % 100)}` : "")
       );
-    if (num < 100000)
+    }
+    if (num < 100000) {
       return (
         numberToWords(Math.floor(num / 1000)) +
         " Thousand" +
-        (num % 1000 ? " " + numberToWords(num % 1000) : "")
+        (num % 1000 ? ` ${numberToWords(num % 1000)}` : "")
       );
-    if (num < 10000000)
+    }
+    if (num < 10000000) {
       return (
         numberToWords(Math.floor(num / 100000)) +
         " Lakh" +
-        (num % 100000 ? " " + numberToWords(num % 100000) : "")
+        (num % 100000 ? ` ${numberToWords(num % 100000)}` : "")
       );
+    }
     return num.toString();
   };
 
-  const amountInWords = numberToWords(Math.round(final)) + " Taka Only";
+  const amountInWords = `${numberToWords(Math.round(final))} Taka Only`;
 
   const handlePrint = () => {
+    const selectedInvoice = invoiceRef.current;
+    if (!selectedInvoice) return;
+
+    // Print only the invoice whose button was clicked.
+    document.body.classList.add("printing-checkout-invoice");
+    document
+      .querySelectorAll(".invoice-page.print-selected")
+      .forEach((invoice) => invoice.classList.remove("print-selected"));
+    selectedInvoice.classList.add("print-selected");
+
+    const cleanup = () => {
+      document.body.classList.remove("printing-checkout-invoice");
+      selectedInvoice.classList.remove("print-selected");
+      window.removeEventListener("afterprint", cleanup);
+    };
+
+    window.addEventListener("afterprint", cleanup);
     window.print();
+
+    // Fallback cleanup for browsers that don't fire afterprint.
+    window.setTimeout(cleanup, 1000);
   };
 
   const formatMoney = (value) =>
@@ -108,123 +135,193 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
     });
 
   return (
-    <div className="bg-white invoice-page">
-      {/* Print styles for A4 + footer at bottom */}
+    <div
+      ref={invoiceRef}
+      className="invoice-page bg-white"
+      data-invoice-variant={variant}
+    >
       <style>{`
         @media print {
           @page {
-            size: A4;
-            margin: 12mm;
+            size: A4 portrait;
+            margin: 5mm;
           }
+
+          html,
           body {
-            margin: 0;
+            margin: 0 !important;
+            padding: 0 !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          .invoice-page {
-            width: 100%;
+
+          body.printing-checkout-invoice .invoice-page {
+            display: none !important;
           }
+
+          body.printing-checkout-invoice .invoice-page.print-selected {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+          }
+
           .invoice-container {
-            min-height: calc(297mm - 24mm); /* A4 height minus top+bottom margins */
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 287mm !important;
+            min-height: 287mm !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            border: 0 !important;
+            padding: 0 2mm !important;
+            zoom: 1;
+            overflow: visible !important;
           }
+
           .invoice-body {
-            flex: 1 1 auto;
+            flex: 1 0 auto !important;
+            width: 100% !important;
+            min-width: 0 !important;
           }
+
+          .invoice-container table {
+            width: 100% !important;
+            table-layout: fixed !important;
+          }
+
+          .invoice-container th,
+          .invoice-container td {
+            overflow-wrap: anywhere !important;
+            word-break: normal !important;
+          }
+
+          .invoice-container .flex.justify-end > div {
+            max-width: 100% !important;
+          }
+
           .invoice-footer {
-            margin-top: auto;
+            width: 100% !important;
+            margin-top: auto !important;
+            padding-top: 8px !important;
             page-break-inside: avoid;
+            text-align: center !important;
           }
+
+          .invoice-container .invoice-body > p,
+          .invoice-container .invoice-footer > p,
+          .invoice-container .invoice-footer > div:last-child {
+            text-align: center !important;
+          }
+
+          .invoice-container .mb-4 { margin-bottom: 6px !important; }
+          .invoice-container .mb-3 { margin-bottom: 5px !important; }
+          .invoice-container .mt-8 { margin-top: 10px !important; }
+          .invoice-container .mb-6 { margin-bottom: 8px !important; }
+          .invoice-container th,
+          .invoice-container td { padding: 2px 4px !important; }
+          .invoice-container table { font-size: 9px !important; }
+          .invoice-container .signature-area { margin-top: 10px !important; margin-bottom: 8px !important; }
+          .invoice-container .invoice-footer > p { margin-bottom: 5px !important; }
+          .invoice-container .invoice-footer > div:last-child { margin-top: 6px !important; padding-top: 4px !important; }
+
           .print\\:hidden {
             display: none !important;
+          }
+
+          .invoice-page,
+          .invoice-container,
+          .invoice-body,
+          .invoice-footer {
+            break-inside: auto;
+          }
+
+          .invoice-footer,
+          .signature-area,
+          .paid-stamp {
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
         }
       `}</style>
 
-      {/* Print Button */}
-      <div className="flex justify-end mb-3 print:hidden">
+      {/* Only this invoice is printed when its button is clicked. */}
+      <div className="mb-3 flex justify-end print:hidden">
         <button
+          type="button"
           onClick={handlePrint}
-          className="btn btn-sm bg-rose-900 hover:bg-rose-800 text-white border-none gap-2"
+          className="btn btn-sm gap-2 border-none bg-rose-900 text-white hover:bg-rose-800"
         >
-          <FaPrint /> Print {isHotelCopy ? "Hotel" : "Guest"} Invoice
+          <FaPrint />
+          Print {isHotelCopy ? "Hotel Invoice" : "Guest Invoice"}
         </button>
       </div>
 
-      {/* ===================== INVOICE ===================== */}
-      <div className="invoice-container border border-gray-400 p-4 sm:p-5 max-w-4xl mx-auto text-xs text-gray-800 leading-tight">
-        {/* Everything above the thank-you / generated footer */}
+      <div className="invoice-container mx-auto max-w-4xl border border-gray-400 p-4 text-xs leading-tight text-gray-800 sm:p-5">
         <div className="invoice-body">
-          {/* Header */}
-          <div className="text-center mb-3">
-            <h1 className="text-xl sm:text-2xl font-bold text-rose-700 tracking-wide">
+          {/* Hotel Header */}
+          <div className="mb-3 text-center">
+            <h1 className="text-xl font-bold tracking-wide text-rose-700 sm:text-2xl">
               {hotelInfo?.hotelName || "YOUR HOTEL NAME"}
             </h1>
 
-            {/* Hotel Location */}
             {hotelInfo?.address && (
-              <p className="text-[11px] text-gray-700 mt-0.5 font-medium">
+              <p className="mt-0.5 text-[11px] font-medium text-gray-700">
                 {hotelInfo.address}
               </p>
             )}
 
-            <p className="text-[10px] italic text-gray-500 mt-0.5">
+            <p className="mt-0.5 text-[10px] italic text-gray-500">
               {hotelInfo?.tagline || "A luxury hotel of your comfort"}
             </p>
 
-            <p className="text-[10px] text-gray-600 mt-0.5">
+            <p className="mt-0.5 text-[10px] text-gray-600">
               {hotelInfo?.email && `E-mail: ${hotelInfo.email}`}
               {hotelInfo?.website && ` | ${hotelInfo.website}`}
               {hotelInfo?.phone && ` | ${hotelInfo.phone}`}
             </p>
           </div>
 
-          {/* Title */}
-          <h2 className="text-center text-sm font-bold underline tracking-wider mb-1">
-            {isHotelCopy ? "HOTEL COPY – GUEST INVOICE" : "GUEST INVOICE"}
+          {/* Both versions use the same invoice title; no "Hotel Copy" label. */}
+          <h2 className="mb-4 text-center text-sm font-bold tracking-wider underline">
+            GUEST INVOICE
           </h2>
 
-          {isHotelCopy && (
-            <p className="text-center text-[10px] text-rose-700 font-semibold mb-3">
-              ★ HOTEL COPY – For Office Use Only ★
-            </p>
-          )}
-
-          {!isHotelCopy && <div className="mb-3" />}
-
-          {/* Guest Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5 mb-4 text-xs">
+          {/* Guest Information */}
+          <div className="mb-4 grid grid-cols-1 gap-x-6 gap-y-0.5 text-xs sm:grid-cols-2">
             <div className="space-y-0.5">
               <p>
-                <span className="font-semibold w-28 inline-block">
+                <span className="inline-block w-28 font-semibold">
                   Guest's Name
                 </span>
-                : <strong>{guestName?.toUpperCase()}</strong>
+                : <strong>{guestName?.toUpperCase() || "—"}</strong>
               </p>
               <p>
-                <span className="font-semibold w-28 inline-block">Company</span>
+                <span className="inline-block w-28 font-semibold">Company</span>
                 : {designation || "—"}
               </p>
               <p>
-                <span className="font-semibold w-28 inline-block">Arrival</span>
+                <span className="inline-block w-28 font-semibold">Arrival</span>
                 : {checkInDate} {checkInTime || ""}
               </p>
               <p>
-                <span className="font-semibold w-28 inline-block">
+                <span className="inline-block w-28 font-semibold">
                   Departure
                 </span>
-                : {actualCheckoutDate || checkOutDate}
+                : {actualCheckoutDate || checkOutDate || "—"}
               </p>
               <p>
-                <span className="font-semibold w-28 inline-block">
+                <span className="inline-block w-28 font-semibold">
                   No. of Night
                 </span>
-                : {actualNights}
+                : {actualNights ?? "—"}
               </p>
               <p>
-                <span className="font-semibold w-28 inline-block">
+                <span className="inline-block w-28 font-semibold">
                   No. of Person
                 </span>
                 : {numberOfGuests || 1}
@@ -233,44 +330,44 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
 
             <div className="space-y-0.5">
               <p>
-                <span className="font-semibold w-32 inline-block">
+                <span className="inline-block w-32 font-semibold">
                   Registration No.
                 </span>
                 : {_id?.toString().slice(-8).toUpperCase() || "—"}
               </p>
               <p>
-                <span className="font-semibold w-32 inline-block">
+                <span className="inline-block w-32 font-semibold">
                   Room No.
                 </span>
-                : {roomNumber}
+                : {roomNumber || "—"}
               </p>
               <p>
-                <span className="font-semibold w-32 inline-block">
+                <span className="inline-block w-32 font-semibold">
                   Room Type
                 </span>
-                : {roomVariantName}
+                : {roomVariantName || "—"}
               </p>
               <p>
-                <span className="font-semibold w-32 inline-block">
+                <span className="inline-block w-32 font-semibold">
                   Rack Rate (BDT)
                 </span>
                 : {formatMoney(pricePerNight)}
               </p>
               <p>
-                <span className="font-semibold w-32 inline-block">
+                <span className="inline-block w-32 font-semibold">
                   Room Rent (BDT)
                 </span>
                 : {formatMoney(actualRoomCharge)}
               </p>
               <p>
-                <span className="font-semibold w-32 inline-block">Contact</span>
+                <span className="inline-block w-32 font-semibold">Contact</span>
                 : {contactNumber || "—"}
               </p>
             </div>
           </div>
 
-          {/* Items Table */}
-          <div className="overflow-x-auto mb-3">
+          {/* Charges Table */}
+          <div className="mb-3 overflow-x-auto">
             <table className="w-full border-collapse text-[11px]">
               <thead>
                 <tr className="bg-gray-100">
@@ -298,7 +395,6 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
                 </tr>
               </thead>
               <tbody>
-                {/* Room Rent */}
                 <tr>
                   <td className="border border-gray-400 px-1.5 py-1">
                     {checkInDate}
@@ -324,10 +420,9 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
                   </td>
                 </tr>
 
-                {/* Restaurant Items - SHOW ALL */}
                 {restaurantOrders.map((order, idx) =>
-                  (order.foodItems || []).map((item, i) => (
-                    <tr key={`rest-${idx}-${i}`}>
+                  (order.foodItems || []).map((item, itemIdx) => (
+                    <tr key={`rest-${idx}-${itemIdx}`}>
                       <td className="border border-gray-400 px-1.5 py-1">
                         {order.orderDate || actualCheckoutDate || checkOutDate}
                       </td>
@@ -353,10 +448,9 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
                   )),
                 )}
 
-                {/* Laundry Items - SHOW ALL */}
                 {laundryOrders.map((order, idx) =>
-                  (order.clothItems || []).map((item, i) => (
-                    <tr key={`lnd-${idx}-${i}`}>
+                  (order.clothItems || []).map((item, itemIdx) => (
+                    <tr key={`lnd-${idx}-${itemIdx}`}>
                       <td className="border border-gray-400 px-1.5 py-1">
                         {order.orderDate || actualCheckoutDate || checkOutDate}
                       </td>
@@ -383,7 +477,6 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
                   )),
                 )}
 
-                {/* Transport - SHOW ALL */}
                 {transportOrders.map((order, idx) => (
                   <tr key={`trn-${idx}`}>
                     <td className="border border-gray-400 px-1.5 py-1">
@@ -411,7 +504,6 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
                   </tr>
                 ))}
 
-                {/* Advance / Payment */}
                 <tr>
                   <td className="border border-gray-400 px-1.5 py-1">
                     {actualCheckoutDate || checkOutDate}
@@ -437,9 +529,9 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
             </table>
           </div>
 
-          {/* Summary */}
-          <div className="flex justify-end mb-3">
-            <div className="w-60 text-xs space-y-0.5">
+          {/* Totals */}
+          <div className="mb-3 flex justify-end">
+            <div className="w-60 space-y-0.5 text-xs">
               <div className="flex justify-between">
                 <span className="font-semibold">Total Amount : Tk.</span>
                 <span>{formatMoney(totalCharges)}</span>
@@ -456,57 +548,55 @@ const CheckoutInvoice = ({ checkoutData, hotelInfo, variant = "guest" }) => {
                 <span className="font-semibold">Payment Receive : Tk.</span>
                 <span>{formatMoney(advance)}</span>
               </div>
-              <div className="flex justify-between border-t border-gray-400 pt-1 mt-1 font-bold">
+              <div className="mt-1 flex justify-between border-t border-gray-400 pt-1 font-bold">
                 <span>{isRefund ? "Guest Refund" : "Balance"} : Tk.</span>
                 <span>{formatMoney(final)}</span>
               </div>
             </div>
           </div>
 
-          <p className="text-xs mb-3">
+          <p className="mb-3 text-xs">
             <strong>Taka In Word :</strong> {amountInWords}
           </p>
 
-          {/* PAID Stamp - only when fully paid */}
           {final === 0 && (
-            <div className="text-center my-3 paid-stamp">
-              <span className="inline-block border-4 border-blue-600 text-blue-600 text-2xl font-bold px-6 py-0.5 -rotate-6 tracking-widest">
+            <div className="paid-stamp my-3 text-center">
+              <span className="-rotate-6 inline-block border-4 border-blue-600 px-6 py-0.5 text-2xl font-bold tracking-widest text-blue-600">
                 PAID
               </span>
             </div>
           )}
+        </div>
 
-          {/* Signatures */}
-          <div className="flex justify-between mt-8 signature-area text-xs">
-            <div className="text-center w-36">
+        {/* Footer and signatures are kept together at the bottom of the invoice. */}
+        <div className="invoice-footer">
+          <div className="signature-area mb-6 mt-8 flex justify-between text-xs">
+            <div className="w-36 text-center">
               <div className="border-t border-gray-700 pt-1">
                 Authorized Signature
               </div>
             </div>
-            <div className="text-center w-36">
+            <div className="w-36 text-center">
               <div className="border-t border-gray-700 pt-1">
                 Guest Signature
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ===== Footer that sticks to bottom of A4 ===== */}
-        <div className="invoice-footer">
-          <p className="text-center font-semibold text-sm mb-2">
+          <p className="mb-2 text-center text-sm font-semibold">
             Thank You For Staying With Us
           </p>
 
-          <p className="text-[10px] text-center text-gray-600 mb-3 leading-snug">
+          <p className="mb-3 text-center text-[10px] leading-snug text-gray-600">
             I agree that my liability for this bill is not waived and agree to
             be held personally liable in the event that the indicated person,
             company or govt. fails to pay for any part of the full amount to
             these charges.
           </p>
 
-          <div className="text-center text-[10px] text-gray-500 mt-4 border-t border-gray-300 pt-2">
-            Generated on {new Date().toLocaleString()} | Designed & Developed by
-            SmithIT
+          <div className="mt-4 border-t border-gray-300 pt-2 text-center text-[10px] text-gray-500">
+            Generated on {new Date().toLocaleString()} | Designed &amp;
+            Developed by SmithIT
           </div>
         </div>
       </div>

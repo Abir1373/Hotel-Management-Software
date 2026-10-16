@@ -13,18 +13,13 @@ const AddRoom = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
-
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      roomStatus: "",
+      roomStatus: "Available",
       roomNo: "",
       assignedPerson: "",
       assignedPersonNumber: "",
@@ -42,57 +37,124 @@ const AddRoom = () => {
     isError,
   } = useQuery({
     queryKey: ["room-variant", id],
-    queryFn: async () => {
+    qweryFn: async () => {
       const res = await axiosInstance.get(`/room-variants/${id}`);
       return res.data;
     },
     enabled: !!id,
   });
 
-  const roomStatus = watch("roomStatus");
+  // ===== Parse room numbers (101,102 or 100-105) =====
+  const parseRoomNumbers = (input) => {
+    if (!input || !input.trim()) return [];
+
+    const result = new Set();
+
+    // Split by comma
+    const parts = input
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    for (const part of parts) {
+      if (part.includes("-")) {
+        // Range: 100-105
+        const [startStr, endStr] = part.split("-").map((s) => s.trim());
+        const start = Number(startStr);
+        const end = Number(endStr);
+
+        if (isNaN(start) || isNaN(end) || start > end) {
+          throw new Error(`Invalid range: ${part}`);
+        }
+
+        for (let i = start; i <= end; i++) {
+          result.add(String(i));
+        }
+      } else {
+        // Single number
+        result.add(part);
+      }
+    }
+
+    return Array.from(result);
+  };
 
   const onSubmit = async (data) => {
-    const roomData = {
-      variantId: variant._id,
+    try {
+      let roomNumbers = [];
 
-      // Fixed variant information
-      variantName: variant.variantName,
-      baseRoomType: variant.baseRoomType,
-      price: variant.price,
-      maxOccupancy: variant.maxOccupancy,
-      bedType: variant.bedType,
-      amenities: variant.amenities,
-      description: variant.description,
-      image: variant.image,
-      hotelEmail: user.email,
+      try {
+        roomNumbers = parseRoomNumbers(data.roomNo);
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid Room Numbers",
+          text: err.message,
+          confirmButtonColor: "#9f1239",
+        });
+        return;
+      }
 
-      // Room information
-      roomStatus: data.roomStatus,
-      roomNo: data.roomNo,
-      assignedPerson: data.assignedPerson,
-      assignedPersonNumber: data.assignedPersonNumber,
-      maintenanceCost: data.maintenanceCost,
-      correctives: data.correctives,
-      workBegins: data.workBegins,
-      workEnds: data.workEnds,
-    };
+      if (roomNumbers.length === 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "No Room Numbers",
+          text: "Please enter at least one room number.",
+          confirmButtonColor: "#9f1239",
+        });
+        return;
+      }
 
-    const res = await axiosInstance.post("/rooms", roomData);
+      // Create all rooms
+      const promises = roomNumbers.map((roomNo) => {
+        const roomData = {
+          variantId: variant._id,
+          variantName: variant.variantName,
+          baseRoomType: variant.baseRoomType,
+          price: variant.price,
+          maxOccupancy: variant.maxOccupancy,
+          bedType: variant.bedType,
+          amenities: variant.amenities,
+          description: variant.description,
+          image: variant.image,
+          hotelEmail: user.email,
 
-    if (res.status === 201 || res.data.insertedId) {
-      Swal.fire({
+          roomStatus: data.roomStatus,
+          roomNo: roomNo,
+          assignedPerson: data.assignedPerson || "",
+          assignedPersonNumber: data.assignedPersonNumber || "",
+          maintenanceCost: data.maintenanceCost || "",
+          correctives: data.correctives || "",
+          workBegins: data.workBegins || "",
+          workEnds: data.workEnds || "",
+        };
+
+        return axiosInstance.post("/rooms", roomData);
+      });
+
+      await Promise.all(promises);
+
+      await Swal.fire({
         icon: "success",
         title: "Success!",
-        text: "Room added successfully",
+        text: `${roomNumbers.length} room(s) added successfully`,
         showConfirmButton: false,
-        timer: 1500,
+        timer: 1800,
       });
 
       navigate("/dashboard/rooms");
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Failed to add rooms",
+        confirmButtonColor: "#9f1239",
+      });
     }
   };
 
-  if (isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="min-h-96 flex justify-center items-center">
         <span className="loading loading-spinner loading-lg text-rose-900"></span>
@@ -127,14 +189,13 @@ const AddRoom = () => {
         </div>
 
         <p className="text-gray-500 mt-2">
-          Add a new room to this room variant.
+          Add one or multiple rooms to this room variant.
         </p>
       </div>
 
       {/* ================================================= */}
       {/* SECTION 1 - ROOM VARIANT INFORMATION */}
       {/* ================================================= */}
-
       <div className="card shadow-xl mb-8">
         <div className="card-body">
           <h2 className="card-title text-xl text-rose-900 mb-5">
@@ -142,7 +203,6 @@ const AddRoom = () => {
           </h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* IMAGE */}
             <div>
               <img
                 src={`${axiosInstance.defaults.baseURL}${variant.image}`}
@@ -151,45 +211,31 @@ const AddRoom = () => {
               />
             </div>
 
-            {/* FIXED INFORMATION */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {/* Variant Name */}
               <div>
                 <p className="text-sm text-gray-500">Variant Name</p>
                 <p className="font-semibold text-lg">{variant.variantName}</p>
               </div>
-
-              {/* Base Room Type */}
               <div>
                 <p className="text-sm text-gray-500">Base Room Type</p>
                 <p className="font-semibold">{variant.baseRoomType}</p>
               </div>
-
-              {/* Price */}
               <div>
                 <p className="text-sm text-gray-500">Price</p>
                 <p className="font-semibold">৳{variant.price}</p>
               </div>
-
-              {/* Max Occupancy */}
               <div>
                 <p className="text-sm text-gray-500">Max Occupancy</p>
                 <p className="font-semibold">{variant.maxOccupancy} Persons</p>
               </div>
-
-              {/* Bed Type */}
               <div>
                 <p className="text-sm text-gray-500">Bed Type</p>
                 <p className="font-semibold">{variant.bedType}</p>
               </div>
-
-              {/* Amenities */}
               <div>
                 <p className="text-sm text-gray-500">Amenities</p>
                 <p className="font-semibold">{variant.amenities}</p>
               </div>
-
-              {/* Description */}
               <div className="sm:col-span-2">
                 <p className="text-sm text-gray-500">Description</p>
                 <p className="font-semibold">{variant.description}</p>
@@ -202,7 +248,6 @@ const AddRoom = () => {
       {/* ================================================= */}
       {/* SECTION 2 - ROOM INFORMATION FORM */}
       {/* ================================================= */}
-
       <form onSubmit={handleSubmit(onSubmit)} className="card shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-xl text-rose-900 mb-6">
@@ -210,12 +255,11 @@ const AddRoom = () => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* ================= ROOM STATUS ================= */}
+            {/* Room Status */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Room Status</span>
               </label>
-
               <select
                 className="select select-bordered w-full bg-white"
                 {...register("roomStatus", {
@@ -225,13 +269,12 @@ const AddRoom = () => {
                 <option value="" disabled>
                   Select room status
                 </option>
+                <option value="Available">Available</option>
                 <option value="Maintenance">Maintenance</option>
                 <option value="In Progress">In Progress</option>
-                <option value="Available">Available</option>
                 <option value="Occupied">Occupied</option>
                 <option value="Reserved">Reserved</option>
               </select>
-
               {errors.roomStatus && (
                 <p className="text-error text-sm mt-1">
                   {errors.roomStatus.message}
@@ -239,21 +282,25 @@ const AddRoom = () => {
               )}
             </div>
 
-            {/* ================= ROOM NUMBER ================= */}
-            <div className="form-control">
+            {/* ========== MULTIPLE ROOM NUMBERS ========== */}
+            <div className="form-control md:col-span-2">
               <label className="label">
-                <span className="label-text font-semibold">Room No</span>
+                <span className="label-text font-semibold">
+                  Room Numbers <span className="text-rose-900">*</span>
+                </span>
               </label>
-
               <input
                 type="text"
-                placeholder="Example: 201"
+                placeholder="Examples: 101,102,103   or   100-105   or   201, 205-210"
                 className="input input-bordered w-full bg-white"
                 {...register("roomNo", {
                   required: "Room number is required",
                 })}
               />
-
+              <p className="text-sm text-gray-500 mt-1">
+                You can use comma separated values or range (e.g.{" "}
+                <code>101,102,103</code> or <code>100-105</code>)
+              </p>
               {errors.roomNo && (
                 <p className="text-error text-sm mt-1">
                   {errors.roomNo.message}
@@ -261,14 +308,13 @@ const AddRoom = () => {
               )}
             </div>
 
-            {/* ================= ASSIGNED PERSON ================= */}
+            {/* Assigned Person */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">
                   Assigned Person
                 </span>
               </label>
-
               <input
                 type="text"
                 placeholder="Enter assigned person's name"
@@ -277,14 +323,13 @@ const AddRoom = () => {
               />
             </div>
 
-            {/* ================= PHONE NUMBER ================= */}
+            {/* Phone Number */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">
                   Assigned Person Number
                 </span>
               </label>
-
               <input
                 type="tel"
                 placeholder="Enter phone number"
@@ -293,14 +338,13 @@ const AddRoom = () => {
               />
             </div>
 
-            {/* ================= MAINTENANCE COST ================= */}
+            {/* Maintenance Cost */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">
                   Maintenance Cost
                 </span>
               </label>
-
               <input
                 type="number"
                 min="0"
@@ -312,12 +356,11 @@ const AddRoom = () => {
               />
             </div>
 
-            {/* ================= CORRECTIVES ================= */}
+            {/* Correctives */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Correctives</span>
               </label>
-
               <input
                 type="text"
                 placeholder="Enter corrective action"
@@ -326,12 +369,11 @@ const AddRoom = () => {
               />
             </div>
 
-            {/* ================= WORK BEGINS ================= */}
+            {/* Work Begins */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Work Begins</span>
               </label>
-
               <input
                 type="datetime-local"
                 className="input input-bordered w-full bg-white"
@@ -339,12 +381,11 @@ const AddRoom = () => {
               />
             </div>
 
-            {/* ================= WORK ENDS ================= */}
+            {/* Work Ends */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Work Ends</span>
               </label>
-
               <input
                 type="datetime-local"
                 className="input input-bordered w-full bg-white"
@@ -353,7 +394,7 @@ const AddRoom = () => {
             </div>
           </div>
 
-          {/* ================= BUTTONS ================= */}
+          {/* Buttons */}
           <div className="flex justify-end gap-3 mt-8">
             <button
               type="button"
@@ -367,7 +408,7 @@ const AddRoom = () => {
               type="submit"
               className="btn bg-rose-900 hover:bg-rose-900 text-white border-none"
             >
-              Add Room
+              Add Room(s)
             </button>
           </div>
         </div>

@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import Swal from "sweetalert2";
-import { FaArrowLeft, FaUserPlus } from "react-icons/fa";
+import { FaUserPlus } from "react-icons/fa";
 import { MdHotel } from "react-icons/md";
 import useAuth from "../../../../hooks/useAuth";
 import useAxios from "../../../../hooks/useAxios";
@@ -24,10 +25,10 @@ const SubUser = () => {
     enabled: !!user?.email,
   });
 
-  // Get existing sub users
+  // Get user document (contains email1, email2)
   const {
-    data: subUsers,
-    isLoading: subUsersLoading,
+    data: userDoc,
+    isLoading: userLoading,
     refetch,
   } = useQuery({
     queryKey: ["sub-users", user?.email],
@@ -35,41 +36,87 @@ const SubUser = () => {
       const res = await axiosInstance.get("/users", {
         params: { hotelEmail: user.email },
       });
-      return res.data;
+      // Support both single object and array response
+      const data = res.data;
+      if (Array.isArray(data)) {
+        return (
+          data.find(
+            (u) =>
+              u.hotelEmail === user.email ||
+              u.email === user.email ||
+              u.status === "Admin" ||
+              u.status === "Approved",
+          ) ||
+          data[0] ||
+          null
+        );
+      }
+      return data || null;
     },
     enabled: !!user?.email,
   });
 
-  // Form for Email 1 (no auto-fill)
+  // Form for Email 1
   const {
     register: register1,
     handleSubmit: handleSubmit1,
     reset: reset1,
     formState: { isSubmitting: isSubmitting1 },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      email1: "",
+      password1: "",
+    },
+  });
 
-  // Form for Email 2 (no auto-fill)
+  // Form for Email 2
   const {
     register: register2,
     handleSubmit: handleSubmit2,
     reset: reset2,
     formState: { isSubmitting: isSubmitting2 },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      email2: "",
+      password2: "",
+    },
+  });
+
+  // Prefill Email 1 & Email 2 from users collection
+  useEffect(() => {
+    if (userDoc) {
+      reset1({
+        email1: userDoc.email1 || "",
+        password1: "",
+      });
+      reset2({
+        email2: userDoc.email2 || "",
+        password2: "",
+      });
+    }
+  }, [userDoc, reset1, reset2]);
 
   // ========== Submit Email 1 ==========
   const onSubmitEmail1 = async (data) => {
+    if (!userDoc?._id) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: "User record not found",
+      });
+      return;
+    }
+
     try {
-      // Create Firebase user
       await createUser(data.email1, data.password1);
 
-      // Update in database
-      await axiosInstance.patch(`/users/${subUsers._id}`, {
+      await axiosInstance.patch(`/users/${userDoc._id}`, {
         email1: data.email1,
         password1: data.password1,
       });
 
       await refetch();
-      reset1();
+      reset1({ email1: data.email1, password1: "" });
 
       Swal.fire({
         icon: "success",
@@ -98,18 +145,25 @@ const SubUser = () => {
 
   // ========== Submit Email 2 ==========
   const onSubmitEmail2 = async (data) => {
+    if (!userDoc?._id) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: "User record not found",
+      });
+      return;
+    }
+
     try {
-      // Create Firebase user
       await createUser(data.email2, data.password2);
 
-      // Update in database
-      await axiosInstance.patch(`/users/${subUsers._id}`, {
+      await axiosInstance.patch(`/users/${userDoc._id}`, {
         email2: data.email2,
         password2: data.password2,
       });
 
       await refetch();
-      reset2();
+      reset2({ email2: data.email2, password2: "" });
 
       Swal.fire({
         icon: "success",
@@ -136,7 +190,7 @@ const SubUser = () => {
     }
   };
 
-  if (hotelLoading || subUsersLoading) {
+  if (hotelLoading || userLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <span className="loading loading-spinner loading-lg text-rose-900"></span>
@@ -155,7 +209,8 @@ const SubUser = () => {
           <div>
             <h1 className="text-lg font-bold text-rose-900">Sub Users</h1>
             <p className="text-sm text-gray-500">
-              Manage additional login emails for {hotel?.hotelName}
+              Manage additional login emails for{" "}
+              {hotel?.hotelName || userDoc?.hotelName}
             </p>
           </div>
         </div>
@@ -177,8 +232,12 @@ const SubUser = () => {
             <MdHotel className="text-2xl text-rose-900" />
           </div>
           <div>
-            <h2 className="font-bold text-gray-800">{hotel?.hotelName}</h2>
-            <p className="text-sm text-gray-500">{hotel?.email}</p>
+            <h2 className="font-bold text-gray-800">
+              {hotel?.hotelName || userDoc?.hotelName}
+            </h2>
+            <p className="text-sm text-gray-500">
+              {hotel?.hotelEmail || hotel?.email || userDoc?.hotelEmail}
+            </p>
           </div>
         </div>
       </div>
@@ -189,7 +248,14 @@ const SubUser = () => {
           onSubmit={handleSubmit1(onSubmitEmail1)}
           className="bg-white rounded-2xl shadow-md border border-gray-100 p-6"
         >
-          <h3 className="text-lg font-bold text-rose-900 mb-6">Sub User 1</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-rose-900">Sub User 1</h3>
+            {userDoc?.email1 && (
+              <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 font-medium">
+                Already set
+              </span>
+            )}
+          </div>
 
           <div className="space-y-4">
             <div className="form-control">
@@ -199,7 +265,7 @@ const SubUser = () => {
               <input
                 type="email"
                 placeholder="user1@example.com"
-                className="input input-bordered w-full bg-white"
+                className="input input-bordered w-full bg-white focus:outline-none focus:ring-2 focus:ring-rose-900/20 focus:border-rose-900"
                 {...register1("email1", { required: true })}
               />
             </div>
@@ -210,8 +276,12 @@ const SubUser = () => {
               </label>
               <input
                 type="password"
-                placeholder="Enter password"
-                className="input input-bordered w-full bg-white"
+                placeholder={
+                  userDoc?.email1
+                    ? "Enter new password to update"
+                    : "Enter password"
+                }
+                className="input input-bordered w-full bg-white focus:outline-none focus:ring-2 focus:ring-rose-900/20 focus:border-rose-900"
                 {...register1("password1", { required: true })}
               />
             </div>
@@ -223,7 +293,11 @@ const SubUser = () => {
               disabled={isSubmitting1}
               className="btn bg-rose-900 hover:bg-[#BF1E2E] text-white border-none"
             >
-              {isSubmitting1 ? "Saving..." : "Save User 1"}
+              {isSubmitting1
+                ? "Saving..."
+                : userDoc?.email1
+                  ? "Update User 1"
+                  : "Save User 1"}
             </button>
           </div>
         </form>
@@ -233,7 +307,14 @@ const SubUser = () => {
           onSubmit={handleSubmit2(onSubmitEmail2)}
           className="bg-white rounded-2xl shadow-md border border-gray-100 p-6"
         >
-          <h3 className="text-lg font-bold text-rose-900 mb-6">Sub User 2</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-rose-900">Sub User 2</h3>
+            {userDoc?.email2 && (
+              <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 font-medium">
+                Already set
+              </span>
+            )}
+          </div>
 
           <div className="space-y-4">
             <div className="form-control">
@@ -243,7 +324,7 @@ const SubUser = () => {
               <input
                 type="email"
                 placeholder="user2@example.com"
-                className="input input-bordered w-full bg-white"
+                className="input input-bordered w-full bg-white focus:outline-none focus:ring-2 focus:ring-rose-900/20 focus:border-rose-900"
                 {...register2("email2", { required: true })}
               />
             </div>
@@ -254,8 +335,12 @@ const SubUser = () => {
               </label>
               <input
                 type="password"
-                placeholder="Enter password"
-                className="input input-bordered w-full bg-white"
+                placeholder={
+                  userDoc?.email2
+                    ? "Enter new password to update"
+                    : "Enter password"
+                }
+                className="input input-bordered w-full bg-white focus:outline-none focus:ring-2 focus:ring-rose-900/20 focus:border-rose-900"
                 {...register2("password2", { required: true })}
               />
             </div>
@@ -267,7 +352,11 @@ const SubUser = () => {
               disabled={isSubmitting2}
               className="btn bg-rose-900 hover:bg-[#BF1E2E] text-white border-none"
             >
-              {isSubmitting2 ? "Saving..." : "Save User 2"}
+              {isSubmitting2
+                ? "Saving..."
+                : userDoc?.email2
+                  ? "Update User 2"
+                  : "Save User 2"}
             </button>
           </div>
         </form>

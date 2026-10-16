@@ -8,15 +8,12 @@ import { IoFastFoodSharp } from "react-icons/io5";
 import { Link, useNavigate } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
 import Swal from "sweetalert2";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const RestaurantOrders = () => {
   const axiosInstance = useAxios();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
 
   const {
     register,
@@ -29,35 +26,38 @@ const RestaurantOrders = () => {
   const [foodItems, setFoodItems] = useState([
     { itemName: "", quantity: 1, price: 0 },
   ]);
-
-  // Store the full selected check-in object
   const [selectedCheckIn, setSelectedCheckIn] = useState(null);
 
-  // Get current check-in guests
-  const { data: checkIns = [], isLoading } = useQuery({
-    queryKey: ["check-ins"],
+  // Get current check-in guests for the current hotel account.
+  const {
+    data: checkIns = [],
+    isLoading: checkInsLoading,
+    isError: checkInsError,
+  } = useQuery({
+    queryKey: ["check-ins", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/check-in", {
-        params: {
-          hotelEmail: user.email,
-        },
+        params: { hotelEmail },
       });
-
       return res.data;
     },
+    enabled: Boolean(hotelEmail) && !statusLoading,
   });
 
-  // Fetch food menu
-  const { data: menuItems = [] } = useQuery({
-    queryKey: ["food-menu"],
+  // Fetch the food menu for the current hotel account.
+  const {
+    data: menuItems = [],
+    isLoading: menuLoading,
+    isError: menuError,
+  } = useQuery({
+    queryKey: ["food-menu", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/food-menu", {
-        params: {
-          hotelEmail: user.email,
-        },
+        params: { hotelEmail },
       });
       return res.data;
     },
+    enabled: Boolean(hotelEmail) && !statusLoading,
   });
 
   const handleRoomChange = (e) => {
@@ -65,7 +65,7 @@ const RestaurantOrders = () => {
     setValue("roomNumber", roomNo);
 
     const foundCheckIn = checkIns.find(
-      (checkIn) => checkIn.roomNumber === roomNo,
+      (checkIn) => String(checkIn.roomNumber) === String(roomNo),
     );
 
     if (foundCheckIn) {
@@ -78,64 +78,128 @@ const RestaurantOrders = () => {
   };
 
   const handleAddFoodItem = () => {
-    setFoodItems([...foodItems, { itemName: "", quantity: 1, price: 0 }]);
+    setFoodItems((current) => [
+      ...current,
+      { itemName: "", quantity: 1, price: 0 },
+    ]);
   };
 
   const handleRemoveFoodItem = (index) => {
-    if (foodItems.length === 1) return;
-    const updated = foodItems.filter((_, i) => i !== index);
-    setFoodItems(updated);
+    setFoodItems((current) => {
+      if (current.length === 1) return current;
+      return current.filter((_, i) => i !== index);
+    });
   };
 
   const handleFoodChange = (index, field, value) => {
-    const updated = [...foodItems];
+    setFoodItems((current) =>
+      current.map((item, i) => {
+        if (i !== index) return item;
 
-    if (field === "itemName") {
-      const selected = menuItems.find((item) => item.itemName === value);
-      updated[index].itemName = value;
-      updated[index].price = selected ? selected.price : 0;
-    } else {
-      updated[index][field] = value;
-    }
+        if (field === "itemName") {
+          const selected = menuItems.find((menu) => menu.itemName === value);
+          return {
+            ...item,
+            itemName: value,
+            price: selected ? Number(selected.price) || 0 : 0,
+          };
+        }
 
-    setFoodItems(updated);
+        return {
+          ...item,
+          [field]:
+            field === "quantity" ? Math.max(1, Number(value) || 1) : value,
+        };
+      }),
+    );
   };
 
-  const totalAmount = foodItems.reduce((sum, item) => {
-    return sum + Number(item.quantity || 0) * Number(item.price || 0);
-  }, 0);
+  const totalAmount = foodItems.reduce(
+    (sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0),
+    0,
+  );
 
   const onSubmit = async (data) => {
-    const orderData = {
-      ...data,
-      foodItems,
-      totalAmount,
-      checkInInfo: selectedCheckIn || null,
-      hotelEmail: user.email,
-    };
-
-    const res = await axiosInstance.post("/restaurant-orders", orderData);
-
-    if (res.data.insertedId) {
+    if (!hotelEmail || statusLoading) {
       await Swal.fire({
-        title: "Success!",
-        text: "Restaurant order submitted successfully.",
-        icon: "success",
+        title: "Account not ready",
+        text: "Your hotel account information is not available yet. Please try again.",
+        icon: "warning",
         confirmButtonColor: "#BF1E2E",
       });
-      navigate("/dashboard/services");
+      return;
+    }
+
+    try {
+      const orderData = {
+        ...data,
+        foodItems,
+        totalAmount,
+        checkInInfo: selectedCheckIn || null,
+        hotelEmail,
+      };
+
+      const res = await axiosInstance.post("/restaurant-orders", orderData);
+
+      if (res.data.insertedId) {
+        await Swal.fire({
+          title: "Success!",
+          text: "Restaurant order submitted successfully.",
+          icon: "success",
+          confirmButtonColor: "#BF1E2E",
+        });
+        navigate("/dashboard/services");
+      }
+    } catch (error) {
+      await Swal.fire({
+        title: "Order failed",
+        text:
+          error?.response?.data?.message ||
+          "Could not submit the restaurant order. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#BF1E2E",
+      });
     }
   };
 
+  if (statusLoading) {
+    return (
+      <div className="flex min-h-40 items-center justify-center">
+        <span className="loading loading-spinner text-error" />
+      </div>
+    );
+  }
+
+  if (!hotelEmail) {
+    return (
+      <div className="mx-auto max-w-2xl rounded-2xl border border-rose-100 bg-white p-8 text-center shadow-lg">
+        <MdRestaurantMenu className="mx-auto mb-3 text-4xl text-rose-900" />
+        <h2 className="text-lg font-bold text-rose-900">
+          Hotel account unavailable
+        </h2>
+        <p className="mt-2 text-sm text-gray-600">
+          We couldn't identify your hotel account. Please sign in again or
+          refresh the page.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="btn mt-4 border-none bg-rose-900 text-white hover:bg-rose-800"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto p-6">
+    <div className="mx-auto p-4 sm:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-rose-900 flex items-center justify-center shadow-md">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-900 shadow-md">
             <MdRestaurantMenu className="text-xl text-white" />
           </div>
-
           <div>
             <h1 className="text-lg font-bold text-rose-900">
               Restaurant Order
@@ -150,26 +214,25 @@ const RestaurantOrders = () => {
           <Link to="/dashboard/services/restaurant_orders/food_menu">
             <button
               type="button"
-              className="flex items-center justify-center w-10 h-10 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-rose-900 text-rose-900 transition-colors hover:bg-rose-900 hover:text-white"
               title="Food Menu"
             >
               <IoFastFoodSharp className="text-xl" />
             </button>
           </Link>
-
           <Link to="/dashboard/services/restaurant_orders/restaurant_orders_history">
             <button
               type="button"
-              className="flex items-center justify-center w-9 h-9 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
+              title="Order History"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-rose-900 text-rose-900 transition-colors hover:bg-rose-900 hover:text-white"
             >
               <MdWorkHistory className="text-xl" />
             </button>
           </Link>
-
           <Link to="/dashboard/services">
             <button
               type="button"
-              className="flex items-center justify-center w-10 h-10 border border-rose-900 text-rose-900 hover:bg-rose-900 hover:text-white rounded-lg transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-rose-900 text-rose-900 transition-colors hover:bg-rose-900 hover:text-white"
               title="Back to Services"
             >
               <RiHome3Line className="text-xl" />
@@ -178,12 +241,23 @@ const RestaurantOrders = () => {
         </div>
       </div>
 
-      {/* Form */}
+      {checkInsError && (
+        <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          Could not load check-in rooms. You can still enter the guest name
+          manually.
+        </p>
+      )}
+      {menuError && (
+        <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          Could not load the food menu. Please refresh or check your connection.
+        </p>
+      )}
+
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white shadow-lg rounded-2xl p-8"
+        className="rounded-2xl bg-white p-5 shadow-lg sm:p-8"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Room Number (Optional) */}
           <div>
             <label className="label">
@@ -194,10 +268,12 @@ const RestaurantOrders = () => {
               onChange={handleRoomChange}
               className="select select-bordered w-full bg-white"
               defaultValue=""
-              disabled={isLoading}
+              disabled={checkInsLoading}
             >
               <option value="">
-                {isLoading ? "Loading rooms..." : "Select room (optional)"}
+                {checkInsLoading
+                  ? "Loading rooms..."
+                  : "Select room (optional)"}
               </option>
               {checkIns.map((checkIn) => (
                 <option key={checkIn._id} value={checkIn.roomNumber}>
@@ -215,13 +291,11 @@ const RestaurantOrders = () => {
             <input
               type="text"
               placeholder="Enter guest name"
-              {...register("guestName", {
-                required: "Guest name is required",
-              })}
+              {...register("guestName", { required: "Guest name is required" })}
               className="input input-bordered w-full bg-white"
             />
             {errors.guestName && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.guestName.message}
               </p>
             )}
@@ -234,13 +308,11 @@ const RestaurantOrders = () => {
             </label>
             <input
               type="date"
-              {...register("orderDate", {
-                required: "Order date is required",
-              })}
+              {...register("orderDate", { required: "Order date is required" })}
               className="input input-bordered w-full bg-white"
             />
             {errors.orderDate && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.orderDate.message}
               </p>
             )}
@@ -253,13 +325,11 @@ const RestaurantOrders = () => {
             </label>
             <input
               type="time"
-              {...register("orderTime", {
-                required: "Order time is required",
-              })}
+              {...register("orderTime", { required: "Order time is required" })}
               className="input input-bordered w-full bg-white"
             />
             {errors.orderTime && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.orderTime.message}
               </p>
             )}
@@ -300,7 +370,7 @@ const RestaurantOrders = () => {
               <option value="Room Charge">Room Charge</option>
             </select>
             {errors.paymentMethod && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.paymentMethod.message}
               </p>
             )}
@@ -325,7 +395,7 @@ const RestaurantOrders = () => {
               <option value="Paid">Paid</option>
             </select>
             {errors.paymentStatus && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.paymentStatus.message}
               </p>
             )}
@@ -350,24 +420,23 @@ const RestaurantOrders = () => {
               <option value="left">Left</option>
             </select>
             {errors.active_status && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="mt-1 text-sm text-red-500">
                 {errors.active_status.message}
               </p>
             )}
           </div>
         </div>
 
-        {/* ========== Food Items Section ========== */}
+        {/* Food Items Section */}
         <div className="mt-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="text-base font-semibold text-rose-900">
               Food Items
             </h3>
-
             <button
               type="button"
               onClick={handleAddFoodItem}
-              className="btn btn-sm bg-rose-900 text-white hover:bg-rose-900 border-none gap-2"
+              className="btn btn-sm gap-2 border-none bg-rose-900 text-white hover:bg-rose-800"
             >
               <FaPlus /> Add Food Item
             </button>
@@ -377,9 +446,8 @@ const RestaurantOrders = () => {
             {foodItems.map((item, index) => (
               <div
                 key={index}
-                className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-rose-50 border border-rose-100 rounded-xl p-4"
+                className="grid grid-cols-1 items-end gap-4 rounded-xl border border-rose-100 bg-rose-50 p-4 md:grid-cols-12"
               >
-                {/* Item Name */}
                 <div className="md:col-span-5">
                   <label className="label">
                     <span className="label-text font-medium">Item Name</span>
@@ -390,8 +458,11 @@ const RestaurantOrders = () => {
                       handleFoodChange(index, "itemName", e.target.value)
                     }
                     className="select select-bordered w-full bg-white"
+                    disabled={menuLoading}
                   >
-                    <option value="">Select food item</option>
+                    <option value="">
+                      {menuLoading ? "Loading menu..." : "Select food item"}
+                    </option>
                     {menuItems.map((menu) => (
                       <option key={menu._id} value={menu.itemName}>
                         {menu.itemName} — ৳{menu.price}
@@ -400,7 +471,6 @@ const RestaurantOrders = () => {
                   </select>
                 </div>
 
-                {/* Quantity */}
                 <div className="md:col-span-2">
                   <label className="label">
                     <span className="label-text font-medium">Quantity</span>
@@ -416,7 +486,6 @@ const RestaurantOrders = () => {
                   />
                 </div>
 
-                {/* Price */}
                 <div className="md:col-span-3">
                   <label className="label">
                     <span className="label-text font-medium">Price (৳)</span>
@@ -429,13 +498,13 @@ const RestaurantOrders = () => {
                   />
                 </div>
 
-                {/* Remove */}
-                <div className="md:col-span-2 flex justify-end">
+                <div className="flex justify-end md:col-span-2">
                   <button
                     type="button"
                     onClick={() => handleRemoveFoodItem(index)}
                     disabled={foodItems.length === 1}
                     className="btn btn-sm btn-outline border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-40"
+                    title="Remove food item"
                   >
                     <FaTrash />
                   </button>
@@ -446,7 +515,7 @@ const RestaurantOrders = () => {
         </div>
 
         {/* Total Amount */}
-        <div className="mt-6 bg-rose-50 border border-rose-200 rounded-xl p-5 flex justify-between items-center">
+        <div className="mt-6 flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 p-5">
           <span className="text-lg font-semibold text-gray-700">
             Total Amount
           </span>
@@ -465,11 +534,11 @@ const RestaurantOrders = () => {
             placeholder="Enter any special requests..."
             {...register("specialInstruction")}
             className="textarea textarea-bordered w-full bg-white"
-          ></textarea>
+          />
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end gap-4 mt-8">
+        <div className="mt-8 flex justify-end gap-4">
           <button
             type="button"
             onClick={() => {
@@ -481,10 +550,9 @@ const RestaurantOrders = () => {
           >
             Reset
           </button>
-
           <button
             type="submit"
-            className="btn bg-[#BF1E2E] text-white hover:bg-red-800 border-none px-8"
+            className="btn border-none bg-[#BF1E2E] px-8 text-white hover:bg-red-800"
           >
             Submit Order
           </button>

@@ -2,32 +2,47 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import { LuBookImage, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { MdWorkHistory } from "react-icons/md";
-import PageHeader from "../../../components/PageHeader"; // adjust path if needed
+import PageHeader from "../../../components/PageHeader";
 
-const Reservations = () => {
-  const navigate = useNavigate();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [now, setNow] = useState(new Date());
+// Fixed national holidays (same date every year)
+const FIXED_HOLIDAYS = [
+  { month: 2, day: 21 }, // Shaheed Dibosh / Mother Language Day
+  { month: 3, day: 26 }, // Independence Day
+  { month: 4, day: 14 }, // Pohela Boishakh
+  { month: 5, day: 1 }, // May Day
+  { month: 8, day: 5 }, // July Mass Uprising Day
+  { month: 8, day: 15 }, // National Mourning Day
+  { month: 12, day: 16 }, // Victory Day
+  { month: 12, day: 25 }, // Christmas
+];
 
-  // Live clock
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Bangladesh National Holidays 2026
-  const nationalHolidays = [
+// Movable holidays (Islamic / Hindu) — update each year from govt gazette
+// Format: "YYYY-MM-DD"
+const MOVABLE_HOLIDAYS_BY_YEAR = {
+  2025: [
+    "2025-02-14", // Shab-e-Barat (approx / gazette)
+    "2025-03-28", // Shab-e-Qadr
+    "2025-03-31",
+    "2025-04-01",
+    "2025-04-02", // Eid-ul-Fitr period
+    "2025-06-07",
+    "2025-06-08",
+    "2025-06-09",
+    "2025-06-10", // Eid-ul-Adha period
+    "2025-07-06", // Ashura
+    "2025-09-05", // Eid-e-Milad-un-Nabi
+    "2025-08-16", // Janmashtami
+    "2025-10-01",
+    "2025-10-02", // Durga Puja
+  ],
+  2026: [
     "2026-02-04", // Shab-e-Barat
-    "2026-02-21", // Shaheed Dibosh
     "2026-03-17", // Shab-e-Qadr
     "2026-03-19",
     "2026-03-20",
     "2026-03-21",
     "2026-03-22",
     "2026-03-23", // Eid-ul-Fitr
-    "2026-03-26", // Independence Day
-    "2026-04-14", // Pohela Boishakh
-    "2026-05-01", // May Day
     "2026-05-26",
     "2026-05-27",
     "2026-05-28",
@@ -35,18 +50,55 @@ const Reservations = () => {
     "2026-05-30",
     "2026-05-31", // Eid-ul-Adha
     "2026-06-26", // Ashura
-    "2026-08-05", // July Mass Uprising Day
-    "2026-08-15", // National Mourning Day
     "2026-08-26", // Eid-e-Milad-un-Nabi
     "2026-09-04", // Janmashtami
     "2026-10-20",
     "2026-10-21", // Durga Puja
-    "2026-12-16", // Victory Day
-    "2026-12-25", // Christmas
-  ];
+  ],
+  2027: [
+    "2027-01-24", // Shab-e-Barat
+    "2027-03-07", // Shab-e-Qadr
+    "2027-03-08",
+    "2027-03-09",
+    "2027-03-10",
+    "2027-03-11",
+    "2027-03-12", // Eid-ul-Fitr
+    "2027-05-15",
+    "2027-05-16",
+    "2027-05-17",
+    "2027-05-18",
+    "2027-05-19",
+    "2027-05-20", // Eid-ul-Adha
+    "2027-06-15", // Ashura
+    "2027-08-15", // Eid-e-Milad-un-Nabi
+    "2027-08-24", // Janmashtami
+    "2027-10-08",
+    "2027-10-09", // Durga Puja
+  ],
+};
+
+const getNationalHolidays = (year) => {
+  const fixed = FIXED_HOLIDAYS.map(
+    ({ month, day }) =>
+      `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+  );
+  const movable = MOVABLE_HOLIDAYS_BY_YEAR[year] || [];
+  return [...new Set([...fixed, ...movable])];
+};
+
+const Reservations = () => {
+  const navigate = useNavigate();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+  const nationalHolidays = getNationalHolidays(year);
 
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -99,8 +151,8 @@ const Reservations = () => {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   return (
-    <div className="mx-auto p-4 sm:p-6 max-w-5xl">
-      {/* ===== Page Header (Title + History + Logout) ===== */}
+    <div className="p-6">
+      {/* ===== Page Header ===== */}
       <PageHeader
         title="Reservations"
         subtitle="Select a date to view available rooms and make a reservation."
@@ -116,7 +168,7 @@ const Reservations = () => {
       />
 
       {/* Live Date & Time */}
-      <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 mb-8 text-center shadow-sm">
+      <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 mb-8 text-center shadow-sm mt-6">
         <p className="text-sm text-gray-500 mb-1">Current Date & Time</p>
         <p className="text-xl font-bold text-rose-900">
           {now.toLocaleDateString("en-GB", {
@@ -168,12 +220,10 @@ const Reservations = () => {
 
         {/* Days Grid */}
         <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-          {/* Empty cells for days before the 1st */}
           {Array.from({ length: firstDayOfMonth }).map((_, i) => (
             <div key={`empty-${i}`} className="aspect-square" />
           ))}
 
-          {/* Actual days */}
           {Array.from({ length: daysInMonth }, (_, i) => {
             const day = i + 1;
             const special = isSpecialDay(day);

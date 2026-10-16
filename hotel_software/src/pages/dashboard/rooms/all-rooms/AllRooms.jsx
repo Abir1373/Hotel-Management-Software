@@ -1,26 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import useAxios from "../../../../hooks/useAxios";
-import { FaUsers, FaMoneyBillWave } from "react-icons/fa";
+import { FaUsers, FaMoneyBillWave, FaEdit, FaTrash } from "react-icons/fa";
 import { MdHotel } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { useNavigate, useSearchParams, Link } from "react-router";
-import useAuth from "../../../../hooks/useAuth";
+import Swal from "sweetalert2";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const AllRooms = () => {
   const axiosInstance = useAxios();
+  const queryClient = useQueryClient();
   const imageBaseURL = import.meta.env.VITE_API_URL || "http://localhost:3000";
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, loading } = useAuth();
+  const { hotelEmail, statusLoading } = useUserStatus();
 
   const mode = searchParams.get("mode");
   const selectedDate = searchParams.get("date");
 
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
-
-  // 1. Always fetch all rooms
+  // 1. Fetch all rooms
   const {
     data: rooms = [],
     isLoading: roomsLoading,
@@ -28,35 +26,95 @@ const AllRooms = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["all-rooms", user?.email],
+    queryKey: ["all-rooms", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/rooms", {
-        params: { hotelEmail: user.email },
+        params: { hotelEmail },
       });
       return res.data;
     },
-    enabled: !!user?.email,
+    enabled: !!hotelEmail,
   });
 
-  // 2. When in reserve mode → check real availability for the selected date
+  // 2. Availability (only in reserve mode)
   const { data: availability, isLoading: availabilityLoading } = useQuery({
-    queryKey: ["room-availability", selectedDate, user?.email],
+    queryKey: ["room-availability", selectedDate, hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/rooms/available", {
         params: {
           arriving: selectedDate,
           departure: selectedDate,
-          hotelEmail: user.email,
+          hotelEmail,
         },
       });
       return res.data;
     },
-    enabled: mode === "reserve" && !!selectedDate && !!user?.email,
+    enabled: mode === "reserve" && !!selectedDate && !!hotelEmail,
   });
 
   const isLoading = roomsLoading || (mode === "reserve" && availabilityLoading);
 
-  if (isLoading) {
+  // Helper: check availability
+  const isRoomAvailableOnDate = (room) => {
+    if (mode !== "reserve" || !selectedDate) {
+      return room.roomStatus?.toLowerCase() === "available";
+    }
+
+    if (!availability) return false;
+
+    const allAvailableRooms =
+      availability.variants?.flatMap((v) => v.rooms) || [];
+
+    return allAvailableRooms.some(
+      (r) => r._id === room._id || r.roomNo === room.roomNo,
+    );
+  };
+
+  // ========== DELETE ROOM ==========
+  const handleDelete = async (room) => {
+    const confirm = await Swal.fire({
+      title: "Delete Room?",
+      html: `Are you sure you want to delete <b>Room ${room.roomNo}</b>?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#9f1239",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Delete",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await axiosInstance.delete(`/room-delete/${room._id}`);
+
+      await Swal.fire({
+        title: "Deleted!",
+        text: `Room ${room.roomNo} has been deleted.`,
+        icon: "success",
+        confirmButtonColor: "#9f1239",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      queryClient.invalidateQueries(["all-rooms"]);
+    } catch (err) {
+      Swal.fire({
+        title: "Error",
+        text: err?.response?.data?.message || "Failed to delete room",
+        icon: "error",
+        confirmButtonColor: "#9f1239",
+      });
+    }
+  };
+
+  // ========== UPDATE ROOM ==========
+  const handleUpdate = (room) => {
+    navigate(`/dashboard/rooms/edit/${room._id}`, {
+      state: { room },
+    });
+  };
+
+  if (statusLoading || isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <span className="loading loading-spinner loading-lg text-rose-900"></span>
@@ -82,25 +140,9 @@ const AllRooms = () => {
     );
   }
 
-  // Helper: check if a room is available on the selected date
-  const isRoomAvailableOnDate = (room) => {
-    if (mode !== "reserve" || !selectedDate) {
-      return room.roomStatus?.toLowerCase() === "available";
-    }
-
-    if (!availability) return false;
-
-    const allAvailableRooms =
-      availability.variants?.flatMap((v) => v.rooms) || [];
-
-    return allAvailableRooms.some(
-      (r) => r._id === room._id || r.roomNo === room.roomNo,
-    );
-  };
-
   return (
     <div className="p-6">
-      {/* Header */}
+      {/* ================= HEADER ================= */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -121,12 +163,11 @@ const AllRooms = () => {
                 </span>
               </>
             ) : (
-              "Manage rooms and make bookings easily."
+              "Manage rooms, update or delete them easily."
             )}
           </p>
         </div>
 
-        {/* Header Buttons */}
         <div className="flex items-center gap-3">
           {mode === "reserve" ? (
             <button
@@ -166,7 +207,6 @@ const AllRooms = () => {
           </p>
         </div>
       ) : (
-        /* Room Cards - Horizontal Layout like RoomStatus */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {rooms.map((room) => {
             const imageUrl = room.image
@@ -180,11 +220,11 @@ const AllRooms = () => {
             return (
               <div
                 key={room._id}
-                className="group bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-rose-900"
+                className="group bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-rose-200"
               >
                 <div className="flex flex-col sm:flex-row">
                   {/* Image */}
-                  <figure className="w-full sm:w-44 sm:min-w-44 h-56 sm:h-auto bg-gray-100">
+                  <figure className="w-full sm:w-44 sm:min-w-44 h-56 sm:h-auto bg-gray-100 relative">
                     <img
                       src={imageUrl}
                       alt={`Room ${room.roomNo || ""}`}
@@ -197,9 +237,9 @@ const AllRooms = () => {
                   </figure>
 
                   {/* Content */}
-                  <div className="p-6 flex-1 flex flex-col">
+                  <div className="p-5 flex-1 flex flex-col">
                     {/* Title + Status */}
-                    <div className="flex justify-between items-start gap-3 mb-4">
+                    <div className="flex justify-between items-start gap-3 mb-3">
                       <div>
                         <h2 className="text-lg font-bold text-rose-900">
                           Room {room.roomNo || "N/A"}
@@ -216,15 +256,17 @@ const AllRooms = () => {
                             : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {isAvailable ? "Available" : "Reserved"}
+                        {isAvailable
+                          ? "Available"
+                          : room.roomStatus || "Reserved"}
                       </span>
                     </div>
 
-                    {/* Room Information */}
+                    {/* Info */}
                     <div className="space-y-2 text-sm flex-1">
                       <p className="flex items-center gap-2">
                         <FaMoneyBillWave className="text-[#BF1E2E]" />
-                        <span className="text-gray-500">Price:</span>{" "}
+                        <span className="text-gray-500">Price:</span>
                         <span className="font-semibold text-gray-800">
                           ৳{Number(room.price || 0).toLocaleString()}
                         </span>
@@ -232,7 +274,7 @@ const AllRooms = () => {
 
                       <p className="flex items-center gap-2">
                         <FaUsers className="text-[#BF1E2E]" />
-                        <span className="text-gray-500">Occupancy:</span>{" "}
+                        <span className="text-gray-500">Occupancy:</span>
                         <span className="font-medium text-gray-800">
                           {room.maxOccupancy || "-"} Guests
                         </span>
@@ -248,11 +290,36 @@ const AllRooms = () => {
                       )}
                     </div>
 
-                    {/* Button */}
-                    <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
+                    {/* ========== ACTION BUTTONS ========== */}
+                    <div className="flex flex-wrap justify-end gap-2 mt-5 pt-4 border-t border-gray-100">
+                      {/* Edit */}
+                      {mode !== "reserve" && (
+                        <button
+                          onClick={() => handleUpdate(room)}
+                          className="btn btn-sm h-9 gap-1.5 border border-blue-500 text-blue-600 hover:bg-blue-50 bg-white"
+                          title="Edit Room"
+                        >
+                          <FaEdit className="text-sm" />
+                          Edit
+                        </button>
+                      )}
+
+                      {/* Delete */}
+                      {mode !== "reserve" && (
+                        <button
+                          onClick={() => handleDelete(room)}
+                          className="btn btn-sm h-9 gap-1.5 border border-red-500 text-red-600 hover:bg-red-50 bg-white"
+                          title="Delete Room"
+                        >
+                          <FaTrash className="text-sm" />
+                          Delete
+                        </button>
+                      )}
+
+                      {/* Book / Reserve */}
                       {isAvailable ? (
                         <button
-                          className="btn btn-sm h-10 bg-[#BF1E2E] hover:bg-rose-900 text-white border-none px-5"
+                          className="btn btn-sm h-9 bg-[#BF1E2E] hover:bg-rose-900 text-white border-none px-4"
                           onClick={() => {
                             if (mode === "reserve") {
                               navigate(`/dashboard/reservations/main-reserve`, {
@@ -272,7 +339,7 @@ const AllRooms = () => {
                         </button>
                       ) : (
                         <button
-                          className="btn btn-sm h-10 bg-gray-200 text-gray-500 border-none px-5 cursor-not-allowed"
+                          className="btn btn-sm h-9 bg-gray-200 text-gray-500 border-none px-4 cursor-not-allowed"
                           disabled
                         >
                           Not Available

@@ -1,32 +1,49 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MdDirectionsCar, MdWorkHistory } from "react-icons/md";
+import { MdDirectionsCar, MdWorkHistory, MdSearch } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const TransportServiceHistory = () => {
   const axiosInstance = useAxios();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const {
     data: transportOrders = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["transport-service-history"],
+    queryKey: ["transport-service-history", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/transport-service", {
-        params: {
-          hotelEmail: user.email,
-        },
+        params: { hotelEmail },
       });
       return res.data;
     },
+    enabled: !!hotelEmail,
   });
+
+  // Simple client-side filter by guest name or room number
+  const term = searchTerm.toLowerCase().trim();
+  const filteredOrders = term
+    ? transportOrders.filter((order) => {
+        const guestName = (order.guestName || "").toLowerCase();
+        const roomNumber = String(order.roomNumber || "").toLowerCase();
+
+        return guestName.includes(term) || roomNumber.includes(term);
+      })
+    : transportOrders;
+
+  if (statusLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto p-6">
@@ -71,6 +88,25 @@ const TransportServiceHistory = () => {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+          <input
+            type="text"
+            placeholder="Search by guest name or room number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-900/30 focus:border-rose-900 text-sm"
+          />
+        </div>
+        {searchTerm && (
+          <p className="text-xs text-gray-500 mt-1.5">
+            Showing {filteredOrders.length} of {transportOrders.length} results
+          </p>
+        )}
+      </div>
+
       {/* Table Card */}
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
         {isLoading ? (
@@ -81,9 +117,11 @@ const TransportServiceHistory = () => {
           <div className="text-center py-20 text-red-500 font-medium">
             Failed to load transport history. Please try again.
           </div>
-        ) : transportOrders.length === 0 ? (
+        ) : filteredOrders.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            No transport service requests found.
+            {searchTerm
+              ? "No matching transport service requests found."
+              : "No transport service requests found."}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -105,7 +143,7 @@ const TransportServiceHistory = () => {
               </thead>
 
               <tbody>
-                {transportOrders.map((order, index) => (
+                {filteredOrders.map((order, index) => (
                   <tr
                     key={order._id}
                     className="hover:bg-rose-50/50 border-b border-gray-100"

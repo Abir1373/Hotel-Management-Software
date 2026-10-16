@@ -1,25 +1,22 @@
 import { useForm } from "react-hook-form";
-import { useNavigate, useSearchParams, useLocation } from "react-router";
+import { useNavigate, useSearchParams, useLocation, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import useAxios from "../../../hooks/useAxios";
+import useUserStatus from "../../../hooks/useUserStatus";
 import { LuBookImage } from "react-icons/lu";
-import useAuth from "../../../hooks/useAuth";
+import { RiHome3Line } from "react-icons/ri";
+import { MdCheckCircle, MdCancel } from "react-icons/md";
 
 const MainReserve = () => {
   const axiosInstance = useAxios();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
-  // Get data from previous page
+  const { hotelEmail, statusLoading } = useUserStatus();
+
   const room = location.state?.room || null;
   const selectedDate = searchParams.get("date") || location.state?.date || "";
-
-  // Same base URL as your axiosInstance
   const imageBaseURL = "http://localhost:3000";
 
   const {
@@ -42,33 +39,57 @@ const MainReserve = () => {
   const arrivingDate = watch("arrivingDate");
   const departureDate = watch("departureDate");
 
-  // Check availability when dates change
-  const { data: availability, isFetching } = useQuery({
-    queryKey: ["check-availability", arrivingDate, departureDate, room?._id],
+  const {
+    data: availability,
+    isFetching,
+    isError: availabilityError,
+  } = useQuery({
+    queryKey: [
+      "check-availability",
+      hotelEmail,
+      arrivingDate,
+      departureDate,
+      room?._id,
+    ],
     queryFn: async () => {
-      if (!arrivingDate || !departureDate || !room) return null;
       const res = await axiosInstance.get("/rooms/available", {
         params: {
           arriving: arrivingDate,
           departure: departureDate,
-          hotelEmail: user.email,
+          hotelEmail,
         },
       });
       return res.data;
     },
-    enabled: !!arrivingDate && !!departureDate && !!room,
+    enabled:
+      !!hotelEmail &&
+      !statusLoading &&
+      !!arrivingDate &&
+      !!departureDate &&
+      departureDate > arrivingDate &&
+      !!room,
   });
 
   const isRoomAvailable = () => {
     if (!availability || !room) return true;
     const allAvailableRooms =
-      availability.variants?.flatMap((v) => v.rooms) || [];
+      availability.variants?.flatMap((variant) => variant.rooms || []) || [];
     return allAvailableRooms.some(
-      (r) => r._id === room._id || r.roomNo === room.roomNo,
+      (availableRoom) =>
+        availableRoom._id === room._id || availableRoom.roomNo === room.roomNo,
     );
   };
 
   const onSubmit = async (data) => {
+    if (!hotelEmail) {
+      Swal.fire(
+        "Account unavailable",
+        "Hotel account information could not be loaded. Please refresh and try again.",
+        "warning",
+      );
+      return;
+    }
+
     if (!room) {
       Swal.fire("Error", "No room selected", "error");
       return;
@@ -79,7 +100,7 @@ const MainReserve = () => {
         title: "Invalid Dates",
         text: "Departure date must be after arriving date",
         icon: "warning",
-        confirmButtonColor: "#BF1E2E",
+        confirmButtonColor: "#881337",
       });
       return;
     }
@@ -89,13 +110,13 @@ const MainReserve = () => {
         title: "Room Not Available",
         text: "This room is already reserved or occupied for the selected dates.",
         icon: "error",
-        confirmButtonColor: "#BF1E2E",
+        confirmButtonColor: "#881337",
       });
       return;
     }
 
     const reservationData = {
-      hotelEmail: user.email,
+      hotelEmail,
       guestName: data.guestName,
       contactNumber: data.contactNumber,
       arrivingDate: data.arrivingDate,
@@ -120,208 +141,355 @@ const MainReserve = () => {
 
       if (res.data.insertedId) {
         Swal.fire({
-          title: "Success!",
+          title: "Reservation Confirmed",
           text: `Room ${room.roomNo} reserved for ${data.guestName}`,
           icon: "success",
-          confirmButtonColor: "#BF1E2E",
+          confirmButtonColor: "#881337",
         }).then(() => {
           navigate("/dashboard/reservations");
+        });
+      } else {
+        Swal.fire({
+          title: "Reservation Not Confirmed",
+          text: "The reservation could not be confirmed. Please try again.",
+          icon: "warning",
+          confirmButtonColor: "#881337",
         });
       }
     } catch (error) {
       Swal.fire({
-        title: "Failed",
+        title: "Reservation Failed",
         text: error.response?.data?.message || "Could not create reservation",
         icon: "error",
-        confirmButtonColor: "#BF1E2E",
+        confirmButtonColor: "#881337",
       });
     }
   };
 
-  // Image URL builder
   const getImageUrl = (imagePath) => {
     if (!imagePath) {
       return "https://images.unsplash.com/photo-1566665797739-1674de7a421a";
     }
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
+    if (imagePath.startsWith("http")) return imagePath;
     return `${imageBaseURL}${imagePath}`;
   };
 
+  const amenitiesList = Array.isArray(room?.amenities)
+    ? room.amenities
+    : typeof room?.amenities === "string"
+      ? room.amenities
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+
+  if (statusLoading) {
+    return (
+      <div className="flex min-h-96 items-center justify-center">
+        <span className="loading loading-spinner loading-lg text-rose-900" />
+      </div>
+    );
+  }
+
+  if (!hotelEmail) {
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <div className="rounded-2xl border border-rose-100 bg-white p-8 text-center shadow-lg">
+          <h2 className="text-lg font-bold text-rose-900">
+            Hotel Account Unavailable
+          </h2>
+          <p className="mt-2 text-sm text-gray-500">
+            We couldn't identify the hotel account. Please refresh the page or
+            sign in again.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/reservations")}
+            className="mt-5 rounded-xl bg-rose-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-800"
+          >
+            Back to Reservations
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!room) {
     return (
-      <div className="p-10 text-center">
-        <p className="text-xl text-gray-500">No room selected.</p>
-        <button
-          onClick={() => navigate("/dashboard/reservations")}
-          className="btn bg-rose-900 text-white mt-4"
-        >
-          Back to Calendar
-        </button>
+      <div className="mx-auto max-w-3xl p-6">
+        <div className="rounded-2xl border border-gray-100 bg-white px-6 py-16 text-center shadow-lg">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+            <LuBookImage className="text-2xl text-rose-900" />
+          </div>
+          <p className="mb-4 text-lg font-semibold text-gray-700">
+            No room selected.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/reservations")}
+            className="rounded-xl bg-rose-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-800"
+          >
+            Back to Calendar
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto p-6 max-w-3xl">
+    <div className="mx-auto max-w-4xl p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-rose-900 flex items-center justify-center">
-          <LuBookImage className="text-xl text-white" />
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-900 shadow-md">
+            <LuBookImage className="text-xl text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-rose-900 sm:text-2xl">
+              Complete Reservation
+            </h1>
+            <p className="mt-0.5 text-sm text-gray-500">
+              Enter guest details and confirm the room booking.
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-rose-900">
-            Complete Reservation
-          </h1>
-          <p className="text-gray-500">
-            Room {room.roomNo} • {room.variantName}
-          </p>
-        </div>
+
+        <Link
+          to="/dashboard/reservations"
+          aria-label="Back to Reservations"
+          title="Back to Reservations"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rose-900 text-rose-900 transition-colors hover:bg-rose-900 hover:text-white"
+        >
+          <RiHome3Line className="text-xl" />
+        </Link>
       </div>
 
-      {/* Selected Room Card */}
-      <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 mb-8 flex gap-5 items-center">
-        <img
-          src={getImageUrl(room.image)}
-          alt={room.variantName || "Room"}
-          className="w-24 h-24 object-cover rounded-xl border border-rose-200"
-          onError={(e) => {
-            e.currentTarget.src =
-              "https://images.unsplash.com/photo-1566665797739-1674de7a421a";
-          }}
-        />
-        <div>
-          <h3 className="font-bold text-lg text-rose-900">
-            {room.variantName || room.baseRoomType}
-          </h3>
-          <p className="text-sm text-gray-600">
-            {room.bedType} • Max {room.maxOccupancy} guests
-          </p>
-          <p className="text-xl font-bold text-rose-900 mt-1">
-            ৳{Number(room.price || 0).toLocaleString()} / night
-          </p>
+      {/* Selected room */}
+      <section className="mb-6 overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-lg">
+        <div className="border-b border-rose-100 bg-rose-50/70 px-5 py-3">
+          <h2 className="font-semibold text-rose-900">Selected Room</h2>
         </div>
-      </div>
+        <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center">
+          <img
+            src={getImageUrl(room.image)}
+            alt={room.variantName || "Room"}
+            className="h-48 w-full rounded-xl border border-rose-100 object-cover shadow-sm sm:h-32 sm:w-40"
+            onError={(event) => {
+              event.currentTarget.src =
+                "https://images.unsplash.com/photo-1566665797739-1674de7a421a";
+            }}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">
+                  {room.variantName || room.baseRoomType || "Room"}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Room {room.roomNo} {room.bedType ? `• ${room.bedType}` : ""}
+                  {room.maxOccupancy
+                    ? ` • Max ${room.maxOccupancy} guests`
+                    : ""}
+                </p>
+              </div>
+              <span className="rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-800">
+                Reserved on confirmation
+              </span>
+            </div>
 
-      {/* Form */}
+            {amenitiesList.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {amenitiesList.slice(0, 5).map((item, index) => (
+                  <span
+                    key={index}
+                    className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-600"
+                  >
+                    {typeof item === "string"
+                      ? item
+                      : item?.name || String(item)}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <p className="mt-3 text-xl font-bold text-rose-900">
+              ৳{Number(room.price || 0).toLocaleString()}
+              <span className="ml-1 text-sm font-medium text-gray-500">
+                / night
+              </span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Reservation form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white shadow-xl rounded-2xl p-8 space-y-6"
+        className="space-y-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-lg sm:p-8"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Guest Name */}
+        <div className="border-b border-gray-100 pb-4">
+          <h2 className="text-lg font-bold text-gray-800">
+            Guest & Stay Details
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Fields marked with * are required.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Guest Name *</span>
+            <label className="label pb-1">
+              <span className="label-text font-medium text-gray-700">
+                Guest Name *
+              </span>
             </label>
             <input
               type="text"
               placeholder="Enter full name"
-              className="input input-bordered w-full bg-white"
-              {...register("guestName", { required: "Guest name is required" })}
+              className={`input input-bordered w-full bg-white focus:border-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-900/20 ${errors.guestName ? "border-red-400" : ""}`}
+              {...register("guestName", {
+                required: "Guest name is required",
+                minLength: {
+                  value: 2,
+                  message: "Please enter at least 2 characters",
+                },
+              })}
             />
             {errors.guestName && (
-              <p className="text-error text-sm mt-1">
+              <p className="mt-1 text-sm text-red-600">
                 {errors.guestName.message}
               </p>
             )}
           </div>
 
-          {/* Contact Number */}
           <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Contact Number *</span>
+            <label className="label pb-1">
+              <span className="label-text font-medium text-gray-700">
+                Contact Number *
+              </span>
             </label>
             <input
               type="tel"
               placeholder="01XXXXXXXXX"
-              className="input input-bordered w-full bg-white"
+              className={`input input-bordered w-full bg-white focus:border-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-900/20 ${errors.contactNumber ? "border-red-400" : ""}`}
               {...register("contactNumber", {
                 required: "Contact number is required",
+                pattern: {
+                  value: /^[0-9+()\-\s]{7,20}$/,
+                  message: "Enter a valid contact number",
+                },
               })}
             />
             {errors.contactNumber && (
-              <p className="text-error text-sm mt-1">
+              <p className="mt-1 text-sm text-red-600">
                 {errors.contactNumber.message}
               </p>
             )}
           </div>
 
-          {/* Month */}
           <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Month</span>
+            <label className="label pb-1">
+              <span className="label-text font-medium text-gray-700">
+                Month
+              </span>
             </label>
             <input
               type="month"
-              className="input input-bordered w-full bg-white"
+              className="input input-bordered w-full bg-white focus:border-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-900/20"
               {...register("month")}
             />
           </div>
 
-          {/* Arriving Date */}
           <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Arriving Date *</span>
+            <label className="label pb-1">
+              <span className="label-text font-medium text-gray-700">
+                Arriving Date *
+              </span>
             </label>
             <input
               type="date"
-              className="input input-bordered w-full bg-white"
+              min={new Date().toISOString().slice(0, 10)}
+              className={`input input-bordered w-full bg-white focus:border-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-900/20 ${errors.arrivingDate ? "border-red-400" : ""}`}
               {...register("arrivingDate", {
                 required: "Arriving date is required",
               })}
             />
             {errors.arrivingDate && (
-              <p className="text-error text-sm mt-1">
+              <p className="mt-1 text-sm text-red-600">
                 {errors.arrivingDate.message}
               </p>
             )}
           </div>
 
-          {/* Departure Date */}
           <div className="form-control md:col-span-2">
-            <label className="label">
-              <span className="label-text font-medium">Departure Date *</span>
+            <label className="label pb-1">
+              <span className="label-text font-medium text-gray-700">
+                Departure Date *
+              </span>
             </label>
             <input
               type="date"
-              className="input input-bordered w-full bg-white"
+              min={arrivingDate || new Date().toISOString().slice(0, 10)}
+              className={`input input-bordered w-full bg-white focus:border-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-900/20 ${errors.departureDate ? "border-red-400" : ""}`}
               {...register("departureDate", {
                 required: "Departure date is required",
+                validate: (value) =>
+                  !arrivingDate ||
+                  value > arrivingDate ||
+                  "Departure date must be after arriving date",
               })}
             />
             {errors.departureDate && (
-              <p className="text-error text-sm mt-1">
+              <p className="mt-1 text-sm text-red-600">
                 {errors.departureDate.message}
               </p>
             )}
           </div>
         </div>
 
-        {/* Availability Status */}
-        {arrivingDate && departureDate && (
-          <div className="alert shadow-sm">
+        {/* Availability */}
+        {arrivingDate && departureDate && departureDate > arrivingDate && (
+          <div
+            className={`flex items-start gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
+              isFetching
+                ? "border-gray-200 bg-gray-50 text-gray-600"
+                : availabilityError
+                  ? "border-amber-200 bg-amber-50 text-amber-800"
+                  : isRoomAvailable()
+                    ? "border-green-100 bg-green-50 text-green-700"
+                    : "border-red-100 bg-red-50 text-red-700"
+            }`}
+          >
             {isFetching ? (
-              <span className="loading loading-spinner loading-sm"></span>
+              <>
+                <span className="loading loading-spinner loading-sm mt-0.5" />
+                Checking room availability...
+              </>
+            ) : availabilityError ? (
+              <>
+                <MdCancel className="mt-0.5 shrink-0 text-lg" />
+                Couldn't check availability. Please try changing the dates or
+                submit again later.
+              </>
             ) : isRoomAvailable() ? (
-              <span className="text-success font-medium">
-                ✓ Room is available for these dates
-              </span>
+              <>
+                <MdCheckCircle className="mt-0.5 shrink-0 text-lg" />
+                Room appears to be available for these dates.
+              </>
             ) : (
-              <span className="text-error font-medium">
-                ✗ This room is already reserved for the selected period
-              </span>
+              <>
+                <MdCancel className="mt-0.5 shrink-0 text-lg" />
+                This room is already reserved for the selected period.
+              </>
             )}
           </div>
         )}
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-4 pt-4">
+        <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="btn btn-outline border-rose-900 text-rose-900"
+            className="rounded-xl border border-rose-900 px-5 py-2.5 text-sm font-semibold text-rose-900 transition hover:bg-rose-50"
           >
             Back
           </button>
@@ -329,12 +497,20 @@ const MainReserve = () => {
             type="submit"
             disabled={
               isSubmitting ||
-              (arrivingDate && departureDate && !isRoomAvailable())
+              statusLoading ||
+              !hotelEmail ||
+              (arrivingDate &&
+                departureDate &&
+                departureDate > arrivingDate &&
+                (isFetching || availabilityError || !isRoomAvailable()))
             }
-            className="btn bg-[#BF1E2E] text-white hover:bg-red-800 border-none px-8"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-900 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? (
-              <span className="loading loading-spinner"></span>
+              <>
+                <span className="loading loading-spinner loading-sm" />
+                Processing...
+              </>
             ) : (
               "Confirm Reservation"
             )}

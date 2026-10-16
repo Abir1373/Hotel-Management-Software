@@ -1,32 +1,56 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MdRoomService, MdWorkHistory } from "react-icons/md";
+import { MdRoomService, MdWorkHistory, MdSearch } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const RoomServiceHistory = () => {
   const axiosInstance = useAxios();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const {
     data: roomServices = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["room-service-history"],
+    queryKey: ["room-service-history", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/room-service", {
         params: {
-          hotelEmail: user?.email,
+          hotelEmail,
         },
       });
       return res.data;
     },
+    enabled: !!hotelEmail,
   });
+
+  // Simple client-side filter by name, NID, or room number
+  const term = searchTerm.toLowerCase().trim();
+  const filteredServices = term
+    ? roomServices.filter((order) => {
+        const orderedBy = (order.orderedBy || "").toLowerCase();
+        const nid = (order.nidNumber || "").toLowerCase();
+        const roomNumber = String(order.roomNumber || "").toLowerCase();
+
+        return (
+          orderedBy.includes(term) ||
+          nid.includes(term) ||
+          roomNumber.includes(term)
+        );
+      })
+    : roomServices;
+
+  if (statusLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto p-6">
@@ -71,6 +95,25 @@ const RoomServiceHistory = () => {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+          <input
+            type="text"
+            placeholder="Search by name, NID or room number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-900/30 focus:border-rose-900 text-sm"
+          />
+        </div>
+        {searchTerm && (
+          <p className="text-xs text-gray-500 mt-1.5">
+            Showing {filteredServices.length} of {roomServices.length} results
+          </p>
+        )}
+      </div>
+
       {/* Table Card */}
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
         {isLoading ? (
@@ -81,9 +124,11 @@ const RoomServiceHistory = () => {
           <div className="text-center py-20 text-red-500 font-medium">
             Failed to load room service history. Please try again.
           </div>
-        ) : roomServices.length === 0 ? (
+        ) : filteredServices.length === 0 ? (
           <div className="text-center py-20 text-gray-500">
-            No room service requests found.
+            {searchTerm
+              ? "No matching room service requests found."
+              : "No room service requests found."}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -104,7 +149,7 @@ const RoomServiceHistory = () => {
               </thead>
 
               <tbody>
-                {roomServices.map((order, index) => (
+                {filteredServices.map((order, index) => (
                   <tr
                     key={order._id}
                     className="hover:bg-rose-50/50 border-b border-gray-100"

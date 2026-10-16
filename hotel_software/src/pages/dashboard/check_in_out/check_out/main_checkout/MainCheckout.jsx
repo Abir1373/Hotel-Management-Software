@@ -19,19 +19,15 @@ import { MdCheckCircleOutline } from "react-icons/md";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 import Swal from "sweetalert2";
 import useAxios from "../../../../../hooks/useAxios";
-import useAuth from "../../../../../hooks/useAuth";
+import useUserStatus from "../../../../../hooks/useUserStatus";
 import CheckoutInvoice from "../../../../../components/CheckoutInvoice";
 
 const MainCheckout = () => {
   const { id } = useParams();
   const axiosInstance = useAxios();
-  const { user, loading } = useAuth();
+  const { hotelEmail, statusLoading } = useUserStatus();
   const [isCheckedOut, setIsCheckedOut] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
-
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
 
   const {
     data: guest,
@@ -41,23 +37,23 @@ const MainCheckout = () => {
     queryKey: ["check-in-details", id],
     queryFn: async () => {
       const res = await axiosInstance.get(`/check-in/${id}`, {
-        params: { hotelEmail: user?.email },
+        params: { hotelEmail: hotelEmail },
       });
       return res.data;
     },
-    enabled: !!id && !!user?.email,
+    enabled: !!id && !!hotelEmail && !statusLoading,
   });
 
   // Get Hotel Info
   const { data: hotelInfo } = useQuery({
-    queryKey: ["hotel-info", user?.email],
+    queryKey: ["hotel-info", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/hotels/by-email", {
-        params: { email: user?.email },
+        params: { email: hotelEmail },
       });
       return res.data;
     },
-    enabled: !!user?.email,
+    enabled: !!hotelEmail && !statusLoading,
   });
 
   // ====================== FORM FOR ACTUAL CHECKOUT DATE ======================
@@ -68,6 +64,14 @@ const MainCheckout = () => {
   });
 
   const actualCheckoutDate = watch("actualCheckoutDate");
+
+  if (statusLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <span className="loading loading-spinner loading-lg text-rose-900" />
+      </div>
+    );
+  }
 
   // ====================== HELPER: Get order payment status ======================
   const getOrderStatus = (order) => {
@@ -123,7 +127,6 @@ const MainCheckout = () => {
     actualRoomCharge + restaurantDue + laundryDue + transportDue;
 
   const balance = totalCharges - advance;
-  const hotelEmail = user?.email;
   const isRefund = balance < 0;
   const finalAmount = Math.abs(balance);
 

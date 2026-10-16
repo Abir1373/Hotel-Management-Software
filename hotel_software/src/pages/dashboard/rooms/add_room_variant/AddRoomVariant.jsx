@@ -11,10 +11,6 @@ const AddRoomVariant = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
-
   const {
     register,
     handleSubmit,
@@ -33,6 +29,9 @@ const AddRoomVariant = () => {
     },
   });
 
+  if (loading) {
+    return <span className="loading loading-spinner text-error"></span>;
+  }
   const onSubmit = async (data) => {
     const imageFile = data.image?.[0];
 

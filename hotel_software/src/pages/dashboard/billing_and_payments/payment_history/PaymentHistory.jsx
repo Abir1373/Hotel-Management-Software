@@ -1,30 +1,45 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { FaEye, FaPhone, FaIdCard, FaCalendarAlt } from "react-icons/fa";
-import { MdCheckCircleOutline } from "react-icons/md";
-import { IoArrowBackCircleSharp } from "react-icons/io5";
+import { MdCheckCircleOutline, MdSearch } from "react-icons/md";
 import useAxios from "../../../../hooks/useAxios";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 import { RiHome3Line } from "react-icons/ri";
 
 const PaymentHistory = () => {
   const axiosInstance = useAxios();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: checkouts = [], isLoading } = useQuery({
-    queryKey: ["checkout-list"],
+    queryKey: ["checkout-list", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/check-out", {
-        params: { hotelEmail: user.email },
+        params: { hotelEmail },
       });
       return res.data;
     },
+    enabled: !!hotelEmail,
   });
 
-  if (isLoading) {
+  // Simple filter by guest name, contact, or room number
+  const term = searchTerm.toLowerCase().trim();
+  const filteredCheckouts = term
+    ? checkouts.filter((item) => {
+        const guestName = (item.guestName || "").toLowerCase();
+        const contactNumber = String(item.contactNumber || "").toLowerCase();
+        const roomNumber = String(item.roomNumber || "").toLowerCase();
+
+        return (
+          guestName.includes(term) ||
+          contactNumber.includes(term) ||
+          roomNumber.includes(term)
+        );
+      })
+    : checkouts;
+
+  if (statusLoading || isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <span className="loading loading-spinner loading-lg text-rose-900"></span>
@@ -58,6 +73,25 @@ const PaymentHistory = () => {
         </Link>
       </div>
 
+      {/* ====================== SEARCH ====================== */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+          <input
+            type="text"
+            placeholder="Search by name, contact or room number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-900/30 focus:border-rose-900 text-sm"
+          />
+        </div>
+        {term && (
+          <p className="text-xs text-gray-500 mt-1.5">
+            Showing {filteredCheckouts.length} of {checkouts.length} results
+          </p>
+        )}
+      </div>
+
       {/* ====================== TABLE ====================== */}
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -77,14 +111,16 @@ const PaymentHistory = () => {
             </thead>
 
             <tbody>
-              {checkouts.length === 0 ? (
+              {filteredCheckouts.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="text-center py-16 text-gray-400">
-                    No checkout records found
+                    {term
+                      ? "No matching checkout records found"
+                      : "No checkout records found"}
                   </td>
                 </tr>
               ) : (
-                checkouts.map((item) => (
+                filteredCheckouts.map((item) => (
                   <tr key={item._id} className="hover:bg-gray-50">
                     {/* Guest + Image */}
                     <td>

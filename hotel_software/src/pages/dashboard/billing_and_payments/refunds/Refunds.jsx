@@ -7,19 +7,15 @@ import {
   FaIdCard,
   FaCalendarAlt,
   FaMoneyBillWave,
-  FaArrowLeft,
 } from "react-icons/fa";
 import { MdMoneyOff } from "react-icons/md";
 import useAxios from "../../../../hooks/useAxios";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 import { RiHome3Line } from "react-icons/ri";
 
 const Refunds = () => {
   const axiosInstance = useAxios();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
 
   const { register, handleSubmit, getValues } = useForm();
 
@@ -29,7 +25,7 @@ const Refunds = () => {
     refetch,
     isFetched,
   } = useQuery({
-    queryKey: ["refunded-checkouts"],
+    queryKey: ["refunded-checkouts", hotelEmail],
     queryFn: async () => {
       const { fromDate, toDate, contactNumber } = getValues();
 
@@ -38,7 +34,7 @@ const Refunds = () => {
           fromDate,
           toDate,
           contactNumber: contactNumber || undefined,
-          hotelEmail: user.email,
+          hotelEmail,
         },
       });
 
@@ -48,6 +44,7 @@ const Refunds = () => {
   });
 
   const onSubmit = () => {
+    if (!hotelEmail) return;
     refetch();
   };
 
@@ -56,6 +53,14 @@ const Refunds = () => {
     (sum, item) => sum + (Number(item.finalAmount) || 0),
     0,
   );
+
+  if (statusLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">

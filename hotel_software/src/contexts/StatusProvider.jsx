@@ -17,29 +17,28 @@ const StatusProvider = ({ children }) => {
     queryKey: ["userStatus", user?.email],
     enabled: !authLoading && !!user?.email,
     queryFn: async () => {
-      try {
-        const res = await axiosInstance.get(`/users/${user.email}/status`);
-        return res.data; // { status, type, hotelEmail, hotelName }
-      } catch (err) {
-        if (err.response?.status === 404) {
-          return { status: "Pending", type: null, hotelEmail: null };
-        }
-        throw err;
-      }
+      const res = await axiosInstance.get(`/users/${user.email}/status`);
+      return res.data; // expected: { status, type, hotelEmail, hotelName }
     },
   });
 
+  // Safe defaults
   const statusInfo = {
-    status: data?.status || "Pending",
-    type: data?.type || null,
-    hotelEmail: data?.hotelEmail || null,
-    hotelName: data?.hotelName || null,
+    status: data?.status ?? "Pending",
+    type: data?.type ?? null,
+    hotelEmail: data?.hotelEmail ?? null,
+    hotelName: data?.hotelName ?? null,
     statusLoading: authLoading || statusLoading,
     isError,
     error,
     refetch,
   };
-  return <StatusContext value={statusInfo}>{children}</StatusContext>;
+
+  return (
+    <StatusContext.Provider value={statusInfo}>
+      {children}
+    </StatusContext.Provider>
+  );
 };
 
 export default StatusProvider;

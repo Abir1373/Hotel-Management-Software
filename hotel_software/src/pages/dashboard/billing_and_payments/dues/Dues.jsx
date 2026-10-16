@@ -4,45 +4,59 @@ import { MdPayments, MdSearch } from "react-icons/md";
 import { RiHome3Line } from "react-icons/ri";
 import { Link } from "react-router";
 import useAxios from "../../../../hooks/useAxios";
-import useAuth from "../../../../hooks/useAuth";
+import useUserStatus from "../../../../hooks/useUserStatus";
 
 const AllGuestDues = () => {
   const axiosInstance = useAxios();
-  const { user, loading } = useAuth();
-  if (loading) {
-    return <span className="loading loading-spinner text-error"></span>;
-  }
+  const { hotelEmail, statusLoading } = useUserStatus();
+
   const { register, watch } = useForm({
     defaultValues: {
-      searchRoom: "",
+      searchTerm: "",
     },
   });
 
-  const searchRoom = watch("searchRoom");
+  const searchTerm = watch("searchTerm");
 
   const { data: duesList = [], isLoading } = useQuery({
-    queryKey: ["all-dues"],
+    queryKey: ["all-dues", hotelEmail],
     queryFn: async () => {
       const res = await axiosInstance.get("/check-in/all-dues", {
-        params: { hotelEmail: user.email },
+        params: { hotelEmail },
       });
       return res.data;
     },
+    enabled: !!hotelEmail,
   });
 
-  // Filter by room number
-  const filteredDues = searchRoom?.trim()
-    ? duesList.filter((item) =>
-        String(item.roomNumber)
-          .toLowerCase()
-          .includes(searchRoom.trim().toLowerCase()),
-      )
+  // Filter by room number, guest name, or contact number
+  const term = searchTerm?.trim().toLowerCase() || "";
+  const filteredDues = term
+    ? duesList.filter((item) => {
+        const roomNumber = String(item.roomNumber || "").toLowerCase();
+        const guestName = (item.guestName || "").toLowerCase();
+        const contactNumber = String(item.contactNumber || "").toLowerCase();
+
+        return (
+          roomNumber.includes(term) ||
+          guestName.includes(term) ||
+          contactNumber.includes(term)
+        );
+      })
     : duesList;
 
   const grandTotal = filteredDues.reduce(
     (sum, item) => sum + (item.totalDue || 0),
     0,
   );
+
+  if (statusLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-96">
+        <span className="loading loading-spinner loading-lg text-rose-900"></span>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto p-6">
@@ -58,7 +72,8 @@ const AllGuestDues = () => {
             </h1>
           </div>
           <p className="text-gray-500 ml-12">
-            View all due amounts from check-in. Search by room number.
+            View all due amounts from check-in. Search by room, guest name, or
+            contact.
           </p>
         </div>
 
@@ -78,11 +93,16 @@ const AllGuestDues = () => {
           <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
           <input
             type="text"
-            placeholder="Search by room number..."
-            {...register("searchRoom")}
+            placeholder="Search by room, guest name or contact..."
+            {...register("searchTerm")}
             className="input input-bordered w-full pl-10 bg-white"
           />
         </div>
+        {term && (
+          <p className="text-xs text-gray-500 mt-2">
+            Showing {filteredDues.length} of {duesList.length} results
+          </p>
+        )}
       </div>
 
       {/* Table */}
@@ -115,9 +135,7 @@ const AllGuestDues = () => {
               ) : filteredDues.length === 0 ? (
                 <tr>
                   <td colSpan="11" className="text-center py-10 text-gray-500">
-                    {searchRoom
-                      ? `No dues found for room "${searchRoom}"`
-                      : "No dues found"}
+                    {term ? "No matching dues found." : "No dues found"}
                   </td>
                 </tr>
               ) : (
